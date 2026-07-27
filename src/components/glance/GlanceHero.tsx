@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Globe, Mail, MapPin, Phone } from 'lucide-react'
+import { FaWhatsapp } from 'react-icons/fa'
 import { Button } from '@/components/ui/Button'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -35,6 +36,15 @@ export function GlanceHero() {
           >
             <Mail className="h-4 w-4 text-accent" />
             {personal.email}
+          </a>
+          <a
+            href={personal.links.whatsapp}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 transition-colors hover:text-accent"
+          >
+            <FaWhatsapp className="h-4 w-4 text-accent" />
+            WhatsApp
           </a>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-accent" />

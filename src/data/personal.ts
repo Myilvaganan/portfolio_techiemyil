@@ -20,5 +20,6 @@ export const personal = {
     github: 'https://github.com/Myilvaganan',
     portfolio: 'https://portfolio.techiemyil.com',
     studio: 'https://studio.techiemyil.com',
+    whatsapp: 'https://wa.me/916374517254',
   },
 } as const

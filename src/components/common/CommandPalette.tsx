@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Mail, Download, ArrowRight } from 'lucide-react'
-import { FaGithub, FaLinkedin } from 'react-icons/fa'
+import { FaGithub, FaLinkedin, FaWhatsapp } from 'react-icons/fa'
 import { navLinks } from '@/data/nav'
 import { personal } from '@/data/personal'
 import { getLenis } from '@/hooks/useLenis'
@@ -83,6 +83,16 @@ export function CommandPalette() {
         action: () => {
           setOpen(false)
           window.open(personal.links.linkedin, '_blank')
+        },
+      },
+      {
+        id: 'whatsapp',
+        label: 'Open WhatsApp',
+        hint: 'External',
+        icon: FaWhatsapp,
+        action: () => {
+          setOpen(false)
+          window.open(personal.links.whatsapp, '_blank')
         },
       },
       {

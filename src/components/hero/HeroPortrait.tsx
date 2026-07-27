@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { motion } from 'framer-motion'
 import profileImg from '@/assets/images/profile.jpg'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
+import { FloatingIcons } from './FloatingIcons'
 
 const HeroCanvas = lazy(() => import('./HeroCanvas').then((m) => ({ default: m.HeroCanvas })))
 
@@ -50,6 +51,8 @@ export function HeroPortrait() {
         </div>
         <div className="pointer-events-none absolute inset-0 rounded-[32px] ring-1 ring-inset ring-surface-5" />
       </motion.div>
+
+      <FloatingIcons />
     </div>
   )
 }
