@@ -140,6 +140,15 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'] {
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   h1,

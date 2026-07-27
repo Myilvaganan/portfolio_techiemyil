@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Chip } from '@/components/ui/Chip'
+import { Watermark } from '@/components/ui/Watermark'
 import { projects } from '@/data/projects'
 
 export function ProjectsPanel() {
@@ -37,6 +38,7 @@ export function ProjectsPanel() {
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              <Watermark />
             </div>
             <div className="p-2.5">
               <p className="truncate text-xs font-semibold text-text">{project.title}</p>

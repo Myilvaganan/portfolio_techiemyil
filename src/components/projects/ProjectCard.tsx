@@ -4,6 +4,7 @@ import { FaGithub } from 'react-icons/fa'
 import type { Project } from '@/types'
 import { Chip } from '@/components/ui/Chip'
 import { Button } from '@/components/ui/Button'
+import { Watermark } from '@/components/ui/Watermark'
 import { cn } from '@/lib/utils'
 
 export function ProjectCard({ project, index }: { project: Project; index: number }) {
@@ -27,6 +28,7 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
+        <Watermark />
         <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/80 via-black/10 to-transparent p-6 opacity-0 transition-opacity duration-400 group-hover:opacity-100">
           <div className="flex gap-3">
             {project.github && (

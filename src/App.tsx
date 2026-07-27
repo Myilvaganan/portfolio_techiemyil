@@ -11,6 +11,8 @@ import { ConnectFab } from '@/components/common/ConnectFab'
 import { LoadingScreen } from '@/components/common/LoadingScreen'
 import { CommandPalette } from '@/components/common/CommandPalette'
 import { useLenis } from '@/hooks/useLenis'
+import { useDisableContextMenu } from '@/hooks/useDisableContextMenu'
+import { useDisableCopy } from '@/hooks/useDisableCopy'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { Home } from '@/pages/Home'
 
@@ -22,6 +24,8 @@ const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m
 
 function AppShell() {
   useLenis()
+  useDisableContextMenu()
+  useDisableCopy()
 
   return (
     <div className="relative min-h-screen">
