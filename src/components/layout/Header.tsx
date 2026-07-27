@@ -91,20 +91,26 @@ export function Header() {
                 </a>
               )
             })}
-            <NavLink
-              to="/at-a-glance"
-              data-cursor="hover"
-              className={({ isActive }) =>
-                cn(
-                  'rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'border-accent/40 text-accent'
-                    : 'border-transparent text-text-secondary hover:text-text',
-                )
-              }
-            >
-              At a Glance
-            </NavLink>
+            <div className="relative">
+              <span
+                aria-hidden="true"
+                className="animate-glow-pulse absolute inset-0 -z-10 rounded-full bg-accent/40 blur-md"
+              />
+              <NavLink
+                to="/at-a-glance"
+                data-cursor="hover"
+                className={({ isActive }) =>
+                  cn(
+                    'relative rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'border-accent/40 text-accent'
+                      : 'border-transparent text-text-secondary hover:text-text',
+                  )
+                }
+              >
+                At a Glance
+              </NavLink>
+            </div>
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
@@ -174,9 +180,13 @@ export function Header() {
                 <Link
                   to="/at-a-glance"
                   onClick={() => setMobileOpen(false)}
-                  className="font-display text-3xl font-medium text-accent"
+                  className="relative inline-flex items-center gap-2 font-display text-3xl font-medium text-accent"
                 >
                   At a Glance
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-glow-pulse absolute inline-flex h-full w-full rounded-full bg-accent" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+                  </span>
                 </Link>
               </motion.div>
               <Button onClick={() => openResume()} className="mt-4">
