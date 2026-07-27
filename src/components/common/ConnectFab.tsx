@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Mail, MessageCircle, Phone, X } from 'lucide-react'
-import { FaGithub, FaWhatsapp } from 'react-icons/fa'
+import { FaGithub, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { personal } from '@/data/personal'
 
 const actions = [
   { label: 'GitHub', href: personal.links.github, icon: FaGithub, external: true },
   { label: 'WhatsApp', href: personal.links.whatsapp, icon: FaWhatsapp, external: true },
+  { label: 'Telegram', href: personal.links.telegram, icon: FaTelegram, external: true },
   { label: 'Email', href: `mailto:${personal.email}`, icon: Mail },
   { label: 'Call', href: `tel:${personal.phone}`, icon: Phone },
 ]
