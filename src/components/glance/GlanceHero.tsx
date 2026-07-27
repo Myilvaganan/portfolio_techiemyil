@@ -8,9 +8,14 @@ import { Tooltip } from '@/components/ui/Tooltip'
 import { personal } from '@/data/personal'
 import { stats } from '@/data/stats'
 import { formatExperienceDuration, getExperienceDuration } from '@/lib/experience'
-import profileImg from '@/assets/images/profile.jpg'
+import { useTheme } from '@/hooks/useTheme'
+import profileImgDark from '@/assets/images/profile.jpg'
+import profileImgLight from '@/assets/images/profile_light.png'
 
 export function GlanceHero() {
+  const { theme } = useTheme()
+  const profileImg = theme === 'light' ? profileImgLight : profileImgDark
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1.15fr_auto_0.85fr] lg:items-center lg:gap-10">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
