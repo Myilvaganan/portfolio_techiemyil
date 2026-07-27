@@ -1,0 +1,18 @@
+export const techStack: string[] = [
+  'Python',
+  'React',
+  'Next.js',
+  'Node.js',
+  'FastAPI',
+  'AWS',
+  'Azure',
+  'Docker',
+  'Redis',
+  'MongoDB',
+  'MySQL',
+  'Cosmos DB',
+  'OpenAI',
+  'LangChain',
+  'TypeScript',
+  'Kubernetes',
+]

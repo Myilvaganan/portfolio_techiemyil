@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090909" />
+  <meta name="color-scheme" content="dark light" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var theme = stored === 'dark' || stored === 'light'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <title>Myilvaganan Sakthivel — Senior Software Engineer &amp; AI Systems Lead</title>
+  <meta name="description"
+    content="Portfolio of Myilvaganan Sakthivel — Senior Software Engineer &amp; Technical Lead with 7+ years building scalable enterprise software, cloud-native platforms, and AI-integrated systems." />
+  <meta name="keywords"
+    content="Myilvaganan Sakthivel, Senior Software Engineer, Technical Lead, Full Stack Developer, AI Engineer, MERN Stack, React Developer, Node.js, AWS, Azure, Bangalore" />
+  <meta name="author" content="Myilvaganan Sakthivel" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://portfolio.techiemyil.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Techie Myil" />
+  <meta property="og:title" content="Myilvaganan Sakthivel — Senior Software Engineer & AI Systems Lead" />
+  <meta property="og:description"
+    content="7+ years architecting scalable enterprise software, cloud-native platforms, and AI-integrated systems. Explore my experience, projects, and skills." />
+  <meta property="og:url" content="https://portfolio.techiemyil.com/" />
+  <meta property="og:image" content="/og-image.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Myilvaganan Sakthivel — Senior Software Engineer & AI Systems Lead" />
+  <meta name="twitter:description"
+    content="7+ years architecting scalable enterprise software, cloud-native platforms, and AI-integrated systems." />
+  <meta name="twitter:image" content="/og-image.png" />
+
+  <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Myilvaganan Sakthivel",
+        "jobTitle": "Senior Software Engineer & Technical Lead",
+        "url": "https://portfolio.techiemyil.com/",
+        "email": "mailto:connect@techiemyil.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Bangalore",
+          "addressCountry": "IN"
+        },
+        "sameAs": [
+          "https://linkedin.com/in/Myilvaganan",
+          "https://github.com/Myilvaganan"
+        ]
+      }
+    </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
