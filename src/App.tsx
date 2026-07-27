@@ -14,6 +14,7 @@ import { CommandPalette } from '@/components/common/CommandPalette'
 import { useLenis } from '@/hooks/useLenis'
 import { useDisableContextMenu } from '@/hooks/useDisableContextMenu'
 import { useDisableCopy } from '@/hooks/useDisableCopy'
+import { useVisitNotify } from '@/hooks/useVisitNotify'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { Home } from '@/pages/Home'
 
@@ -27,6 +28,7 @@ function AppShell() {
   useLenis()
   useDisableContextMenu()
   useDisableCopy()
+  useVisitNotify()
 
   return (
     <div className="relative min-h-screen">

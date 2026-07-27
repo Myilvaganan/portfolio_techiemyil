@@ -1,0 +1,8 @@
+{
+  "name": "visit-alert-lambda",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AWS Lambda handler that sends a Telegram alert when a visitor loads techiemyil.com",
+  "main": "index.js",
+  "license": "UNLICENSED"
+}
