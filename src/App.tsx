@@ -8,6 +8,7 @@ import { CustomCursor } from '@/components/common/CustomCursor'
 import { ScrollProgressBar } from '@/components/common/ScrollProgressBar'
 import { BackToTop } from '@/components/common/BackToTop'
 import { ConnectFab } from '@/components/common/ConnectFab'
+import { MyvaChat } from '@/components/common/MyvaChat'
 import { LoadingScreen } from '@/components/common/LoadingScreen'
 import { CommandPalette } from '@/components/common/CommandPalette'
 import { useLenis } from '@/hooks/useLenis'
@@ -50,6 +51,7 @@ function AppShell() {
       <Footer />
       <BackToTop />
       <ConnectFab />
+      <MyvaChat />
     </div>
   )
 }
