@@ -7,8 +7,10 @@ function isEditableTarget(target: EventTarget | null) {
   return EDITABLE_TAGS.has(target.tagName) || target.isContentEditable
 }
 
-export function useDisableCopy() {
+export function useDisableCopy({ disabled = false }: { disabled?: boolean } = {}) {
   useEffect(() => {
+    if (disabled) return
+
     function handleCopyOrCut(e: ClipboardEvent) {
       if (isEditableTarget(e.target)) return
       e.preventDefault()
@@ -31,5 +33,5 @@ export function useDisableCopy() {
       document.removeEventListener('cut', handleCopyOrCut)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [disabled])
 }

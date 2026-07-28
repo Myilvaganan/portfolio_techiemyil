@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -22,13 +22,27 @@ const AtAGlance = lazy(() => import('@/pages/AtAGlance').then((m) => ({ default:
 const Blog = lazy(() => import('@/pages/Blog').then((m) => ({ default: m.Blog })))
 const Pricing = lazy(() => import('@/pages/Pricing').then((m) => ({ default: m.Pricing })))
 const Tools = lazy(() => import('@/pages/Tools').then((m) => ({ default: m.Tools })))
+const Admin = lazy(() => import('@/pages/Admin').then((m) => ({ default: m.Admin })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 
 function AppShell() {
+  const location = useLocation()
+  const isAdmin = location.pathname.startsWith('/admin')
+
   useLenis()
-  useDisableContextMenu()
-  useDisableCopy()
+  useDisableContextMenu({ disabled: isAdmin })
+  useDisableCopy({ disabled: isAdmin })
   useVisitNotify()
+
+  if (isAdmin) {
+    return (
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
+      </Suspense>
+    )
+  }
 
   return (
     <div className="relative min-h-screen">
