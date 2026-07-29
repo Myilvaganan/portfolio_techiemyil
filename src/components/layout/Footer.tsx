@@ -1,4 +1,5 @@
 import { Heart } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/Container'
 import { Logo } from '@/components/ui/Logo'
 import { navLinks } from '@/data/nav'
@@ -78,10 +79,15 @@ export function Footer() {
       <div className="border-t border-border py-6">
         <Container className="flex flex-col items-center justify-between gap-3 text-xs text-text-secondary sm:flex-row">
           <p>© {new Date().getFullYear()} {personal.name}. All Rights Reserved.</p>
-          <p className="flex items-center gap-1.5">
-            Built with React + TypeScript
-            <Heart className="h-3.5 w-3.5 fill-accent text-accent" />
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="flex items-center gap-1.5">
+              Built with React + TypeScript
+              <Heart className="h-3.5 w-3.5 fill-accent text-accent" />
+            </p>
+            <Link to="/admin" className="text-text-secondary/40 transition-colors hover:text-text-secondary">
+              Admin
+            </Link>
+          </div>
         </Container>
       </div>
     </footer>
