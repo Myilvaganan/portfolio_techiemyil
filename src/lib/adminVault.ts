@@ -63,6 +63,10 @@ export async function getDownloadUrl(key: string, mode: 'preview' | 'download'):
   return data.url
 }
 
+export async function deleteDocument(key: string): Promise<void> {
+  await adminFetch(`/admin/documents?key=${encodeURIComponent(key)}`, { method: 'DELETE' })
+}
+
 export async function uploadFile(uploadUrl: string, file: File) {
   const res = await fetch(uploadUrl, {
     method: 'PUT',

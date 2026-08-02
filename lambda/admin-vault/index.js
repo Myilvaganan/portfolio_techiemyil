@@ -4,7 +4,7 @@
 // See README.md in this folder for deployment instructions.
 
 const crypto = require('crypto')
-const { S3Client, ListObjectsV2Command, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3')
+const { S3Client, ListObjectsV2Command, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
@@ -37,7 +37,7 @@ function resolveOrigin(requestOrigin) {
 function corsHeaders(requestOrigin) {
   return {
     'Access-Control-Allow-Origin': resolveOrigin(requestOrigin),
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
     Vary: 'Origin',
   }
@@ -230,6 +230,17 @@ async function handleDownloadUrl(queryParams) {
   return { statusCode: 200, body: { url } }
 }
 
+async function handleDeleteDocument(queryParams) {
+  const key = queryParams.key
+
+  if (!isValidKey(key)) {
+    return { statusCode: 400, body: { error: 'A valid document key is required.' } }
+  }
+
+  await s3.send(new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key }))
+  return { statusCode: 200, body: { ok: true } }
+}
+
 // ---------- Entry point ----------
 
 exports.handler = async (event) => {
@@ -288,6 +299,11 @@ exports.handler = async (event) => {
 
     if (method === 'GET' && path === '/admin/documents/download-url') {
       const result = await handleDownloadUrl(queryParams)
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'DELETE' && path === '/admin/documents') {
+      const result = await handleDeleteDocument(queryParams)
       return respond(result.statusCode, result.body)
     }
 

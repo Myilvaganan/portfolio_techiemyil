@@ -19,7 +19,7 @@ This is already live in AWS account `905418329604` (ap-south-1):
 | Resource | Name / ID |
 |---|---|
 | Lambda function | `admin-vault` |
-| IAM execution role | `admin-vault-lambda-role` (`AWSLambdaBasicExecutionRole` + inline policy scoped to `s3:GetObject`/`s3:PutObject`/`s3:ListBucket` on the vault bucket only) |
+| IAM execution role | `admin-vault-lambda-role` (`AWSLambdaBasicExecutionRole` + inline policy scoped to `s3:GetObject`/`s3:PutObject`/`s3:DeleteObject`/`s3:ListBucket` on the vault bucket only) |
 | API Gateway (HTTP API) | `admin-vault-api` (`uie2mufwti`) |
 | Invoke URL | `https://uie2mufwti.execute-api.ap-south-1.amazonaws.com` |
 | S3 bucket | `techiemyil-admin-vault` (private, Block Public Access on, SSE-S3 default encryption, versioning on, TLS-only bucket policy) |
@@ -85,7 +85,7 @@ S3 keys, no PII.
    - Trust policy: `lambda.amazonaws.com`
    - Attach `AWSLambdaBasicExecutionRole`
    - Inline policy: `s3:ListBucket` on the bucket ARN, `s3:GetObject` +
-     `s3:PutObject` on `<bucket-arn>/*`
+     `s3:PutObject` + `s3:DeleteObject` on `<bucket-arn>/*`
 
 3. **Package and create the function**
    ```bash
@@ -107,7 +107,7 @@ S3 keys, no PII.
    ```bash
    aws apigatewayv2 create-api --name admin-vault-api --protocol-type HTTP \
      --target <lambda-arn> --region <region> \
-     --cors-configuration AllowOrigins=<origins>,AllowMethods=GET,POST,OPTIONS,AllowHeaders=Content-Type,Authorization
+     --cors-configuration AllowOrigins=<origins>,AllowMethods=GET,POST,DELETE,OPTIONS,AllowHeaders=Content-Type,Authorization
    ```
    This creates a `$default` route + auto-deployed `$default` stage pointing
    at the Lambda (payload format 2.0).
@@ -171,4 +171,7 @@ GET /admin/documents/download-url?key=<key>&mode=preview|download
 200 { "url": "<presigned S3 GET url, 2 min>" }
 # mode=download sets Content-Disposition: attachment; mode=preview (default)
 # sets inline, for use in an <iframe>/<img> preview.
+
+DELETE /admin/documents?key=<key>
+200 { "ok": true }
 ```

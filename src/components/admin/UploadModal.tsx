@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Loader2, UploadCloud, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -11,9 +11,10 @@ interface UploadModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploaded: () => void
+  initialTag?: string | null
 }
 
-export function UploadModal({ open, onOpenChange, onUploaded }: UploadModalProps) {
+export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: UploadModalProps) {
   const [tag, setTag] = useState<string>(VAULT_TAG_PRESETS[0])
   const [customTag, setCustomTag] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -29,6 +30,13 @@ export function UploadModal({ open, onOpenChange, onUploaded }: UploadModalProps
     setFile(null)
     setError(null)
   }
+
+  useEffect(() => {
+    if (!open || !initialTag) return
+    const isPreset = (VAULT_TAG_PRESETS as readonly string[]).includes(initialTag)
+    setTag(isPreset ? initialTag : CUSTOM_TAG_VALUE)
+    setCustomTag(isPreset ? '' : initialTag)
+  }, [open, initialTag])
 
   function handleOpenChange(next: boolean) {
     if (uploading) return
@@ -69,7 +77,9 @@ export function UploadModal({ open, onOpenChange, onUploaded }: UploadModalProps
           className="fixed left-1/2 top-1/2 z-[151] w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-2xl"
         >
           <div className="mb-5 flex items-center justify-between">
-            <Dialog.Title className="font-display text-lg font-semibold text-text">Upload Document</Dialog.Title>
+            <Dialog.Title className="font-display text-lg font-semibold text-text">
+              {initialTag ? `New folder: ${initialTag}` : 'Upload Document'}
+            </Dialog.Title>
             <Dialog.Close asChild>
               <button type="button" aria-label="Close" className="text-text-secondary hover:text-text">
                 <X className="h-4 w-4" />
@@ -101,6 +111,11 @@ export function UploadModal({ open, onOpenChange, onUploaded }: UploadModalProps
                   placeholder="e.g. Insurance"
                   className="mt-2 w-full rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-text outline-none transition-colors focus:border-accent/50"
                 />
+              )}
+              {initialTag && (
+                <p className="mt-2 text-xs text-text-secondary">
+                  Folders are created by uploading a first file into them.
+                </p>
               )}
             </div>
 

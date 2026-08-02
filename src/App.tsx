@@ -38,7 +38,7 @@ function AppShell() {
     return (
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/*" element={<Admin />} />
         </Routes>
       </Suspense>
     )
