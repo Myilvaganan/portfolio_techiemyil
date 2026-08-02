@@ -2,6 +2,9 @@
 // Deployed behind API Gateway (HTTP API) as a single POST route.
 // See README.md in this folder for deployment instructions.
 
+const crypto = require('crypto')
+const { DynamoDBClient, PutItemCommand } = require('@aws-sdk/client-dynamodb')
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID
 // Comma-separated list, e.g. "https://techiemyil.com,https://www.techiemyil.com".
@@ -11,6 +14,15 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
   .map((o) => o.trim())
   .filter(Boolean)
 const MAX_FIELD_LENGTH = 300
+
+// Server-side dedup so a new device always gets one alert per day even if
+// the client-side localStorage gate (src/lib/visit.ts) is bypassed by
+// incognito mode or cleared site data. Keyed by IP + User-Agent rather than
+// IP alone, so multiple devices behind the same NAT/router still each count
+// as "new".
+const DEDUP_TABLE = process.env.VISIT_DEDUP_TABLE || 'visit-dedup'
+const DEDUP_TTL_SECONDS = 2 * 24 * 60 * 60
+const ddb = new DynamoDBClient({})
 
 function resolveOrigin(requestOrigin) {
   if (ALLOWED_ORIGINS.includes('*')) return '*'
@@ -42,6 +54,36 @@ function clean(value) {
 
 function escapeHtml(value) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function getUserAgent(event) {
+  const headers = event.headers || {}
+  return headers['user-agent'] || headers['User-Agent'] || ''
+}
+
+// Resolves true only the first time this IP+User-Agent pair is seen today.
+// Fails open (treats as new) on DynamoDB errors, since a missed dedup just
+// means an extra Telegram message, while a false negative would silently
+// drop a real visit alert.
+async function isNewDeviceToday(sourceIp, userAgent) {
+  const today = new Date().toISOString().slice(0, 10)
+  const fingerprint = crypto.createHash('sha256').update(`${sourceIp}|${userAgent}`).digest('hex')
+  const expiresAt = Math.floor(Date.now() / 1000) + DEDUP_TTL_SECONDS
+
+  try {
+    await ddb.send(
+      new PutItemCommand({
+        TableName: DEDUP_TABLE,
+        Item: { pk: { S: `${fingerprint}#${today}` }, expiresAt: { N: String(expiresAt) } },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      })
+    )
+    return true
+  } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') return false
+    console.error('Visit dedup check failed, notifying anyway', err)
+    return true
+  }
 }
 
 async function sendTelegramNotification(text) {
@@ -91,6 +133,11 @@ exports.handler = async (event) => {
   const path = clean(payload.path) || '/'
   const referrer = clean(payload.referrer)
   const sourceIp = event.requestContext?.http?.sourceIp || event.requestContext?.identity?.sourceIp
+  const userAgent = getUserAgent(event)
+
+  if (!(await isNewDeviceToday(sourceIp, userAgent))) {
+    return respond(200, { ok: true, deduped: true })
+  }
 
   const lines = [
     '👀 <b>New visitor on techiemyil.com</b>',
