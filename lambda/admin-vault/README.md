@@ -23,7 +23,26 @@ This is already live in AWS account `905418329604` (ap-south-1):
 | API Gateway (HTTP API) | `admin-vault-api` (`uie2mufwti`) |
 | Invoke URL | `https://uie2mufwti.execute-api.ap-south-1.amazonaws.com` |
 | S3 bucket | `techiemyil-admin-vault` (private, Block Public Access on, SSE-S3 default encryption, versioning on, TLS-only bucket policy) |
-| `ALLOWED_ORIGINS` | `https://techiemyil.com,https://www.techiemyil.com,http://localhost:5173,http://localhost:4173` |
+| `ALLOWED_ORIGINS` | `https://techiemyil.com,https://www.techiemyil.com,https://portfolio.techiemyil.com,http://localhost:5173,http://localhost:4173` |
+
+**Two separate CORS configs must both list the site's origins, or uploads
+silently fail:** the Lambda's `ALLOWED_ORIGINS` / the API Gateway CORS config
+(covering `/admin/login`, `/admin/documents`, etc.) *and* the S3 bucket's own
+CORS rule (covering the direct browser→S3 `PUT` for uploads, which bypasses
+the Lambda entirely). The site is actually served from
+`https://portfolio.techiemyil.com` — that origin was missing from the S3
+bucket CORS rule while the Lambda/API Gateway had it, so login and listing
+worked but the upload `PUT` was silently blocked by the browser. Keep the S3
+bucket's `AllowedOrigins` in sync with `ALLOWED_ORIGINS` above:
+```bash
+aws s3api put-bucket-cors --bucket techiemyil-admin-vault --region ap-south-1 --cors-configuration '{
+  "CORSRules": [{
+    "AllowedHeaders": ["*"], "AllowedMethods": ["PUT"],
+    "AllowedOrigins": ["https://techiemyil.com","https://www.techiemyil.com","https://portfolio.techiemyil.com","http://localhost:5173","http://localhost:4173"],
+    "ExposeHeaders": ["ETag"], "MaxAgeSeconds": 3000
+  }]
+}'
+```
 
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_JWT_SECRET` are already set as
 real values on the function (the password was generated and shared with the
@@ -33,7 +52,7 @@ site owner directly — it is not recorded in this repo). To rotate them:
 aws lambda update-function-configuration \
   --function-name admin-vault \
   --region ap-south-1 \
-  --environment "Variables={ADMIN_USERNAME=<user>,ADMIN_PASSWORD=<new-password>,ADMIN_JWT_SECRET=<new-secret>,S3_BUCKET=techiemyil-admin-vault,ALLOWED_ORIGINS=https://techiemyil.com\,https://www.techiemyil.com\,http://localhost:5173\,http://localhost:4173}"
+  --environment "Variables={ADMIN_USERNAME=<user>,ADMIN_PASSWORD=<new-password>,ADMIN_JWT_SECRET=<new-secret>,S3_BUCKET=techiemyil-admin-vault,ALLOWED_ORIGINS=https://techiemyil.com\,https://www.techiemyil.com\,https://portfolio.techiemyil.com\,http://localhost:5173\,http://localhost:4173}"
 ```
 
 (`update-function-configuration` replaces the whole `Variables` map, so keep

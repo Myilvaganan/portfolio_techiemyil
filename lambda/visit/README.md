@@ -28,8 +28,16 @@ This is already live in AWS account `905418329604` (ap-south-1):
 | API Gateway (HTTP API) | `visit-alert-api` (`fn46m7ogx7`) |
 | Invoke URL | `https://fn46m7ogx7.execute-api.ap-south-1.amazonaws.com/visit` |
 | DynamoDB table | `visit-dedup` (on-demand billing, TTL enabled on `expiresAt`, ~2-day retention) |
-| `ALLOWED_ORIGINS` | `https://techiemyil.com,https://www.techiemyil.com,http://localhost:5173,http://localhost:4173` |
+| `ALLOWED_ORIGINS` | `https://techiemyil.com,https://www.techiemyil.com,https://portfolio.techiemyil.com,http://localhost:5173,http://localhost:4173` |
 | `VISIT_DEDUP_TABLE` | unset (defaults to `visit-dedup`) |
+
+The site is actually served from `https://portfolio.techiemyil.com` (an
+Amplify subdomain) — that origin must be in **both** this Lambda's
+`ALLOWED_ORIGINS` **and** the API Gateway's own CORS config (`aws apigatewayv2
+get-api --api-id fn46m7ogx7`), since API Gateway answers the CORS preflight
+itself before the Lambda ever runs. It was missing from both until
+2026-08-02, so visit alerts silently never fired for real production
+visitors — only requests from `techiemyil.com`/`www` got through.
 
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are already set as real values on the
 function. To rotate the bot token later:
@@ -38,7 +46,7 @@ function. To rotate the bot token later:
 aws lambda update-function-configuration \
   --function-name visit-alert \
   --region ap-south-1 \
-  --environment "Variables={TELEGRAM_BOT_TOKEN=<new-token>,TELEGRAM_CHAT_ID=<chat-id>,ALLOWED_ORIGINS=https://techiemyil.com\,https://www.techiemyil.com\,http://localhost:5173\,http://localhost:4173}"
+  --environment "Variables={TELEGRAM_BOT_TOKEN=<new-token>,TELEGRAM_CHAT_ID=<chat-id>,ALLOWED_ORIGINS=https://techiemyil.com\,https://www.techiemyil.com\,https://portfolio.techiemyil.com\,http://localhost:5173\,http://localhost:4173}"
 ```
 
 (`update-function-configuration` replaces the whole `Variables` map, so keep
