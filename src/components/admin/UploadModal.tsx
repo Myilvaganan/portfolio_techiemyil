@@ -7,9 +7,17 @@ import { getUploadUrl, uploadFile } from '@/lib/adminVault'
 import { addCustomCategory, getCustomCategories } from '@/lib/vaultCategories'
 import { VAULT_TAG_PRESETS } from '@/constants/vaultTags'
 
-function buildTagOptions(): string[] {
-  const custom = getCustomCategories().filter((c) => !(VAULT_TAG_PRESETS as readonly string[]).includes(c))
-  return [...VAULT_TAG_PRESETS, ...custom]
+function buildTagOptions(existingCategories: string[]): string[] {
+  const presets = VAULT_TAG_PRESETS as readonly string[]
+  const seen = new Set(presets.map((p) => p.toLowerCase()))
+  const extras: string[] = []
+  for (const label of [...existingCategories, ...getCustomCategories()]) {
+    const key = label.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    extras.push(label)
+  }
+  return [...presets, ...extras.sort((a, b) => a.localeCompare(b))]
 }
 
 const CUSTOM_TAG_VALUE = '__custom__'
@@ -32,16 +40,24 @@ interface UploadModalProps {
   onUploaded: () => void
   initialTag?: string | null
   initialFile?: File | null
+  existingCategories?: string[]
 }
 
-export function UploadModal({ open, onOpenChange, onUploaded, initialTag, initialFile }: UploadModalProps) {
+export function UploadModal({
+  open,
+  onOpenChange,
+  onUploaded,
+  initialTag,
+  initialFile,
+  existingCategories = [],
+}: UploadModalProps) {
   const [tag, setTag] = useState<string>(VAULT_TAG_PRESETS[0])
   const [customTag, setCustomTag] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
-  const [tagOptions, setTagOptions] = useState<string[]>(buildTagOptions)
+  const [tagOptions, setTagOptions] = useState<string[]>(() => buildTagOptions(existingCategories))
   const dragCounter = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -59,13 +75,14 @@ export function UploadModal({ open, onOpenChange, onUploaded, initialTag, initia
 
   useEffect(() => {
     if (!open) return
-    setTagOptions(buildTagOptions())
+    setTagOptions(buildTagOptions(existingCategories))
     if (initialTag) {
       const isPreset = (VAULT_TAG_PRESETS as readonly string[]).includes(initialTag)
       setTag(isPreset ? initialTag : CUSTOM_TAG_VALUE)
       setCustomTag(isPreset ? '' : initialTag)
     }
     if (initialFile) setFile(initialFile)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialTag, initialFile])
 
   function handleOpenChange(next: boolean) {

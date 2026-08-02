@@ -585,6 +585,7 @@ export function DocumentManager() {
         onOpenChange={setUploadOpen}
         initialTag={uploadPrefillTag}
         initialFile={uploadPrefillFile}
+        existingCategories={categories.map(tagLabel)}
         onUploaded={() => {
           setUploadOpen(false)
           refresh()
