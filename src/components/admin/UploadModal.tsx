@@ -1,25 +1,49 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Loader2, UploadCloud, X } from 'lucide-react'
+import { File as FileIcon, Loader2, UploadCloud, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
 import { getUploadUrl, uploadFile } from '@/lib/adminVault'
+import { addCustomCategory, getCustomCategories } from '@/lib/vaultCategories'
 import { VAULT_TAG_PRESETS } from '@/constants/vaultTags'
 
+function buildTagOptions(): string[] {
+  const custom = getCustomCategories().filter((c) => !(VAULT_TAG_PRESETS as readonly string[]).includes(c))
+  return [...VAULT_TAG_PRESETS, ...custom]
+}
+
 const CUSTOM_TAG_VALUE = '__custom__'
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB']
+  let value = bytes / 1024
+  let unitIndex = 0
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024
+    unitIndex += 1
+  }
+  return `${value.toFixed(1)} ${units[unitIndex]}`
+}
 
 interface UploadModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploaded: () => void
   initialTag?: string | null
+  initialFile?: File | null
 }
 
-export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: UploadModalProps) {
+export function UploadModal({ open, onOpenChange, onUploaded, initialTag, initialFile }: UploadModalProps) {
   const [tag, setTag] = useState<string>(VAULT_TAG_PRESETS[0])
   const [customTag, setCustomTag] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dragActive, setDragActive] = useState(false)
+  const [tagOptions, setTagOptions] = useState<string[]>(buildTagOptions)
+  const dragCounter = useRef(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isCustom = tag === CUSTOM_TAG_VALUE
   const effectiveTag = isCustom ? customTag : tag
@@ -29,19 +53,57 @@ export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: Uplo
     setCustomTag('')
     setFile(null)
     setError(null)
+    setDragActive(false)
+    dragCounter.current = 0
   }
 
   useEffect(() => {
-    if (!open || !initialTag) return
-    const isPreset = (VAULT_TAG_PRESETS as readonly string[]).includes(initialTag)
-    setTag(isPreset ? initialTag : CUSTOM_TAG_VALUE)
-    setCustomTag(isPreset ? '' : initialTag)
-  }, [open, initialTag])
+    if (!open) return
+    setTagOptions(buildTagOptions())
+    if (initialTag) {
+      const isPreset = (VAULT_TAG_PRESETS as readonly string[]).includes(initialTag)
+      setTag(isPreset ? initialTag : CUSTOM_TAG_VALUE)
+      setCustomTag(isPreset ? '' : initialTag)
+    }
+    if (initialFile) setFile(initialFile)
+  }, [open, initialTag, initialFile])
 
   function handleOpenChange(next: boolean) {
     if (uploading) return
     onOpenChange(next)
     if (!next) reset()
+  }
+
+  function handleDragEnter(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!e.dataTransfer.types.includes('Files')) return
+    dragCounter.current += 1
+    setDragActive(true)
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  function handleDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current = Math.max(0, dragCounter.current - 1)
+    if (dragCounter.current === 0) setDragActive(false)
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current = 0
+    setDragActive(false)
+    const dropped = e.dataTransfer.files?.[0]
+    if (dropped) {
+      setFile(dropped)
+      setError(null)
+    }
   }
 
   async function handleUpload() {
@@ -59,6 +121,7 @@ export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: Uplo
     try {
       const { uploadUrl } = await getUploadUrl(file.name, effectiveTag, file.type)
       await uploadFile(uploadUrl, file)
+      if (isCustom) addCustomCategory(effectiveTag)
       reset()
       onUploaded()
     } catch (err) {
@@ -95,7 +158,7 @@ export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: Uplo
                 onChange={(e) => setTag(e.target.value)}
                 className="w-full appearance-none rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-text outline-none transition-colors focus:border-accent/50"
               >
-                {VAULT_TAG_PRESETS.map((preset) => (
+                {tagOptions.map((preset) => (
                   <option key={preset} value={preset} className="bg-card">
                     {preset}
                   </option>
@@ -121,11 +184,50 @@ export function UploadModal({ open, onOpenChange, onUploaded, initialTag }: Uplo
 
             <div>
               <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-secondary">File</label>
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-sm text-text-secondary file:mr-3 file:rounded-full file:border-0 file:bg-surface-3 file:px-4 file:py-2 file:text-xs file:font-medium file:text-text hover:file:bg-surface-5"
-              />
+              <div
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                data-cursor="hover"
+                className={cn(
+                  'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors',
+                  dragActive ? 'border-accent bg-accent/10' : 'border-border bg-surface-2 hover:border-accent/40',
+                )}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+                {file ? (
+                  <>
+                    <FileIcon className="h-6 w-6 text-accent" />
+                    <p className="max-w-full truncate text-sm font-medium text-text">{file.name}</p>
+                    <p className="text-xs text-text-secondary">{formatBytes(file.size)}</p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setFile(null)
+                      }}
+                      className="mt-1 text-xs font-medium text-error hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-6 w-6 text-text-secondary" />
+                    <p className="text-sm text-text">
+                      <span className="font-medium text-accent">Click to browse</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-text-secondary">Any file type</p>
+                  </>
+                )}
+              </div>
             </div>
 
             {error && <p className="text-xs text-error">{error}</p>}

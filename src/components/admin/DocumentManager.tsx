@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -27,7 +27,8 @@ import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { cn } from '@/lib/utils'
 import { deleteDocument, getDownloadUrl, listDocuments, type VaultDocument } from '@/lib/adminVault'
-import { tagLabel } from '@/constants/vaultTags'
+import { addCustomCategory, getCustomCategories } from '@/lib/vaultCategories'
+import { slugifyTag, tagLabel } from '@/constants/vaultTags'
 import { UploadModal } from './UploadModal'
 import { PreviewModal } from './PreviewModal'
 
@@ -165,10 +166,14 @@ export function DocumentManager() {
   const [page, setPage] = useState(1)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploadPrefillTag, setUploadPrefillTag] = useState<string | null>(null)
+  const [uploadPrefillFile, setUploadPrefillFile] = useState<File | null>(null)
   const [previewDoc, setPreviewDoc] = useState<VaultDocument | null>(null)
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<VaultDocument | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [pageDragActive, setPageDragActive] = useState(false)
+  const pageDragCounter = useRef(0)
+  const [customCategories, setCustomCategories] = useState<string[]>(() => getCustomCategories())
 
   async function refresh() {
     setLoading(true)
@@ -190,9 +195,11 @@ export function DocumentManager() {
   }, [])
 
   const categories = useMemo(() => {
-    const unique = Array.from(new Set(documents.map((d) => d.tag)))
+    const fromDocs = documents.map((d) => d.tag)
+    const fromCustom = customCategories.map((c) => slugifyTag(c))
+    const unique = Array.from(new Set([...fromDocs, ...fromCustom]))
     return unique.sort((a, b) => tagLabel(a).localeCompare(tagLabel(b)))
-  }, [documents])
+  }, [documents, customCategories])
 
   const fileTypes = useMemo(() => {
     const unique = Array.from(new Set(documents.map((d) => getExtension(d.filename)).filter(Boolean)))
@@ -234,12 +241,44 @@ export function DocumentManager() {
   function handleNewFolder() {
     const name = window.prompt('Category name for the new folder:')
     if (!name || !name.trim()) return
+    addCustomCategory(name.trim())
+    setCustomCategories(getCustomCategories())
     setUploadPrefillTag(name.trim())
+    setUploadPrefillFile(null)
     setUploadOpen(true)
   }
 
   function openUpload() {
     setUploadPrefillTag(null)
+    setUploadPrefillFile(null)
+    setUploadOpen(true)
+  }
+
+  function handlePageDragEnter(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    if (!e.dataTransfer.types.includes('Files')) return
+    pageDragCounter.current += 1
+    setPageDragActive(true)
+  }
+
+  function handlePageDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+  }
+
+  function handlePageDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    pageDragCounter.current = Math.max(0, pageDragCounter.current - 1)
+    if (pageDragCounter.current === 0) setPageDragActive(false)
+  }
+
+  function handlePageDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    pageDragCounter.current = 0
+    setPageDragActive(false)
+    const dropped = e.dataTransfer.files?.[0]
+    if (!dropped) return
+    setUploadPrefillTag(null)
+    setUploadPrefillFile(dropped)
     setUploadOpen(true)
   }
 
@@ -270,7 +309,22 @@ export function DocumentManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className="relative space-y-6"
+      onDragEnter={handlePageDragEnter}
+      onDragOver={handlePageDragOver}
+      onDragLeave={handlePageDragLeave}
+      onDrop={handlePageDrop}
+    >
+      {pageDragActive && (
+        <div className="pointer-events-none fixed inset-0 z-[140] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-accent bg-card px-12 py-10 text-center">
+            <UploadCloud className="h-8 w-8 text-accent" />
+            <p className="text-sm font-medium text-text">Drop to upload</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold text-text">Document Manager</h1>
@@ -530,6 +584,7 @@ export function DocumentManager() {
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         initialTag={uploadPrefillTag}
+        initialFile={uploadPrefillFile}
         onUploaded={() => {
           setUploadOpen(false)
           refresh()
