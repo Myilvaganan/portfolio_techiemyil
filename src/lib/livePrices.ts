@@ -37,3 +37,21 @@ export async function fetchLivePrices(): Promise<Partial<Record<InstrumentId, nu
   })
   return prices
 }
+
+// Two independent providers so one outage doesn't leave the rate stale.
+const USD_INR_SOURCES: Array<() => Promise<number | null>> = [
+  async () => (await getJson('https://open.er-api.com/v6/latest/USD'))?.rates?.INR ?? null,
+  async () => (await getJson('https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR'))?.rates?.INR ?? null,
+]
+
+export async function fetchUsdInr(): Promise<number | null> {
+  for (const source of USD_INR_SOURCES) {
+    try {
+      const rate = await source()
+      if (typeof rate === 'number' && Number.isFinite(rate) && rate > 0) return rate
+    } catch {
+      // try the next provider
+    }
+  }
+  return null
+}

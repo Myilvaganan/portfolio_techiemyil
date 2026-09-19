@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
-import { fetchLivePrices } from '@/lib/livePrices'
+import { fetchLivePrices, fetchUsdInr } from '@/lib/livePrices'
 import {
   DEFAULT_LEVERAGE,
+  FALLBACK_USD_INR,
   INSTRUMENTS,
   LEVERAGE_OPTIONS,
   LOT_MAX,
@@ -31,6 +32,18 @@ function signed(n: number, decimals = 2) {
   return `${n >= 0 ? '+' : '-'}$${fmt(Math.abs(n), decimals)}`
 }
 
+// Small grey rupee equivalent shown under every USD amount. Takes a signed USD
+// value so losses and profits keep their sign.
+function toInr(usd: number, rate: number) {
+  const inr = usd * rate
+  const abs = Math.abs(inr)
+  const text = abs.toLocaleString('en-IN', {
+    minimumFractionDigits: abs >= 10000 ? 0 : 2,
+    maximumFractionDigits: abs >= 10000 ? 0 : 2,
+  })
+  return `≈ ${inr < 0 ? '-' : ''}₹${text}`
+}
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -43,12 +56,14 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function Stat({
   label,
   value,
+  inr,
   sub,
   className,
   valueClassName,
 }: {
   label: string
   value: string
+  inr?: string
   sub?: string
   className?: string
   valueClassName?: string
@@ -57,6 +72,7 @@ function Stat({
     <div className={cn('rounded-xl border border-border bg-surface-2 p-3 text-center', className)}>
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
       <p className={cn('mt-1.5 font-mono text-2xl font-bold text-text', valueClassName)}>{value}</p>
+      {inr && <p className="mt-0.5 font-mono text-[11px] text-text-secondary/60">{inr}</p>}
       {sub && <p className="mt-1 text-[11px] text-text-secondary/70">{sub}</p>}
     </div>
   )
@@ -83,6 +99,11 @@ export function MarginCalculator() {
     ) as Record<InstrumentId, { price: number; status: PriceStatus }>,
   )
 
+  const [usdInr, setUsdInr] = useState<{ rate: number; status: PriceStatus }>({
+    rate: FALLBACK_USD_INR,
+    status: 'loading',
+  })
+
   // null = follow the instrument's price; a string = the user typed their own.
   const [priceOverride, setPriceOverride] = useState<string | null>(null)
   const [pnlEntryOverride, setPnlEntryOverride] = useState<string | null>(null)
@@ -107,6 +128,10 @@ export function MarginCalculator() {
         }
         return next
       })
+    })
+    fetchUsdInr().then((rate) => {
+      if (cancelled) return
+      setUsdInr((prev) => (rate ? { rate, status: 'live' } : { ...prev, status: 'est' }))
     })
     return () => {
       cancelled = true
@@ -161,6 +186,7 @@ export function MarginCalculator() {
         ? `${liveCount}/${INSTRUMENT_IDS.length} live · others estimated`
         : 'Manual mode — edit the entry price below'
 
+  const inr = (usd: number) => toInr(usd, usdInr.rate)
   const riskPercentColor = risk.percent > 3 ? 'text-error' : risk.percent > 2 ? 'text-amber-500' : 'text-accent'
 
   return (
@@ -176,6 +202,16 @@ export function MarginCalculator() {
             )}
           />
           {badgeText}
+        </div>
+        <div className="ml-2 mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs text-text-secondary">
+          <span
+            className={cn(
+              'h-2 w-2 rounded-full',
+              usdInr.status === 'loading' ? 'animate-pulse bg-amber-500' : usdInr.status === 'live' ? 'bg-accent' : 'bg-amber-500',
+            )}
+          />
+          1 USD = ₹{fmt(usdInr.rate)}
+          {usdInr.status === 'est' && ' (est)'}
         </div>
       </div>
 
@@ -315,13 +351,15 @@ export function MarginCalculator() {
             className="col-span-2 border-accent/40 bg-accent/5"
             label="Margin required"
             value={`$${fmt(marginResult.margin)}`}
+            inr={inr(marginResult.margin)}
             sub={`at 1:${leverage} leverage`}
             valueClassName="text-3xl text-accent"
           />
-          <Stat label="Position value" value={`$${fmt(marginResult.positionValue, 0)}`} sub="Total exposure" />
+          <Stat label="Position value" value={`$${fmt(marginResult.positionValue, 0)}`} inr={inr(marginResult.positionValue)} sub="Total exposure" />
           <Stat
             label="Point value"
             value={`$${fmt(marginResult.pointValue)}`}
+            inr={inr(marginResult.pointValue)}
             sub="per 1 pt move"
             valueClassName="text-amber-500"
           />
@@ -375,12 +413,14 @@ export function MarginCalculator() {
           <Stat
             label="✅ TP profit"
             value={signed(pnl.tpProfit)}
+            inr={inr(pnl.tpProfit)}
             sub={`${fmt(Math.abs(pnl.tpPoints), 0)} pts`}
             valueClassName={pnl.tpProfit >= 0 ? 'text-accent' : 'text-error'}
           />
           <Stat
             label="❌ SL loss"
             value={`-$${fmt(pnl.slLoss)}`}
+            inr={inr(-pnl.slLoss)}
             sub={`${fmt(Math.abs(pnl.slPoints), 0)} pts`}
             valueClassName="text-error"
           />
@@ -422,6 +462,7 @@ export function MarginCalculator() {
               value={balance}
               onChange={(e) => setBalance(e.target.value)}
             />
+            <span className="font-mono text-[11px] text-text-secondary/60">{inr(parseFloat(balance) || 0)}</span>
           </Field>
           <Field label="SL in points">
             <input
@@ -439,10 +480,11 @@ export function MarginCalculator() {
           <Stat
             label="Dollar risk (SL hit)"
             value={`$${fmt(risk.dollarRisk)}`}
+            inr={inr(risk.dollarRisk)}
             sub={`${fmt(risk.percent)}% of balance`}
             valueClassName="text-error"
           />
-          <Stat label="Reward @ 1:2" value={`$${fmt(risk.reward)}`} sub="if target = 2× SL" valueClassName="text-accent" />
+          <Stat label="Reward @ 1:2" value={`$${fmt(risk.reward)}`} inr={inr(risk.reward)} sub="if target = 2× SL" valueClassName="text-accent" />
         </div>
         <p className={cn('mt-2 text-center text-xs font-medium', riskPercentColor)}>
           {fmt(risk.percent)}% of balance at risk

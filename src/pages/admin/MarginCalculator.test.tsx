@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MarginCalculator } from './MarginCalculator'
-import { fetchLivePrices } from '@/lib/livePrices'
+import { fetchLivePrices, fetchUsdInr } from '@/lib/livePrices'
 
-vi.mock('@/lib/livePrices', () => ({ fetchLivePrices: vi.fn() }))
+vi.mock('@/lib/livePrices', () => ({ fetchLivePrices: vi.fn(), fetchUsdInr: vi.fn() }))
 
 describe('MarginCalculator', () => {
   beforeEach(() => {
     vi.mocked(fetchLivePrices).mockResolvedValue({})
+    vi.mocked(fetchUsdInr).mockResolvedValue(null)
   })
 
   it('shows the default gold margin: 0.10 lot at 4378 with 1:1000', async () => {
@@ -69,5 +70,34 @@ describe('MarginCalculator', () => {
     // 0.1 lot × 1 BTC × 63000 ÷ 1000
     expect(screen.getByText('$6.30')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('your TP')).toHaveValue(null)
+  })
+
+  describe('INR equivalents', () => {
+    it('shows the live USD→INR rate and converts margin with it', async () => {
+      vi.mocked(fetchUsdInr).mockResolvedValue(100)
+      render(<MarginCalculator />)
+
+      expect(await screen.findByText('1 USD = ₹100.00')).toBeInTheDocument()
+      // margin $43.78 × 100
+      expect(screen.getByText('≈ ₹4,378.00')).toBeInTheDocument()
+    })
+
+    it('falls back to an estimated rate and says so when the fetch fails', async () => {
+      render(<MarginCalculator />)
+
+      expect(await screen.findByText(/\(est\)/)).toBeInTheDocument()
+      expect(screen.getByText(/1 USD = ₹96\.00/)).toBeInTheDocument()
+    })
+
+    it('keeps the sign on a stop-loss loss', async () => {
+      vi.mocked(fetchUsdInr).mockResolvedValue(100)
+      const user = userEvent.setup()
+      render(<MarginCalculator />)
+
+      await user.type(screen.getByPlaceholderText('your SL'), '4373')
+
+      // SL loss $50.00 × 100
+      expect(screen.getByText('≈ -₹5,000.00')).toBeInTheDocument()
+    })
   })
 })

@@ -21,6 +21,9 @@ export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
 export const LEVERAGE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000] as const
 export const DEFAULT_LEVERAGE = 1000
 
+/** Shown (marked as estimated) until the live USD→INR rate arrives or if it can't be fetched. */
+export const FALLBACK_USD_INR = 96
+
 export const LOT_MIN = 0.01
 export const LOT_MAX = 5
 
