@@ -15,7 +15,7 @@ const KNOWLEDGE_BASE = `
 - Contact email: connect@techiemyil.com
 - Phone: +91 6374517254
 - Availability: Available for freelance work
-- Links: LinkedIn (linkedin.com/in/Myilvaganan), GitHub (github.com/Myilvaganan), Portfolio (portfolio.techiemyil.com), Studio (studio.techiemyil.com), WhatsApp, Telegram (@techiemyil)
+- Links: LinkedIn (linkedin.com/in/Myilvaganan), GitHub (github.com/Myilvaganan), Portfolio (portfolio.techiemyil.com), Studio (studio.techiemyil.com), WhatsApp, Telegram (@techiemyil), Instagram (@techiemyil)
 
 ## Summary
 Results-driven Senior Software Engineer and Technical Lead with 7+ years of experience architecting and delivering production-grade full-stack applications, leading cross-functional engineering teams, and integrating AI-powered systems into enterprise platforms.

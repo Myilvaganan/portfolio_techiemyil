@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Mail, Download, ArrowRight } from 'lucide-react'
-import { FaGithub, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
+import { FaGithub, FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { navLinks } from '@/data/nav'
 import { personal } from '@/data/personal'
 import { getLenis } from '@/hooks/useLenis'
@@ -104,6 +104,16 @@ export function CommandPalette() {
         action: () => {
           setOpen(false)
           window.open(personal.links.telegram, '_blank')
+        },
+      },
+      {
+        id: 'instagram',
+        label: 'Open Instagram',
+        hint: 'External',
+        icon: FaInstagram,
+        action: () => {
+          setOpen(false)
+          window.open(personal.links.instagram, '_blank')
         },
       },
       {

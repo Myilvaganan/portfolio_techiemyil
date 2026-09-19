@@ -22,5 +22,6 @@ export const personal = {
     studio: 'https://studio.techiemyil.com',
     whatsapp: 'https://wa.me/916374517254',
     telegram: 'https://t.me/techiemyil',
+    instagram: 'https://instagram.com/techiemyil',
   },
 } as const
