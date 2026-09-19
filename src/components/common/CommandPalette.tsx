@@ -7,7 +7,7 @@ import { FaGithub, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { navLinks } from '@/data/nav'
 import { personal } from '@/data/personal'
 import { getLenis } from '@/hooks/useLenis'
-import { openResume } from '@/lib/resume'
+import { useResumeDownload } from '@/hooks/useResumeDownload'
 import type { IconComponent } from '@/types'
 
 interface CommandItem {
@@ -22,6 +22,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
+  const { requestResume } = useResumeDownload()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -62,7 +63,7 @@ export function CommandPalette() {
         icon: Download,
         action: () => {
           setOpen(false)
-          openResume()
+          requestResume()
         },
       },
       {

@@ -16,6 +16,7 @@ import { useDisableContextMenu } from '@/hooks/useDisableContextMenu'
 import { useDisableCopy } from '@/hooks/useDisableCopy'
 import { useVisitNotify } from '@/hooks/useVisitNotify'
 import { ThemeProvider } from '@/hooks/useTheme'
+import { ResumeDownloadProvider } from '@/hooks/useResumeDownload'
 import { Home } from '@/pages/Home'
 
 const AtAGlance = lazy(() => import('@/pages/AtAGlance').then((m) => ({ default: m.AtAGlance })))
@@ -77,7 +78,9 @@ function App() {
     <ThemeProvider>
       <HelmetProvider>
         <BrowserRouter>
-          <AppShell />
+          <ResumeDownloadProvider>
+            <AppShell />
+          </ResumeDownloadProvider>
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>

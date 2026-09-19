@@ -11,7 +11,7 @@ import { useActiveSection } from '@/hooks/useActiveSection'
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll'
 import { getLenis } from '@/hooks/useLenis'
 import { cn } from '@/lib/utils'
-import { openResume } from '@/lib/resume'
+import { useResumeDownload } from '@/hooks/useResumeDownload'
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
@@ -19,6 +19,7 @@ export function Header() {
   const activeId = useActiveSection(navLinks.map((l) => l.href.replace('#', '')))
   const location = useLocation()
   const navigate = useNavigate()
+  const { requestResume } = useResumeDownload()
 
   useLockBodyScroll(mobileOpen)
 
@@ -126,7 +127,7 @@ export function Header() {
             </button>
             <Button
               size="sm"
-              onClick={() => openResume()}
+              onClick={requestResume}
               className="shadow-[0_0_20px_2px_rgba(34,197,94,0.3)]"
             >
               <Download className="h-4 w-4" />
@@ -189,7 +190,13 @@ export function Header() {
                   </span>
                 </Link>
               </motion.div>
-              <Button onClick={() => openResume()} className="mt-4">
+              <Button
+                onClick={() => {
+                  setMobileOpen(false)
+                  requestResume()
+                }}
+                className="mt-4"
+              >
                 <Download className="h-4 w-4" />
                 Download Resume
               </Button>

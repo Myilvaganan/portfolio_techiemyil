@@ -1,7 +1,14 @@
 # Visit Alert Lambda
 
-Sends a Telegram message to the site owner whenever a visitor loads
-techiemyil.com — once per device per day. Deduped two ways:
+Two routes on one function:
+
+- `POST /visit` — sends a Telegram message to the site owner whenever a
+  visitor loads techiemyil.com, once per device per day (dedup below).
+- `POST /download` — sends a Telegram message **and** an email (SES) whenever
+  someone downloads the resume, saying who they are (name required; email and
+  reason optional). See [Resume download alerts](#resume-download-alerts).
+
+The visit alert is deduped two ways:
 
 - Client-side in [`src/lib/visit.ts`](../../src/lib/visit.ts) via
   `localStorage`, so refreshes and route changes within the same day don't
@@ -103,6 +110,54 @@ all three keys in the command.)
 5. **Wire it into the frontend**
    - Set `VITE_VISIT_API_URL` in the site's `.env` to `<invoke-url>/visit`
 
+## Resume download alerts
+
+The resume buttons (hero, header, command palette) open a dialog
+([`ResumeDownloadModal`](../../src/components/common/ResumeDownloadModal.tsx))
+before the download. It POSTs to `/download` and then opens the resume
+regardless of whether the alert succeeded.
+
+Telegram and email are sent independently: the request returns `200` if
+either succeeds and `500` only if both fail, so one flaky channel (e.g. SES
+sandbox rejecting the recipient) doesn't lose the alert. There is no dedup —
+every download is reported.
+
+Extra setup this route needs on top of the visit alert:
+
+1. **IAM** — the execution role (`myva-lambda-role`) needs `ses:SendEmail`
+   on the sender identity:
+   ```bash
+   aws iam put-role-policy --role-name myva-lambda-role --policy-name download-alert-ses \
+     --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"ses:SendEmail","Resource":"arn:aws:ses:ap-south-1:905418329604:identity/*"}]}'
+   ```
+2. **API Gateway** — add `POST /download` to `visit-alert-api` (`fn46m7ogx7`)
+   pointing at the same Lambda integration as `POST /visit`. The API's
+   existing CORS config already covers it.
+   ```bash
+   INTEGRATION=$(aws apigatewayv2 get-routes --api-id fn46m7ogx7 --region ap-south-1 \
+     --query "Items[?RouteKey=='POST /visit'].Target" --output text)
+   aws apigatewayv2 create-route --api-id fn46m7ogx7 --region ap-south-1 \
+     --route-key 'POST /download' --target "$INTEGRATION"
+   ```
+   The Lambda's invoke permission is scoped per route, so a new route also
+   needs its own grant — without it API Gateway returns a bare
+   `{"message":"Internal Server Error"}` and the Lambda never runs:
+   ```bash
+   aws lambda add-permission --function-name visit-alert --region ap-south-1 \
+     --statement-id apigateway-invoke-download --action lambda:InvokeFunction \
+     --principal apigateway.amazonaws.com \
+     --source-arn "arn:aws:execute-api:ap-south-1:905418329604:fn46m7ogx7/*/*/download"
+   ```
+3. **Env vars** (all optional):
+   - `DOWNLOAD_EMAIL_FROM` — SES-verified sender, default `support@techiemyil.com`
+   - `DOWNLOAD_EMAIL_TO` — recipient, default `support@techiemyil.com`. While
+     SES is in sandbox mode this must also be a verified identity.
+   - `SES_REGION` — defaults to the Lambda's region
+4. **Frontend** — `VITE_DOWNLOAD_API_URL=<invoke-url>/download` in `.env`.
+
+`@aws-sdk/client-ses` ships in the Node 20 runtime, so still no
+`node_modules` to bundle.
+
 ## Redeploying code after edits
 
 ```bash
@@ -124,8 +179,17 @@ POST /visit
 200 { "ok": true }
 200 { "ok": true, "deduped": true }  # same device already notified today, no Telegram message sent
 4xx/5xx { "error": "..." }
+
+POST /download
+{ "name": "Jane", "email": "jane@acme.com", "reason": "Recruiter / HR — hiring for a role", "reasonDetail": "" }
+
+200 { "ok": true }
+400 { "error": "Name is required." }
+500 { "error": "Failed to send download alert." }  # both Telegram and email failed
 ```
 
-Both fields are optional. The visitor's IP is read from the API Gateway
+For `/visit` both fields are optional. For `/download` only `name` is required;
+an `email` that doesn't look like an address is dropped rather than rejected.
+The visitor's IP is read from the API Gateway
 request context, not the request body. The "device" for dedup purposes is
 `sourceIp + User-Agent`.

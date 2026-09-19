@@ -9,7 +9,7 @@ import { HeroStats } from './HeroStats'
 import { personal } from '@/data/personal'
 import { socials } from '@/data/socials'
 import { getLenis } from '@/hooks/useLenis'
-import { openResume } from '@/lib/resume'
+import { useResumeDownload } from '@/hooks/useResumeDownload'
 
 const container = {
   hidden: {},
@@ -24,6 +24,7 @@ const item = {
 }
 
 export function Hero() {
+  const { requestResume } = useResumeDownload()
   const [roleIndex, setRoleIndex] = useState(0)
 
   useEffect(() => {
@@ -81,7 +82,7 @@ export function Hero() {
               View Projects
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
-            <Button variant="secondary" onClick={() => openResume()}>
+            <Button variant="secondary" onClick={requestResume}>
               <Download className="h-4 w-4" />
               Download Resume
             </Button>
