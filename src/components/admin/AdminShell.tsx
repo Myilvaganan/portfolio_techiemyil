@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Archive,
   Bell,
+  Calculator,
   Briefcase,
   Code2,
   Download,
@@ -57,6 +58,10 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Documents',
     items: [{ label: 'Document Manager', to: '/admin/documents', icon: FolderOpen }],
+  },
+  {
+    label: 'Tools',
+    items: [{ label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator }],
   },
   {
     label: 'Settings',
