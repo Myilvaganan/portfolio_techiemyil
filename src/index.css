@@ -242,6 +242,24 @@ html.has-custom-cursor * {
   cursor: none !important;
 }
 
+/* The custom cursor is drawn beneath modal dialogs (z-100 vs z-150), so inside
+   one the native pointer has to come back or there is no cursor at all. */
+html.has-custom-cursor [data-native-cursor],
+html.has-custom-cursor [data-native-cursor] * {
+  cursor: auto !important;
+}
+
+html.has-custom-cursor [data-native-cursor] input,
+html.has-custom-cursor [data-native-cursor] textarea {
+  cursor: text !important;
+}
+
+html.has-custom-cursor [data-native-cursor] button,
+html.has-custom-cursor [data-native-cursor] select,
+html.has-custom-cursor [data-native-cursor] label {
+  cursor: pointer !important;
+}
+
 @media (max-width: 768px) {
   html.has-custom-cursor,
   html.has-custom-cursor * {

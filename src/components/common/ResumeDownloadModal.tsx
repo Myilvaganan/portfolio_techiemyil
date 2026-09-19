@@ -50,8 +50,9 @@ export function ResumeDownloadModal({ open, onOpenChange }: ResumeDownloadModalP
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay data-native-cursor className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm" />
         <Dialog.Content
+          data-native-cursor
           aria-describedby="resume-download-desc"
           className="fixed left-1/2 top-1/2 z-[151] max-h-[92vh] w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-2xl"
         >
