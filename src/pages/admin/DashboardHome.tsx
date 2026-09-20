@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calculator, ExternalLink, FolderOpen, HardDrive, PieChart, Tags, TrendingUp } from 'lucide-react'
+import { BarChart3, Calculator, ExternalLink, FolderOpen, HardDrive, PieChart, Tags, TrendingUp } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
@@ -46,6 +46,7 @@ const QUICK_ACTIONS = [
   { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
   { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
   { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
+  { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
 ]
 
 export function DashboardHome() {
@@ -91,7 +92,7 @@ export function DashboardHome() {
 
       <div>
         <h2 className="mb-4 font-display text-lg font-semibold text-text">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.to}

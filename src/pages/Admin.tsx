@@ -9,6 +9,7 @@ import { DashboardHome } from '@/pages/admin/DashboardHome'
 import { MarginCalculator } from '@/pages/admin/MarginCalculator'
 import { PortfolioRebalance } from '@/pages/admin/PortfolioRebalance'
 import { ZerodhaDashboard } from '@/pages/admin/ZerodhaDashboard'
+import { OptionsAnalytics } from '@/pages/admin/OptionsAnalytics'
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
@@ -28,6 +29,7 @@ export function Admin() {
               <Route path="margin-calculator" element={<MarginCalculator />} />
               <Route path="portfolio-rebalance" element={<PortfolioRebalance />} />
               <Route path="zerodha" element={<ZerodhaDashboard />} />
+              <Route path="options-analytics" element={<OptionsAnalytics />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </AdminShell>
