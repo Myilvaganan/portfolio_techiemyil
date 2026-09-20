@@ -20,8 +20,7 @@ type PriceStatus = 'loading' | 'live' | 'est'
 
 const INSTRUMENT_IDS = Object.keys(INSTRUMENTS) as InstrumentId[]
 const QUICK_LOTS = [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2]
-// India taxes crypto gains flat at 30%, unlike forex/indices — shown only for Bitcoin profit.
-const BITCOIN_TAX_RATE = 0.3
+const TAX_RATE = 0.3
 
 const inputClass =
   'w-full rounded-lg border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-text outline-none transition-colors focus:border-accent/50'
@@ -420,8 +419,8 @@ export function MarginCalculator() {
             value={signed(pnl.tpProfit)}
             inr={inr(pnl.tpProfit)}
             tax={
-              current === 'BITCOIN' && pnl.tpProfit > 0
-                ? `30% tax: -$${fmt(pnl.tpProfit * BITCOIN_TAX_RATE)}`
+              pnl.tpProfit > 0
+                ? `30% tax: -$${fmt(pnl.tpProfit * TAX_RATE)} (${inr(-pnl.tpProfit * TAX_RATE).replace('≈ ', '')})`
                 : undefined
             }
             sub={`${fmt(Math.abs(pnl.tpPoints), 0)} pts`}
