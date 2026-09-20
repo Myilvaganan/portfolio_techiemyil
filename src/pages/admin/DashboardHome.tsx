@@ -45,6 +45,7 @@ const QUICK_ACTIONS = [
   { label: 'Document Manager', to: '/admin/documents', icon: FolderOpen },
   { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
   { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
+  { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
 ]
 
 export function DashboardHome() {
@@ -90,7 +91,7 @@ export function DashboardHome() {
 
       <div>
         <h2 className="mb-4 font-display text-lg font-semibold text-text">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.to}

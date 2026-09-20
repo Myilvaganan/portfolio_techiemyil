@@ -175,3 +175,36 @@ GET /admin/documents/download-url?key=<key>&mode=preview|download
 DELETE /admin/documents?key=<key>
 200 { "ok": true }
 ```
+
+## Zerodha Kite Connect (`/admin/zerodha`)
+
+The same function proxies Kite Connect for the admin Zerodha dashboard. Kite's
+API sends no CORS headers and the session exchange needs the API secret, so
+the browser can't call it directly. Set two more environment variables
+(keep them out of the repo and `.env`):
+
+| Variable | Value |
+|---|---|
+| `KITE_API_KEY` | API key from the Kite Connect developer console |
+| `KITE_API_SECRET` | API secret from the same app |
+
+`update-function-configuration` replaces the whole `Variables` map — read the
+current map first and merge, don't overwrite.
+
+In the Kite developer console set the app's **Redirect URL** to
+`https://portfolio.techiemyil.com/admin/zerodha` (Kite allows one; use
+`http://localhost:5173/admin/zerodha` temporarily for local dev).
+
+All routes require the normal admin `Authorization: Bearer` token:
+
+```
+GET  /admin/kite/login-url                  200 { "url": "<kite login url>" }
+POST /admin/kite/session   { requestToken } 200 { accessToken, userId, userName, ... }
+POST /admin/kite/snapshot  { accessToken }  200 { profile, margins, holdings, positions, orders, errors, fetchedAt }
+                                            403 { code: "token_expired" } when Kite rejects the token
+POST /admin/kite/logout    { accessToken }  200 { ok: true }   # revokes the Kite session
+```
+
+The access token is never stored server-side: the browser keeps it in
+`sessionStorage` (Kite expires it around 6 AM IST) and sends it with each
+snapshot request. It is never logged.

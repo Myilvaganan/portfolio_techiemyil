@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search } from 'lucide-react'
+import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
       { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
+      { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
     ],
   },
 ]

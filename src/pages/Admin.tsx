@@ -8,6 +8,7 @@ import { DocumentManager } from '@/components/admin/DocumentManager'
 import { DashboardHome } from '@/pages/admin/DashboardHome'
 import { MarginCalculator } from '@/pages/admin/MarginCalculator'
 import { PortfolioRebalance } from '@/pages/admin/PortfolioRebalance'
+import { ZerodhaDashboard } from '@/pages/admin/ZerodhaDashboard'
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
@@ -26,6 +27,7 @@ export function Admin() {
               <Route path="documents" element={<DocumentManager />} />
               <Route path="margin-calculator" element={<MarginCalculator />} />
               <Route path="portfolio-rebalance" element={<PortfolioRebalance />} />
+              <Route path="zerodha" element={<ZerodhaDashboard />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </AdminShell>

@@ -11,6 +11,8 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET
 const S3_BUCKET = process.env.S3_BUCKET
+const KITE_API_KEY = process.env.KITE_API_KEY
+const KITE_API_SECRET = process.env.KITE_API_SECRET
 // Comma-separated list, e.g. "https://techiemyil.com,https://www.techiemyil.com".
 // Falls back to "*" (any origin) if unset.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
@@ -241,6 +243,131 @@ async function handleDeleteDocument(queryParams) {
   return { statusCode: 200, body: { ok: true } }
 }
 
+// ---------- Zerodha Kite Connect proxy ----------
+// Kite's API sends no CORS headers and the token exchange needs the API secret,
+// so the browser can only reach it through this function. The access token is
+// never stored here: the browser keeps it for the day and sends it with each
+// request. Never log it.
+
+const KITE_BASE = 'https://api.kite.trade'
+const KITE_LOGIN = 'https://kite.zerodha.com/connect/login'
+
+const KITE_SNAPSHOT_RESOURCES = {
+  profile: '/user/profile',
+  margins: '/user/margins',
+  holdings: '/portfolio/holdings',
+  positions: '/portfolio/positions',
+  orders: '/orders',
+}
+
+function kiteConfigured() {
+  return Boolean(KITE_API_KEY && KITE_API_SECRET)
+}
+
+async function kiteRequest(path, { method = 'GET', accessToken, form } = {}) {
+  const headers = { 'X-Kite-Version': '3' }
+  if (accessToken) headers.Authorization = `token ${KITE_API_KEY}:${accessToken}`
+  let body
+  if (form) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    body = new URLSearchParams(form).toString()
+  }
+  const res = await fetch(`${KITE_BASE}${path}`, { method, headers, body })
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json || json.status !== 'success') {
+    const err = new Error((json && json.message) || `Kite request failed (${res.status})`)
+    err.kiteType = json && json.error_type
+    err.httpStatus = res.status
+    throw err
+  }
+  return json.data
+}
+
+function isKiteTokenError(err) {
+  return err && (err.kiteType === 'TokenException' || err.httpStatus === 403)
+}
+
+function kiteNotConfigured() {
+  return { statusCode: 500, body: { error: 'Zerodha is not configured yet (KITE_API_KEY / KITE_API_SECRET).' } }
+}
+
+async function handleKiteLoginUrl() {
+  if (!kiteConfigured()) return kiteNotConfigured()
+  const url = `${KITE_LOGIN}?v=3&api_key=${encodeURIComponent(KITE_API_KEY)}`
+  return { statusCode: 200, body: { url } }
+}
+
+async function handleKiteSession(payload) {
+  if (!kiteConfigured()) return kiteNotConfigured()
+  const requestToken = typeof payload.requestToken === 'string' ? payload.requestToken.trim() : ''
+  if (!requestToken) return { statusCode: 400, body: { error: 'A request token is required.' } }
+
+  const checksum = crypto.createHash('sha256').update(`${KITE_API_KEY}${requestToken}${KITE_API_SECRET}`).digest('hex')
+  try {
+    const data = await kiteRequest('/session/token', {
+      method: 'POST',
+      form: { api_key: KITE_API_KEY, request_token: requestToken, checksum },
+    })
+    return {
+      statusCode: 200,
+      body: {
+        accessToken: data.access_token,
+        userId: data.user_id,
+        userName: data.user_name || data.user_shortname || data.user_id,
+        email: data.email,
+        loginTime: data.login_time,
+      },
+    }
+  } catch (err) {
+    console.error('kite session exchange failed', err.kiteType || '', err.message)
+    return { statusCode: 401, body: { error: 'Zerodha login failed. Please try connecting again.' } }
+  }
+}
+
+async function handleKiteSnapshot(payload) {
+  if (!kiteConfigured()) return kiteNotConfigured()
+  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken : ''
+  if (!accessToken) return { statusCode: 400, body: { error: 'An access token is required.' } }
+
+  const entries = Object.entries(KITE_SNAPSHOT_RESOURCES)
+  const results = await Promise.allSettled(entries.map(([, path]) => kiteRequest(path, { accessToken })))
+
+  if (results.some((r) => r.status === 'rejected' && isKiteTokenError(r.reason))) {
+    return { statusCode: 403, body: { error: 'Your Zerodha session has expired. Please reconnect.', code: 'token_expired' } }
+  }
+
+  const snapshot = { fetchedAt: new Date().toISOString(), errors: {} }
+  entries.forEach(([name], i) => {
+    const r = results[i]
+    if (r.status === 'fulfilled') snapshot[name] = r.value
+    else {
+      snapshot[name] = null
+      snapshot.errors[name] = r.reason.message
+    }
+  })
+
+  if (results.every((r) => r.status === 'rejected')) {
+    return { statusCode: 502, body: { error: 'Could not reach Zerodha. Please try again shortly.' } }
+  }
+  return { statusCode: 200, body: snapshot }
+}
+
+async function handleKiteLogout(payload) {
+  if (!kiteConfigured()) return kiteNotConfigured()
+  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken : ''
+  if (accessToken) {
+    try {
+      await kiteRequest(
+        `/session/token?api_key=${encodeURIComponent(KITE_API_KEY)}&access_token=${encodeURIComponent(accessToken)}`,
+        { method: 'DELETE' },
+      )
+    } catch {
+      // Already expired or invalid — nothing left to revoke.
+    }
+  }
+  return { statusCode: 200, body: { ok: true } }
+}
+
 // ---------- Entry point ----------
 
 exports.handler = async (event) => {
@@ -304,6 +431,26 @@ exports.handler = async (event) => {
 
     if (method === 'DELETE' && path === '/admin/documents') {
       const result = await handleDeleteDocument(queryParams)
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'GET' && path === '/admin/kite/login-url') {
+      const result = await handleKiteLoginUrl()
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'POST' && path === '/admin/kite/session') {
+      const result = await handleKiteSession(payload)
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'POST' && path === '/admin/kite/snapshot') {
+      const result = await handleKiteSnapshot(payload)
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'POST' && path === '/admin/kite/logout') {
+      const result = await handleKiteLogout(payload)
       return respond(result.statusCode, result.body)
     }
 
