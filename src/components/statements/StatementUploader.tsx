@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, CheckCircle2, Eye, EyeOff, FileText, KeyRound, Loader2, UploadCloud, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { StatementKind } from '@/lib/statements'
-import { StatementError, processStatementFile, type Progress } from '@/lib/statementsApi'
+import { StatementError, processStatementFile, type Progress, type VaultKind } from '@/lib/statementsApi'
 
 type Status = 'queued' | 'working' | 'done' | 'locked' | 'error'
 
@@ -17,6 +16,7 @@ interface Job {
   resumeId?: string
   prepared?: { id: string; chunks: number }
   txns?: number
+  label?: string
 }
 
 const STAGE_LABEL: Record<string, string> = { uploading: 'Uploading securely', unlocking: 'Unlocking PDF', reading: 'AI is reading transactions', saving: 'Saving to your vault' }
@@ -29,9 +29,10 @@ function percentOf(p: Progress) {
 }
 
 const ACCEPT = '.pdf,.csv,.txt,application/pdf,text/csv,text/plain'
+const PDF_ONLY = /\.pdf$/i
 const CONCURRENCY = 2
 
-export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { kind: StatementKind; onSaved: () => void; onBusyChange?: (busy: boolean) => void; compact?: boolean }) {
+export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { kind: VaultKind; onSaved: () => void; onBusyChange?: (busy: boolean) => void; compact?: boolean }) {
   const [jobs, setJobs] = useState<Job[]>([])
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -54,7 +55,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
           prepared: job.prepared,
           onProgress: (p) => patch(job.key, { stage: STAGE_LABEL[p.stage], percent: percentOf(p) }),
         })
-        patch(job.key, { status: 'done', percent: 100, stage: 'Done', txns: res.statement.txnCount, message: res.replaced ? 'Replaced an earlier upload of the same period' : undefined })
+        patch(job.key, { status: 'done', percent: 100, stage: 'Done', txns: res.statement.txnCount, label: res.label, message: res.replaced ? 'Replaced an earlier upload of the same period' : undefined })
         onSaved()
       } catch (e) {
         const err = e as StatementError
@@ -82,14 +83,14 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
 
   const addFiles = useCallback(
     (files: File[]) => {
-      const accepted = files.filter((f) => /\.(pdf|csv|txt)$/i.test(f.name))
+      const accepted = files.filter((f) => (kind === 'loan' ? PDF_ONLY : /\.(pdf|csv|txt)$/i).test(f.name))
       const rejected = files.length - accepted.length
       const created: Job[] = accepted.map((file) => ({ key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 7)}`, file, status: 'queued', percent: 0 }))
       if (rejected) {
         created.push(
           ...files
             .filter((f) => !accepted.includes(f))
-            .map((file) => ({ key: `${file.name}-${Math.random().toString(36).slice(2, 7)}`, file, status: 'error' as const, percent: 0, message: 'Only PDF, CSV or TXT statements are supported.' })),
+            .map((file) => ({ key: `${file.name}-${Math.random().toString(36).slice(2, 7)}`, file, status: 'error' as const, percent: 0, message: kind === 'loan' ? 'Loan documents must be PDF files.' : 'Only PDF, CSV or TXT statements are supported.' })),
         )
       }
       setJobs((prev) => [...prev, ...created])
@@ -136,7 +137,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
           <UploadCloud className="h-6 w-6" />
         </motion.div>
         <p className="text-sm font-medium text-text">Drop your statements here — as many as you like</p>
-        <p className="mt-1 text-xs text-text-secondary">PDF (password-protected is fine), CSV or TXT · {kind === 'bank' ? 'ICICI or Axis account statements' : 'ICICI credit card statements — all your cards at once'}</p>
+        <p className="mt-1 text-xs text-text-secondary">{kind === 'loan' ? 'PDF only (password-protected is fine) · ICICI loan account statements and amortization schedules — all your loans at once' : `PDF (password-protected is fine), CSV or TXT · ${kind === 'bank' ? 'ICICI or Axis account statements' : 'ICICI credit card statements — all your cards at once'}`}</p>
         <input ref={inputRef} type="file" accept={ACCEPT} multiple className="hidden" aria-label="Upload statements" onChange={(e) => { addFiles(Array.from(e.target.files ?? [])); e.target.value = '' }} />
         <button
           type="button"
@@ -190,7 +191,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-text">{j.file.name}</p>
                   <p className={cn('mt-0.5 text-[11px]', j.status === 'error' ? 'text-error' : j.status === 'locked' ? 'text-amber-500' : 'text-text-secondary')}>
-                    {j.status === 'done' ? `${j.txns} transactions saved${j.message ? ` · ${j.message}` : ''}` : (j.message ?? j.stage ?? 'Waiting…')}
+                    {j.status === 'done' ? `${j.label ?? `${j.txns} transactions`} saved${j.message ? ` · ${j.message}` : ''}` : (j.message ?? j.stage ?? 'Waiting…')}
                   </p>
                 </div>
                 {j.status === 'error' && (j.prepared || j.resumeId) && (

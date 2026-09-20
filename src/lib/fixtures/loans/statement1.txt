@@ -1,0 +1,115 @@
+Page 1 of 3
+Branch SOL ID 1030 - ICICI Bank Ltd., Example Branch
+Loan Account Statement for LPBNG00000000001
+Mr. S Test User
+Example Address Line
+Bangalore - 560001
+Tel: (022) 21212121 ,
+Mob: 0000000000
+Email:
+Loan Account Details As on 20-Sep-26
+Sanction Date Loan Amount Adv. EMI Rate of Interest
+(Per annum)
+Penal Charge
+for Late
+Payment
+(Per annum)
+Instl. Paid Instl. Pending Future
+Instl.Nos.
+Future Instl.Amt
+19-Sep-25 1,500,000.00 0.00 9.99% 5.00% 11 / 306,955.00 0 / 0.00 61 1,702,061.00
+Branch: Bangalore Co-Applicant Name:
+Guarantor Name:
+Product: PERSONAL LOAN Customer Category: Not Applicable
+Application No: US0000000001
+Tenure: 72
+Frequency: Monthly PAN No. : XXXXX0000X
+Benchmark Rate(%)
+per annum:
+N/A
+Spread(%) per annum: N/A
+Int. Rate Type: Fixed
+Current EMI: 27905.00
+Currency: INR
+Instalment Plan: Equated Instl
+HNI:
+Repayment Mode: AUTO DEBIT A/C No.000000000000
+Status: Active
+Disbursement Details As on 20-Sep-26
+Disb. No Date Particulars Reference Amount
+1 19-Sep-25 Disbursal Fund Transfer/RTGS 1,500,000.00
+Total 1,500,000.00
+Mr. S Test User
+Account Statement for LPBNG00000000001 from 19-Sep-25 to 20-Sep-26
+Page 2 of 3
+Pre-Payment/Conversion Details As on 20-Sep-26
+Sr No Date Eff. Date Reference Rate Type Eff. Rate(%) Amount
+There is no Part-prepayment/Conversion for the loan.
+Loan Finance Summary As on 20-Sep-26
+Particulars Instalments/Pre-payments Interest on Overdue
+Instalment
+Bounce Charges Other Charges Total
+PRIN INT
+Op. Bal. 0.00 0.00 0.00 0.00 0.00 0.00
+Debits 169,593.00 137,362.00 31.00 590.00 10,630.82 318,206.82
+Credits 169,593.00 137,362.00 31.00 590.00 10,630.82 318,206.82
+Cl. Bal. 0.00 0.00 0.00 0.00 0.00 0.00
+Current OS Excess Receivable Accrued
+Interest
+Accrued
+interest on
+overdue
+Instalment
+Accrued Penal
+charge for late
+payment
+Future
+Principal
+Total
+Receivable
+0.00 0.00 0.00 5,538.00 0.00 0.00 1,330,407.00 1,335,945.00
+Loan Transaction Details from 19-Sep-25 to 20-Sep-26
+Trans. Date Value Date Trans Type Particulars Debit Credit Balance
+19-Sep-25 19-Sep-25 Other Charge Pf Recd Frm Cust-nirr-nded 10,618.82 10,618.82
+19-Sep-25 19-Sep-25 Disbursement Amt Financed 1,500,000.00 (1,489,381.18)
+19-Sep-25 19-Sep-25 Payment Fund Transfer/RTGS 1,489,381.18 0.00
+05-Nov-25 05-Nov-25 EMI Due for Inst.1, Nov-25 27,905.00 27,905.00
+05-Nov-25 05-Nov-25 Receipt Chq No.:A87081293001 Rcpt No.:A1125081293 27,905.00 0.00
+05-Dec-25 05-Dec-25 EMI Due for Inst.2, Dec-25 27,905.00 27,905.00
+05-Dec-25 05-Dec-25 Receipt Chq No.:A87081293002 Rcpt No.:A1225081293 27,905.00 0.00
+05-Jan-26 05-Jan-26 EMI Due for Inst.3, Jan-26 27,905.00 27,905.00
+05-Jan-26 05-Jan-26 Receipt Chq No.:A87081293003 Rcpt No.:A0126081293 27,905.00 0.00
+05-Feb-26 05-Feb-26 EMI Due for Inst.4, Feb-26 27,905.00 27,905.00
+05-Feb-26 05-Feb-26 Receipt Chq No.:A87081293004 Rcpt No.:A0226081293 27,905.00 0.00
+05-Mar-26 05-Mar-26 EMI Due for Inst.5, Mar-26 27,905.00 27,905.00
+05-Mar-26 05-Mar-26 Receipt Chq No.:A87081293005 Rcpt No.:A0326081293 27,905.00 0.00
+05-Apr-26 05-Apr-26 EMI Due for Inst.6, Apr-26 27,905.00 27,905.00
+05-Apr-26 05-Apr-26 Receipt Chq No.:A87081293006 Rcpt No.:A0426081293 27,905.00 0.00
+05-May-26 05-May-26 EMI Due for Inst.7, May-26 27,905.00 27,905.00
+05-May-26 05-May-26 Receipt Chq No.:A87081293007 Rcpt No.:A0526081293 27,905.00 0.00
+06-May-26 05-May-26 Bounce Chq No.:A87081293007 Bounced, Insufficient Funds 27,905.00 27,905.00
+09-May-26 05-May-26 Interest on overdue
+instalment
+Due for Inst.7, Sep-26 31.00 27,936.00
+31-May-26 05-May-26 Other Charge Penal Charge For Late Payment 7, May-26 12.00 27,948.00
+06-May-26 06-May-26 Bounce Charge Cheque Bouncing Charges 590.00 28,538.00
+08-May-26 08-May-26 Receipt Chq No.:TRS61521444 Rcpt No.:104S6152144408 28,495.00 43.00
+13-May-26 13-May-26 Receipt Chq No.:TRS6071440 Rcpt No.:104S607144013 31.00 12.00
+05-Jun-26 05-Jun-26 EMI Due for Inst.8, Jun-26 27,905.00 27,917.00
+05-Jun-26 05-Jun-26 Receipt Chq No.:A87081293008 Rcpt No.:A0626081293 27,905.00 12.00
+05-Jul-26 05-Jul-26 EMI Due for Inst.9, Jul-26 27,905.00 27,917.00
+05-Jul-26 05-Jul-26 Receipt Chq No.:A87081293009 Rcpt No.:A0726081293 27,905.00 12.00
+05-Aug-26 05-Aug-26 EMI Due for Inst.10, Aug-26 27,905.00 27,917.00
+05-Aug-26 05-Aug-26 Receipt Chq No.:A87081293010 Rcpt No.:A0826081293 27,905.00 12.00
+28-Aug-26 28-Aug-26 Receipt Chq No.:TRS24316780 Rcpt No.:104S2431678028 12.00 0.00
+05-Sep-26 05-Sep-26 EMI Due for Inst.11, Sep-26 27,905.00 27,905.00
+05-Sep-26 05-Sep-26 Receipt Chq No.:A87081293011 Rcpt No.:A0926081293 27,905.00 0.00
+Adjustment Entries from 19-Sep-25 to 20-Sep-26
+Trans. Date Value Date Narration Amount
+09-May-26 05-May-26 Adj against Interest on overdue instalment 31.00
+29-Aug-26 05-May-26 Adj against Penal Charge For Late Payment 12.00
+25-May-26 06-May-26 Adj against Cheque Bouncing Charges 559.00
+25-May-26 06-May-26 Adj against Cheque Bouncing Charges 31.00
+This is a system generated letter. Hence, it does not require any signature.
+1. Calculation of interest/additional interest and other charges are done on monthly basis, number of days in a month being 30.
+2. Pre closure charges would be charged extra at applicable rate/s in case the loan is closed/terminated before maturity of loan.

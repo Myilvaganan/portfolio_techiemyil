@@ -1,5 +1,9 @@
 import { clearStoredToken, getStoredToken } from './adminAuth'
 import type { AiInsights, Statement, StatementKind, StatementsData } from './statements'
+import type { LoanData } from './loans'
+import { parseLoanDocument } from './loanParser'
+
+export type VaultKind = StatementKind | 'loan'
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
 
@@ -30,21 +34,26 @@ async function api(path: string, init: RequestInit = {}) {
 
 const post = (path: string, body: unknown) => api(path, { method: 'POST', body: JSON.stringify(body) })
 
+export async function fetchLoanDocs(): Promise<LoanData> {
+  const data = await api('/admin/statements/data?kind=loan')
+  return { statements: data.statements ?? [], insights: data.insights ?? null }
+}
+
 export async function fetchStatements(kind: StatementKind): Promise<StatementsData> {
   const data = await api(`/admin/statements/data?kind=${kind}`)
   return { statements: data.statements ?? [], transactions: data.transactions ?? [], insights: data.insights ?? null, updatedAt: data.updatedAt }
 }
 
-export async function deleteStatement(kind: StatementKind, id: string) {
+export async function deleteStatement(kind: VaultKind, id: string) {
   await api(`/admin/statements?kind=${kind}&id=${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
-export async function statementFileUrl(kind: StatementKind, id: string): Promise<string> {
+export async function statementFileUrl(kind: VaultKind, id: string): Promise<string> {
   const data = await api(`/admin/statements/file-url?kind=${kind}&id=${encodeURIComponent(id)}`)
   return data.url
 }
 
-export async function generateInsights(kind: StatementKind, context: unknown, fingerprint: string): Promise<AiInsights> {
+export async function generateInsights(kind: VaultKind, context: unknown, fingerprint: string): Promise<AiInsights> {
   try {
     return await post('/admin/statements/insights', { kind, context, fingerprint })
   } catch (e) {
@@ -54,7 +63,7 @@ export async function generateInsights(kind: StatementKind, context: unknown, fi
   }
 }
 
-export async function askAi(kind: StatementKind, question: string, context: unknown): Promise<string> {
+export async function askAi(kind: VaultKind, question: string, context: unknown): Promise<string> {
   try {
     return (await post('/admin/statements/ask', { kind, question, context })).answer
   } catch (e) {
@@ -99,7 +108,7 @@ async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
 }
 
 export interface ProcessOptions {
-  kind: StatementKind
+  kind: VaultKind
   file: File
   password?: string
   resumeId?: string
@@ -111,7 +120,39 @@ export interface ProcessOptions {
 export const isPdf = (file: File) => /\.pdf$/i.test(file.name) || file.type === 'application/pdf'
 
 // Uploads to the vault, unlocks the PDF with the one password, reads it with AI, and saves the result.
-export async function processStatementFile({ kind, file, password, resumeId, prepared, onProgress }: ProcessOptions): Promise<{ statement: Statement; replaced: number }> {
+export async function processStatementFile(opts: ProcessOptions): Promise<{ statement: Statement; replaced: number; label?: string }> {
+  if (opts.kind === 'loan') return processLoanFile(opts)
+  return processBankOrCardFile({ ...opts, kind: opts.kind })
+}
+
+// Loan PDFs need no AI: the server unlocks and extracts text, and the layout is read right here.
+async function processLoanFile({ file, password, resumeId, onProgress }: ProcessOptions): Promise<{ statement: Statement; replaced: number; label: string }> {
+  let id = resumeId
+  if (!id) {
+    onProgress({ stage: 'uploading' })
+    const up = await post('/admin/statements/upload-url', { kind: 'loan', contentType: 'application/pdf' })
+    const put = await fetch(up.uploadUrl, { method: 'PUT', headers: { 'Content-Type': up.contentType }, body: file })
+    if (!put.ok) throw new StatementError('Upload failed. Please try again.')
+    id = up.id as string
+  }
+  onProgress({ stage: 'unlocking' })
+  let prep: { pages: number; lines: string[] }
+  try {
+    prep = await post('/admin/statements/prepare', { kind: 'loan', id, password: password || undefined })
+  } catch (e) {
+    if (e instanceof StatementError) e.uploadId = id
+    throw e
+  }
+  onProgress({ stage: 'reading', done: 0, total: 1 })
+  const parsed = parseLoanDocument(prep.lines)
+  if (!parsed.ok) throw new StatementError(parsed.error)
+  onProgress({ stage: 'saving' })
+  const saved = await post('/admin/statements/commit', { kind: 'loan', id, filename: file.name, pages: prep.pages, parsed: parsed.doc })
+  const label = parsed.doc.docType === 'schedule' ? `Amortization schedule · ${parsed.doc.rows.length} instalments` : `Loan statement · ${parsed.doc.events.length} entries`
+  return { statement: saved.statement, replaced: saved.replaced, label }
+}
+
+async function processBankOrCardFile({ kind, file, password, resumeId, prepared, onProgress }: ProcessOptions & { kind: StatementKind }): Promise<{ statement: Statement; replaced: number }> {
   let id = prepared?.id ?? resumeId
   let prep: { chunks: number } | undefined = prepared
   if (!prep) {

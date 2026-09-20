@@ -4,6 +4,7 @@ import { Nfc } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
 import { CountNumber, Reveal } from '@/components/viz/motion'
+import { FitValue } from '@/components/viz/FitValue'
 import { Sparkline, vizColor } from '@/components/viz/charts'
 import { formatInr } from '@/lib/kite'
 import { dayLabel, type CardSummary } from '@/lib/statements'
@@ -11,6 +12,13 @@ import { dayLabel, type CardSummary } from '@/lib/statements'
 export const inr = (n: number) => formatInr(n)
 export const signedInr = (n: number) => `${n < 0 ? '-' : n > 0 ? '+' : ''}${formatInr(n)}`
 export const pct = (n: number, d = 0) => `${n.toFixed(d)}%`
+
+// Sentiment shows in the tile itself: a tinted background and border, not just the number's colour.
+export const TONE_SURFACE = {
+  good: 'border-accent/35 bg-gradient-to-br from-accent/[0.14] to-accent/[0.03]',
+  warn: 'border-amber-500/40 bg-gradient-to-br from-amber-500/[0.15] to-amber-500/[0.03]',
+  bad: 'border-error/40 bg-gradient-to-br from-error/[0.15] to-error/[0.03]',
+} as const
 
 export function Kpi({
   label,
@@ -31,13 +39,17 @@ export function Kpi({
 }) {
   return (
     <Reveal delay={delay} y={18}>
-      <GlassCard hover className="h-full p-4">
+      <GlassCard hover className={cn('h-full p-4 transition-colors duration-500', tone && TONE_SURFACE[tone])}>
         <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
-        <p className={cn('mt-1.5 whitespace-nowrap font-mono text-2xl font-semibold text-text', tone === 'good' && 'text-accent', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500')}>
+        <FitValue
+          max={24}
+          text={format(value)}
+          className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', tone === 'good' && 'text-accent', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500')}
+        >
           <CountNumber value={value} format={format} />
-        </p>
+        </FitValue>
         {sub && <p className="mt-1 text-[11px] text-text-secondary">{sub}</p>}
-        {spark && spark.length > 1 && <div className="mt-2 opacity-90"><Sparkline values={spark} color={tone === 'bad' ? 'var(--color-error)' : tone === 'good' ? 'var(--color-accent)' : 'var(--viz-1)'} /></div>}
+        {spark && spark.length > 1 && <div className="mt-2 opacity-90"><Sparkline values={spark} color={tone === 'bad' ? 'var(--color-error)' : tone === 'good' ? 'var(--color-accent)' : tone === 'warn' ? '#f59e0b' : 'var(--viz-1)'} /></div>}
       </GlassCard>
     </Reveal>
   )

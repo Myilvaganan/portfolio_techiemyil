@@ -21,6 +21,7 @@ import { demoFills } from '@/lib/optionsDemo'
 import { clearStoredFills, fetchStoredBrokers, fetchStoredFills, saveFills } from '@/lib/optionsStore'
 import { BROKERS, SAMPLE_BROKER, brokerHint, brokerLabel, slugifyBroker } from '@/lib/brokers'
 import { ReportMenu } from '@/components/viz/ReportMenu'
+import { FitValue } from '@/components/viz/FitValue'
 import { optionsReport, optionsTradesCsv } from '@/lib/moduleReports'
 import { FIELDS, analyseRows, autoMapping, cellText, mappingProblems, readTradeFile, rowsToFills, type Cell, type Mapping } from '@/lib/tradeImport'
 
@@ -92,11 +93,13 @@ function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactN
   )
 }
 
-function Kpi({ label, value, sub, valueClassName }: { label: string; value: ReactNode; sub?: ReactNode; valueClassName?: string }) {
+function Kpi({ label, value, fit, sub, valueClassName }: { label: string; value: ReactNode; fit: string; sub?: ReactNode; valueClassName?: string }) {
   return (
     <GlassCard hover={false} className="p-4">
       <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
-      <p className={cn('mt-1.5 whitespace-nowrap font-mono text-xl font-semibold text-text', valueClassName)}>{value}</p>
+      <FitValue max={20} text={fit} className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', valueClassName)}>
+        {value}
+      </FitValue>
       {sub && <p className="mt-1 text-[11px] text-text-secondary">{sub}</p>}
     </GlassCard>
   )
@@ -874,20 +877,22 @@ export function OptionsAnalytics() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-                <Kpi label="Net P&L" value={<Money value={a.net} className="text-xl" />} sub={a.chargesSource === 'actual' ? 'after your actual charges' : 'after est. charges'} />
-                <Kpi label="Gross P&L" value={<Money value={a.gross} className="text-xl" />} sub={`${a.trades} closed trades`} />
+                <Kpi label="Net P&L" fit={`  ${formatSignedInr(a.net)}`} value={<Money value={a.net} />} sub={a.chargesSource === 'actual' ? 'after your actual charges' : 'after est. charges'} />
+                <Kpi label="Gross P&L" fit={`  ${formatSignedInr(a.gross)}`} value={<Money value={a.gross} />} sub={`${a.trades} closed trades`} />
                 <Kpi
                   label={a.chargesSource === 'actual' ? 'Charges' : 'Charges (est.)'}
+                  fit={formatInr(a.charges)}
                   value={formatInr(a.charges)}
                   valueClassName="text-amber-500"
                   sub={a.gross > 0 ? `${Math.round((a.charges / a.gross) * 100)}% of gross profit` : 'brokerage, STT, GST…'}
                 />
-                <Kpi label="Win rate" value={`${a.winRate.toFixed(1)}%`} sub={`${a.wins} wins · ${a.losses} losses`} />
-                <Kpi label="Profit factor" value={a.profitFactor === null ? '—' : a.profitFactor.toFixed(2)} sub="gross wins ÷ gross losses" />
+                <Kpi label="Win rate" fit={`${a.winRate.toFixed(1)}%`} value={`${a.winRate.toFixed(1)}%`} sub={`${a.wins} wins · ${a.losses} losses`} />
+                <Kpi label="Profit factor" fit={a.profitFactor === null ? '—' : a.profitFactor.toFixed(2)} value={a.profitFactor === null ? '—' : a.profitFactor.toFixed(2)} sub="gross wins ÷ gross losses" />
                 <Kpi
                   label="Avg win / loss"
+                  fit={`${formatInr(a.avgWin)} / ${formatInr(a.avgLoss)}`}
                   value={<>{formatInr(a.avgWin)} <span className="text-text-secondary">/</span> {formatInr(a.avgLoss)}</>}
-                  valueClassName="whitespace-normal text-lg"
+                  valueClassName="whitespace-nowrap"
                   sub={a.payoff === null ? undefined : `payoff ${a.payoff.toFixed(2)}`}
                 />
               </div>

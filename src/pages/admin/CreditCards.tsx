@@ -140,7 +140,7 @@ export function CreditCards() {
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
               <Kpi label="Spend" value={totals.spend} sub={selectedLabel} spark={flow.map((r) => r.spend)} />
               <Kpi label="Fees & interest" value={totals.fees} tone={totals.fees > 0 ? 'bad' : 'good'} sub={totals.spend ? `${pct((totals.fees / totals.spend) * 100, 1)} of spend` : undefined} delay={0.05} />
-              <Kpi label="Payments made" value={totals.pay} sub="towards the bills" delay={0.1} />
+              <Kpi label="Payments made" value={totals.pay} tone={totals.spend > 0 ? (totals.pay >= totals.spend * 0.9 ? 'good' : 'warn') : undefined} sub="towards the bills" delay={0.1} />
               <Kpi label="Refunds & cashback" value={totals.refunds} tone="good" delay={0.15} />
               <Kpi label="Total due now" value={totals.due} tone={totals.due > 0 ? 'warn' : 'good'} sub="latest statements" delay={0.2} />
               <Kpi label="Reward points" value={totals.points} format={(n) => Math.round(n).toLocaleString('en-IN')} sub="latest statements" delay={0.25} />

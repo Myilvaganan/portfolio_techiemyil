@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'reac
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { useInViewOnce } from './motion'
+import { FitValue } from './FitValue'
 
 export const vizColor = (i: number, isOther = false) => (isOther ? 'var(--viz-other)' : `var(--viz-${(i % 8) + 1})`)
 
@@ -205,6 +206,8 @@ export function BarChart({
   const barW = stacked ? groupW : groupW / bars.length
   const cx = (i: number) => PX + slot * i + slot / 2
   const grid = [0, 0.25, 0.5, 0.75, 1].map((f) => min + span * f)
+  // With many periods, label only every few so the axis stays readable and thin bars don't grow round dots.
+  const labelStep = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - PX - PR) / 54))))
   const linePath = line ? line.values.map((v, i) => `${i ? 'L' : 'M'}${cx(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ') : ''
 
   return (
@@ -258,7 +261,7 @@ export function BarChart({
                     y={top}
                     width={Math.max(barW - (stacked ? 0 : 2), 2)}
                     height={Math.max(bottom - top - (stacked && bi > 0 ? 1.5 : 0), 1)}
-                    rx={3}
+                    rx={Math.min(3, Math.max(barW / 2 - 0.5, 0))}
                     fill={b.color}
                     style={{ transformBox: 'fill-box', transformOrigin: 'bottom' }}
                     initial={reduce ? false : { scaleY: 0 }}
@@ -268,9 +271,11 @@ export function BarChart({
                   />
                 )
               })}
-              <text x={cx(i)} y={height - 7} textAnchor="middle" className="fill-text-secondary" fontSize={n > 9 ? 10 : 11.5}>
-                {label}
-              </text>
+              {i % labelStep === 0 && (
+                <text x={Math.min(Math.max(cx(i), PX + 18), W - PR - 18)} y={height - 7} textAnchor="middle" className="fill-text-secondary" fontSize={n > 9 ? 10 : 11.5}>
+                  {label}
+                </text>
+              )}
             </g>
           )
         })}
@@ -287,9 +292,8 @@ export function BarChart({
               animate={inView ? { pathLength: 1 } : {}}
               transition={{ duration: 1.2, delay: 0.5 }}
             />
-            {line.values.map((v, i) => (
-              <circle key={i} cx={cx(i)} cy={y(v)} r={3.5} fill={line.color} stroke="var(--color-card)" strokeWidth={1.5} />
-            ))}
+            {n <= 24 &&
+              line.values.map((v, i) => <circle key={i} cx={cx(i)} cy={y(v)} r={3.5} fill={line.color} stroke="var(--color-card)" strokeWidth={1.5} />)}
           </>
         )}
       </svg>
@@ -346,8 +350,12 @@ export function Donut({ slices, centerLabel, format, size = 190 }: { slices: Don
         })}
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="max-w-[9ch] truncate text-[11px] text-text-secondary">{shown ? shown.label : centerLabel}</span>
-        <span className="font-mono text-lg font-semibold text-text">{format(shown ? shown.value : total)}</span>
+        <span className="max-w-[12ch] truncate text-[11px] text-text-secondary">{shown ? shown.label : centerLabel}</span>
+        <div style={{ width: size * 0.56 }}>
+          <FitValue max={18} min={9} text={format(shown ? shown.value : total)} className="whitespace-nowrap text-center font-mono font-semibold leading-tight text-text">
+            {format(shown ? shown.value : total)}
+          </FitValue>
+        </div>
         {shown && <span className="text-[11px] text-text-secondary">{((shown.value / (total || 1)) * 100).toFixed(1)}%</span>}
       </div>
     </div>
@@ -456,11 +464,13 @@ export function CalendarHeatmap({ values, format }: { values: Map<string, number
 
 // ---------- Gauge ----------
 
-export function Gauge({ value, label, sub, size = 150 }: { value: number; label: string; sub?: string; size?: number }) {
+export function Gauge({ value, label, sub, size = 150, invert = false }: { value: number; label: string; sub?: string; size?: number; invert?: boolean }) {
   const { ref, inView } = useInViewOnce<HTMLDivElement>()
   const reduce = useReducedMotion()
   const v = Math.max(0, Math.min(100, value))
-  const tone = v < 30 ? 'var(--color-accent)' : v < 60 ? '#f59e0b' : 'var(--color-error)'
+  // Utilisation is better when low; progress is better when high (invert).
+  const score = invert ? 100 - v : v
+  const tone = score < 30 ? 'var(--color-accent)' : score < 60 ? '#f59e0b' : 'var(--color-error)'
   const R = 62
   const arc = Math.PI * R
   return (

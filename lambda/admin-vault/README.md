@@ -257,3 +257,17 @@ Environment variables (in addition to the ones above):
 | `OPENAI_MODEL_FAST` | `gpt-5.4-mini` | fallback when the insights model times out |
 
 Function settings: memory **1024 MB**, timeout **29 s**. The bucket needs no extra IAM permissions or CORS changes.
+
+## Loans (`/admin/loans`)
+
+ICICI loan **account statements** and **amortization schedules** are stored as the third vault type (`kind=loan`).
+Loan PDFs need no AI: the same upload → `prepare` flow unlocks the PDF (password used once, never stored) and keeps
+the unlocked copy at `_data/statements/loan/<id>/statement.pdf`, but `prepare` returns the extracted text rows and
+**the browser reads them deterministically** (`src/lib/loanParser.ts`). Only loan numbers, dates and amounts are
+sent back to `commit` — PAN, phone, address and e-mail are never picked up or stored. No `text.json` is kept.
+
+`POST /admin/statements/commit {kind: 'loan', id, filename, pages, parsed}` validates and stores the parsed document
+in `_data/statements/loan/data.json` (`statements[]`, each holding its `parsed` schedule rows or statement details,
+summary and payment events). Re-uploading a newer document of the same type for the same loan replaces the old one.
+`insights` / `ask` accept `kind: 'loan'` with compact aggregates (balances, rates, what-if results) — never
+identifiers. Everything else (data, delete, file-url) is shared with bank and card statements.

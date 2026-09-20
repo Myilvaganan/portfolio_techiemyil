@@ -18,7 +18,7 @@ const {
 } = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 
-const KINDS = ['bank', 'card']
+const KINDS = ['bank', 'card', 'loan']
 const DATA_ROOT = '_data/statements'
 const MAX_TXNS = 100000
 const CHUNK_LINES = 30
@@ -344,6 +344,76 @@ function normalizeMeta(kind, raw) {
       }
 }
 
+
+// ---------- Loan documents ----------
+
+const LOAN_EVENT_TYPES = ['processing_fee', 'disbursement', 'payout', 'emi_due', 'receipt', 'bounce', 'bounce_charge', 'overdue_interest', 'penal', 'other_charge']
+
+const money = (v) => (Number.isFinite(Number(v)) && Math.abs(Number(v)) <= 1e10 ? Math.round(Number(v) * 100) / 100 : 0)
+const optMoney = (v) => (v === null || v === undefined || !Number.isFinite(Number(v)) ? null : money(v))
+const isoDate = (d) => (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d)) ? d : null)
+const shortText = (v, max) => (typeof v === 'string' && v.trim() ? clean(v, max) : null)
+
+function sanitizeLoanDoc(p) {
+  if (!p || typeof p !== 'object') return null
+  if (typeof p.accountNo !== 'string' || !/^[A-Z0-9]{6,24}$/.test(p.accountNo)) return null
+  const accountNo = p.accountNo
+
+  if (p.docType === 'schedule') {
+    if (!Array.isArray(p.rows) || p.rows.length < 3 || p.rows.length > 600) return null
+    const rows = []
+    for (const r of p.rows) {
+      const date = isoDate(r && r.date)
+      if (!date || !Number.isInteger(r.no)) return null
+      rows.push({ no: r.no, date, opening: money(r.opening), principal: money(r.principal), installment: money(r.installment), ratePct: money(r.ratePct), interest: money(r.interest), charges: money(r.charges), closing: money(r.closing) })
+    }
+    return { docType: 'schedule', accountNo, rows }
+  }
+
+  if (p.docType === 'statement') {
+    const d = p.details
+    if (!d || typeof d !== 'object' || !isoDate(d.sanctionDate)) return null
+    const int = (v) => (Number.isInteger(v) && v >= 0 && v < 10000 ? v : 0)
+    const details = {
+      asOf: isoDate(d.asOf),
+      sanctionDate: d.sanctionDate,
+      amount: money(d.amount),
+      advEmi: money(d.advEmi),
+      ratePct: money(d.ratePct),
+      penalPct: money(d.penalPct),
+      paidCount: int(d.paidCount),
+      paidAmount: money(d.paidAmount),
+      pendingCount: int(d.pendingCount),
+      pendingAmount: money(d.pendingAmount),
+      futureCount: int(d.futureCount),
+      futureAmount: money(d.futureAmount),
+      tenure: Number.isInteger(d.tenure) && d.tenure > 0 && d.tenure < 1000 ? d.tenure : null,
+      emi: optMoney(d.emi),
+      product: shortText(d.product, 40),
+      rateType: shortText(d.rateType, 20),
+      status: shortText(d.status, 20),
+      repayment: shortText(d.repayment, 30),
+    }
+    let summary = null
+    if (p.summary && typeof p.summary === 'object') {
+      const k = ['debitPrincipal', 'debitInterest', 'debitOverdueInterest', 'debitBounce', 'debitOther', 'debitTotal', 'currentOs', 'accruedInterest', 'accruedOverdue', 'accruedPenal', 'futurePrincipal', 'totalReceivable']
+      summary = Object.fromEntries(k.map((key) => [key, money(p.summary[key])]))
+    }
+    const events = []
+    for (const e of Array.isArray(p.events) ? p.events.slice(0, 800) : []) {
+      const date = isoDate(e && e.date)
+      if (!date || !LOAN_EVENT_TYPES.includes(e.type)) continue
+      const ev = { date, type: e.type, amount: money(e.amount) }
+      if (Number.isInteger(e.instNo) && e.instNo > 0 && e.instNo < 1000) ev.instNo = e.instNo
+      const note = shortText(e.note, 60)
+      if (note) ev.note = note
+      events.push(ev)
+    }
+    return { docType: 'statement', accountNo, details, summary, events }
+  }
+  return null
+}
+
 // ---------- Storage ----------
 
 function makeStore(s3, bucket) {
@@ -414,6 +484,7 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     if (!original) return bad('That upload was not found. Please upload the file again.', 404)
 
     const isPdf = original.subarray(0, 5).toString('latin1') === '%PDF-'
+    if (kind === 'loan') return prepareLoan(id, original, isPdf, payload)
     let lines
     let pages = 1
     let fileKey
@@ -439,6 +510,44 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     await store.putJson(store.key(kind, id, 'text.json'), { lines, pages, fileKey })
     await store.del(store.key(kind, id, 'original'))
     return { statusCode: 200, body: { id, pages, encrypted, chunks: chunkLines(lines).length, fileKey } }
+  }
+
+
+  // Loan PDFs are read deterministically in the browser, so this only unlocks the PDF, keeps the unlocked copy,
+  // and hands the text rows back. Nothing is sent to an AI and no text is stored.
+  async function prepareLoan(id, original, isPdf, payload) {
+    if (!isPdf) return bad('Loan documents must be PDF files.')
+    const password = typeof payload.password === 'string' ? payload.password : ''
+    const pdf = await readPdf(original, password)
+    if (pdf.lines.filter((l) => /\d/.test(l)).length < 3) {
+      await store.delPrefix(store.key('loan', id) + '/')
+      return bad('No readable text was found — scanned (image-only) documents are not supported.')
+    }
+    const fileKey = store.key('loan', id, 'statement.pdf')
+    await store.putBytes(fileKey, pdf.decrypted, 'application/pdf')
+    await store.del(store.key('loan', id, 'original'))
+    return { statusCode: 200, body: { id, pages: pdf.pageCount, encrypted: pdf.encrypted, fileKey, lines: pdf.lines.slice(0, 1500) } }
+  }
+
+  async function commitLoan(payload, id) {
+    const doc = sanitizeLoanDoc(payload.parsed)
+    if (!doc) return bad('That loan document could not be read.')
+    const fileKey = store.key('loan', id, 'statement.pdf')
+    if (!(await store.getBytes(fileKey))) return bad('That upload was not found. Please upload it again.', 404)
+    const data = await store.getJson(store.key('loan', 'data.json'), emptyData())
+    // Re-uploading a newer schedule/statement for the same loan replaces the older one.
+    const same = data.statements.filter((x) => x.id !== id && x.accountNo === doc.accountNo && x.docType === doc.docType)
+    for (const old of same) {
+      data.statements = data.statements.filter((x) => x.id !== old.id)
+      await store.delPrefix(store.key('loan', old.id) + '/')
+    }
+    const pages = Number.isInteger(payload.pages) && payload.pages > 0 && payload.pages < 500 ? payload.pages : 1
+    const entry = { id, kind: 'loan', docType: doc.docType, accountNo: doc.accountNo, filename: clean(payload.filename, 120) || 'loan-document', uploadedAt: new Date().toISOString(), pages, fileKey, parsed: doc }
+    data.statements.push(entry)
+    data.insights = null
+    data.updatedAt = new Date().toISOString()
+    await store.putJson(store.key('loan', 'data.json'), data)
+    return { statusCode: 200, body: { statement: { ...entry, parsed: undefined }, replaced: same.length } }
   }
 
   async function extract(payload) {
@@ -477,6 +586,7 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     const kind = validKind(payload.kind)
     const id = validId(payload.id)
     if (!kind || !id) return bad('A valid statement id is required.')
+    if (kind === 'loan') return commitLoan(payload, id)
     if (!Array.isArray(payload.transactions) || payload.transactions.length > 20000) return bad('A list of transactions is required.')
     const text = await store.getJson(store.key(kind, id, 'text.json'), null)
     if (!text) return bad('That statement was not found. Please upload it again.', 404)
@@ -573,6 +683,10 @@ Rules: use ONLY numbers present in the data — never invent or estimate figures
 score.value is a 0-100 card-health score (utilisation, interest/fees paid, on-time payment, spend concentration) with a 2-4 word label. Give 4-6 highlights (mix of good/warn/bad/info), 3-5 concrete tips (which card to use for which category, fees to avoid, dues to clear) and 0-3 risks.`,
   }
 
+  INSIGHT_SYSTEM.loan = `You are a sharp, friendly loan advisor for an Indian borrower. You receive numbers computed from their ICICI loan schedules and statements in INR: balances, rates, EMIs, what-if results (extra EMI, lump sum, closing now) and a payoff strategy comparison.
+Rules: use ONLY numbers present in the data — never invent or estimate figures; quote amounts as ₹ with Indian grouping; be specific (name each loan by its label, months, dates, rupees saved); no generic advice; no disclaimers. The pre-closure fee percentage is an ASSUMPTION — say so, and tell the user to confirm the real charge and any part-prepayment rules with ICICI.
+score.value is a 0-100 loan-health score (payment discipline incl. bounced EMIs, interest burden, progress, fees paid) with a 2-4 word label. Give 4-6 highlights (mix of good/warn/bad/info), 3-5 concrete tips that explain HOW to close the loans early (which loan first, how much, how often, when to check fees), and 0-3 risks.`
+
   async function insights(payload) {
     const kind = validKind(payload.kind)
     if (!kind) return bad('A valid statement type is required.')
@@ -608,7 +722,7 @@ score.value is a 0-100 card-health score (utilisation, interest/fees paid, on-ti
     if (context.length > 60000) return bad('That is too much data to analyse at once.', 413)
     const result = await callOpenAI({
       model: payload.fast ? FAST_MODEL() : INSIGHT_MODEL(),
-      system: `You answer questions about an Indian user's ${kind === 'bank' ? 'bank account' : 'credit card'} statements using ONLY the JSON data provided (INR, amounts as ₹ with Indian grouping). If the data cannot answer, say so plainly and say what would be needed. Be concise: 2-5 sentences, or a short list. Never invent numbers.`,
+      system: `You answer questions about an Indian user's ${kind === 'bank' ? 'bank account' : kind === 'loan' ? 'loans' : 'credit card'} statements using ONLY the JSON data provided (INR, amounts as ₹ with Indian grouping). If the data cannot answer, say so plainly and say what would be needed. Be concise: 2-5 sentences, or a short list. Never invent numbers.`,
       user: `Data:\n${context}\n\nQuestion: ${question}`,
       name: 'answer',
       schema: SCHEMAS.answer,

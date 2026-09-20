@@ -1,0 +1,80 @@
+Page 1 of 3
+Branch SOL ID 2348 - ICICI Bank Ltd., Example Branch
+Loan Account Statement for LPBNG00000000002
+Mr. Test User
+Example Address
+Bangalore - 560001
+Tel: (022) 21212121 ,
+Mob: 0000000000
+Email: test@example.com
+Loan Account Details As on 20-Sep-26
+Sanction Date Loan Amount Adv. EMI Rate of Interest
+(Per annum)
+Penal Charge
+for Late
+Payment
+(Per annum)
+Instl. Paid Instl. Pending Future
+Instl.Nos.
+Future Instl.Amt
+07-May-26 1,500,000.00 0.00 9.99% 5.00% 4 / 111,128.00 0 / 0.00 68 1,887,594.00
+Branch: Bangalore Co-Applicant Name:
+Guarantor Name:
+Product: PERSONAL LOAN Customer Category: Not Applicable
+Application No: US0000000002
+Tenure: 72
+Frequency: Monthly PAN No. : XXXXX0000X
+Int. Rate Type: Fixed
+Current EMI: 27782.00
+Currency: INR
+Instalment Plan: Equated Instl
+Repayment Mode: AUTO DEBIT A/C No.000000000000
+Status: Active
+Disbursement Details As on 20-Sep-26
+Disb. No Date Particulars Reference Amount
+1 07-May-26 Disbursal Fund Transfer/RTGS 1,500,000.00
+Total 1,500,000.00
+Mr. Test User
+Account Statement for LPBNG00000000002 from 07-May-26 to 20-Sep-26
+Page 2 of 3
+Pre-Payment/Conversion Details As on 20-Sep-26
+There is no Part-prepayment/Conversion for the loan.
+Loan Finance Summary As on 20-Sep-26
+Particulars Instalments/Pre-payments Interest on Overdue
+Instalment
+Bounce Charges Other Charges Total
+PRIN INT
+Op. Bal. 0.00 0.00 0.00 0.00 0.00 0.00
+Debits 62,800.00 48,328.00 0.00 0.00 10,618.82 121,746.82
+Credits 62,800.00 48,328.00 0.00 0.00 10,618.82 121,746.82
+Cl. Bal. 0.00 0.00 0.00 0.00 0.00 0.00
+Current OS Excess Receivable Accrued
+Interest
+Accrued
+interest on
+overdue
+Instalment
+Accrued Penal
+charge for late
+payment
+Future
+Principal
+Total
+Receivable
+0.00 0.00 0.00 5,982.00 0.00 0.00 1,437,200.00 1,443,182.00
+Loan Transaction Details from 07-May-26 to 20-Sep-26
+Trans. Date Value Date Trans Type Particulars Debit Credit Balance
+07-May-26 07-May-26 Other Charge Pf Recd Frm Cust-nirr-nded 10,618.82 10,618.82
+07-May-26 07-May-26 Disbursement Amt Financed 1,500,000.00 (1,489,381.18)
+07-May-26 07-May-26 Payment Fund Transfer/RTGS 1,489,381.18 0.00
+05-Jun-26 05-Jun-26 EMI Due for Inst.1, Jun-26 27,782.00 27,782.00
+05-Jun-26 05-Jun-26 Receipt Chq No.:A88049899001 Rcpt No.:A0626049899 27,782.00 0.00
+05-Jul-26 05-Jul-26 EMI Due for Inst.2, Jul-26 27,782.00 27,782.00
+05-Jul-26 05-Jul-26 Receipt Chq No.:A88049899002 Rcpt No.:A0726049899 27,782.00 0.00
+05-Aug-26 05-Aug-26 EMI Due for Inst.3, Aug-26 27,782.00 27,782.00
+05-Aug-26 05-Aug-26 Receipt Chq No.:A88049899003 Rcpt No.:A0826049899 27,782.00 0.00
+05-Sep-26 05-Sep-26 EMI Due for Inst.4, Sep-26 27,782.00 27,782.00
+05-Sep-26 05-Sep-26 Receipt Chq No.:A88049899004 Rcpt No.:A0926049899 27,782.00 0.00
+Adjustment Entries from 07-May-26 to 20-Sep-26
+There is no adjustment between 07-May-26 to 20-Sep-26
+This is a system generated letter. Hence, it does not require any signature.

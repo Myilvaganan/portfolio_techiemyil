@@ -74,6 +74,17 @@ describe('StatementUploader', () => {
     expect(api.processStatementFile).toHaveBeenCalledTimes(2)
   })
 
+  it('accepts only PDFs for loan documents and labels what was read', async () => {
+    vi.mocked(api.processStatementFile).mockResolvedValue({ statement: { txnCount: 72 } as never, replaced: 0, label: 'Amortization schedule · 72 instalments' })
+    const user = userEvent.setup({ applyAccept: false })
+    render(<StatementUploader kind="loan" onSaved={() => {}} />)
+    await user.upload(screen.getByLabelText('Upload statements'), [pdf('LnAmortSchedule.pdf'), new File(['a,b'], 'sheet.csv', { type: 'text/csv' })])
+    expect(await screen.findByText(/Amortization schedule · 72 instalments saved/)).toBeInTheDocument()
+    expect(screen.getByText(/loan documents must be pdf files/i)).toBeInTheDocument()
+    expect(api.processStatementFile).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(api.processStatementFile).mock.calls[0][0].kind).toBe('loan')
+  })
+
   it('rejects unsupported file types without uploading them', async () => {
     const user = userEvent.setup({ applyAccept: false })
     render(<StatementUploader kind="bank" onSaved={() => {}} />)

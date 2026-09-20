@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp, BarChart3, Landmark, CreditCard } from 'lucide-react'
+import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
       { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
+      { label: 'Loans', to: '/admin/loans', icon: HandCoins },
     ],
   },
   {

@@ -58,10 +58,19 @@ function Typed({ text }: { text: string }) {
   return <>{text.slice(0, n)}</>
 }
 
+// The panel takes on the mood of the analysis: green when things look healthy, amber for mixed, red when they don't.
+function moodOf(score?: number) {
+  if (score === undefined) return { surface: '', blob: 'bg-accent/10' }
+  if (score >= 70) return { surface: 'border-accent/30 bg-gradient-to-br from-accent/[0.09] to-transparent', blob: 'bg-accent/20' }
+  if (score >= 45) return { surface: 'border-amber-500/35 bg-gradient-to-br from-amber-500/[0.09] to-transparent', blob: 'bg-amber-500/20' }
+  return { surface: 'border-error/35 bg-gradient-to-br from-error/[0.09] to-transparent', blob: 'bg-error/20' }
+}
+
 export function AiInsightsPanel({ insights, busy, error, onGenerate, hasData }: { insights: AiInsights | null; busy: boolean; error: string | null; onGenerate: () => void; hasData: boolean }) {
+  const mood = moodOf(insights?.score.value)
   return (
-    <GlassCard hover={false} className="relative overflow-hidden p-5 md:p-6">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl" aria-hidden />
+    <GlassCard hover={false} className={cn('relative overflow-hidden p-5 transition-colors duration-700 md:p-6', mood.surface)}>
+      <div className={cn('pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full blur-3xl transition-colors duration-700', mood.blob)} aria-hidden />
       <div className="relative">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">

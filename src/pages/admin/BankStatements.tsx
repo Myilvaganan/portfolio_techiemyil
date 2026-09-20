@@ -146,11 +146,11 @@ export function BankStatements() {
 
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
               <Kpi label="Net cash flow" value={k.net} format={signedInr} tone={k.net >= 0 ? 'good' : 'bad'} sub={`${k.months} month${k.months === 1 ? '' : 's'}`} spark={flow.map((r) => r.net)} />
-              <Kpi label="Money in" value={k.income} sub={`${inr(k.avgMonthlyIncome)} / month`} delay={0.05} spark={flow.map((r) => r.income)} />
-              <Kpi label="Money out" value={k.spend} sub={`${inr(k.avgMonthlySpend)} / month`} delay={0.1} spark={flow.map((r) => r.spend)} />
+              <Kpi label="Money in" value={k.income} tone={k.income > 0 ? 'good' : undefined} sub={`${inr(k.avgMonthlyIncome)} / month`} delay={0.05} spark={flow.map((r) => r.income)} />
+              <Kpi label="Money out" value={k.spend} tone={k.spend > k.income ? 'bad' : k.income > 0 && k.spend / k.income > 0.85 ? 'warn' : undefined} sub={`${inr(k.avgMonthlySpend)} / month`} delay={0.1} spark={flow.map((r) => r.spend)} />
               <Kpi label="Savings rate" value={k.savingsRate} format={(n) => pct(n)} tone={k.savingsRate >= 20 ? 'good' : k.savingsRate >= 0 ? 'warn' : 'bad'} sub="of money in" delay={0.15} spark={flow.map((r) => r.savingsRate)} />
-              <Kpi label="Latest balance" value={k.latestBalance ?? 0} sub={k.runwayMonths === null ? 'balance not in statements' : `${k.runwayMonths.toFixed(1)} months of spending`} delay={0.2} spark={balance.map((b) => b.balance)} />
-              <Kpi label="Cash withdrawn" value={k.cashWithdrawn} sub={`${k.txns.toLocaleString('en-IN')} transactions`} delay={0.25} />
+              <Kpi label="Latest balance" value={k.latestBalance ?? 0} tone={k.runwayMonths === null ? undefined : k.runwayMonths < 1 ? 'bad' : k.runwayMonths < 3 ? 'warn' : 'good'} sub={k.runwayMonths === null ? 'balance not in statements' : `${k.runwayMonths.toFixed(1)} months of spending`} delay={0.2} spark={balance.map((b) => b.balance)} />
+              <Kpi label="Cash withdrawn" value={k.cashWithdrawn} tone={k.spend > 0 && k.cashWithdrawn / k.spend > 0.15 ? 'warn' : undefined} sub={`${k.txns.toLocaleString('en-IN')} transactions`} delay={0.25} />
             </div>
 
             <Reveal>
