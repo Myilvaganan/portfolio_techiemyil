@@ -85,9 +85,40 @@ describe('BankStatements', () => {
     expect(screen.getByRole('img', { name: /health score 82/i })).toBeInTheDocument()
   })
 
+  it('analyses only the newest month by default, then the chosen period on request', async () => {
+    const user = userEvent.setup()
+    render(<BankStatements />)
+    await waitFor(() => expect(api.generateInsights).toHaveBeenCalledTimes(1))
+    const [, context, fp] = vi.mocked(api.generateInsights).mock.calls[0] as [string, { period: { from: string; to: string }; transactions: number }, string]
+    expect(context.period).toEqual({ from: '2026-07-01', to: '2026-07-12' })
+    expect(context.transactions).toBe(3)
+    expect(fp.endsWith('|2026-07-01~2026-07-31')).toBe(true)
+
+    await screen.findByText('Steady saver with lean subscriptions')
+    await user.click(within(screen.getByRole('group', { name: 'Analysis period' })).getByRole('button', { name: 'Last 3 months' }))
+    expect(api.generateInsights).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: /analyse this period/i }))
+    await waitFor(() => expect(api.generateInsights).toHaveBeenCalledTimes(2))
+    const [, wider] = vi.mocked(api.generateInsights).mock.calls[1] as [string, { period: { from: string }; transactions: number }, string]
+    expect(wider.transactions).toBe(6)
+    expect(wider.period.from).toBe('2026-06-01')
+  })
+
+  it('keeps a saved analysis of another period instead of regenerating it', async () => {
+    const { fingerprint, insightsFingerprint } = await import('@/lib/statements')
+    const saved = insightsFingerprint(fingerprint(data.transactions), { from: '2026-06-01', to: '2026-06-30' })
+    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: saved } })
+    render(<BankStatements />)
+    await screen.findByText('Steady saver with lean subscriptions')
+    expect(screen.getByText(/Showing the analysis of/i)).toHaveTextContent('Jun 2026')
+    expect(screen.getByRole('button', { name: /analyse this period/i })).toBeInTheDocument()
+    expect(api.generateInsights).not.toHaveBeenCalled()
+  })
+
   it('does not run the AI analysis again on a plain reload once insights are saved', async () => {
-    const { fingerprint } = await import('@/lib/statements')
-    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: fingerprint(data.transactions) } })
+    const { fingerprint, insightsFingerprint, presetPeriod } = await import('@/lib/statements')
+    const saved = insightsFingerprint(fingerprint(data.transactions), presetPeriod('last1', data.transactions, { from: '', to: '' }))
+    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: saved } })
     const first = render(<BankStatements />)
     await screen.findByText('Steady saver with lean subscriptions')
     first.unmount()
@@ -97,8 +128,9 @@ describe('BankStatements', () => {
   })
 
   it('reuses saved insights instead of calling the AI again', async () => {
-    const { fingerprint } = await import('@/lib/statements')
-    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: fingerprint(data.transactions) } })
+    const { fingerprint, insightsFingerprint, presetPeriod } = await import('@/lib/statements')
+    const saved = insightsFingerprint(fingerprint(data.transactions), presetPeriod('last1', data.transactions, { from: '', to: '' }))
+    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: saved } })
     render(<BankStatements />)
     expect(await screen.findByText('Steady saver with lean subscriptions')).toBeInTheDocument()
     expect(api.generateInsights).not.toHaveBeenCalled()

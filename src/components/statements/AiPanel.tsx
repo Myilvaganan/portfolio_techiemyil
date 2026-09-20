@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { AlertTriangle, CheckCircle2, Info, Lightbulb, RefreshCw, Send, ShieldAlert, Sparkles, XCircle } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
-import type { AiInsights } from '@/lib/statements'
+import { AI_PERIOD_OPTIONS, periodLabel, type AiInsights, type AiPeriod, type AiPeriodId } from '@/lib/statements'
 import { Reveal } from '@/components/viz/motion'
 
 const TONE = {
@@ -66,7 +66,60 @@ function moodOf(score?: number) {
   return { surface: 'border-error/35 bg-gradient-to-br from-error/[0.09] to-transparent', blob: 'bg-error/20' }
 }
 
-export function AiInsightsPanel({ insights, busy, error, onGenerate, hasData }: { insights: AiInsights | null; busy: boolean; error: string | null; onGenerate: () => void; hasData: boolean }) {
+// Choose what stretch of the statements the AI looks at. Presets count back from the newest month in the data.
+export function AiPeriodPicker({ id, custom, onId, onCustom, resolved }: { id: AiPeriodId; custom: AiPeriod; onId: (id: AiPeriodId) => void; onCustom: (p: AiPeriod) => void; resolved: AiPeriod | null }) {
+  return (
+    <div className="mb-4 space-y-2">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Analysis period">
+        {AI_PERIOD_OPTIONS.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            data-cursor="hover"
+            aria-pressed={id === o.id}
+            onClick={() => onId(o.id)}
+            className={cn('rounded-full border px-3 py-1 text-xs transition-colors', id === o.id ? 'border-accent/50 bg-accent/15 text-text' : 'border-border text-text-secondary hover:border-accent/40 hover:text-text')}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {id === 'custom' && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+          <label className="flex items-center gap-1.5">
+            From
+            <input type="date" value={custom.from} max={custom.to || undefined} onChange={(e) => onCustom({ ...custom, from: e.target.value })} className="rounded-lg border border-border bg-surface-2 px-2 py-1 text-text" />
+          </label>
+          <label className="flex items-center gap-1.5">
+            To
+            <input type="date" value={custom.to} min={custom.from || undefined} onChange={(e) => onCustom({ ...custom, to: e.target.value })} className="rounded-lg border border-border bg-surface-2 px-2 py-1 text-text" />
+          </label>
+        </div>
+      )}
+      <p className="text-[11px] text-text-secondary/80">{resolved ? `Will analyse ${periodLabel(resolved)}.` : 'Pick a valid from and to date.'}</p>
+    </div>
+  )
+}
+
+export function AiInsightsPanel({
+  insights,
+  busy,
+  error,
+  onGenerate,
+  hasData,
+  picker,
+  shownPeriod,
+  periodMatches = true,
+}: {
+  insights: AiInsights | null
+  busy: boolean
+  error: string | null
+  onGenerate: () => void
+  hasData: boolean
+  picker?: ReactNode
+  shownPeriod?: AiPeriod | null
+  periodMatches?: boolean
+}) {
   const mood = moodOf(insights?.score.value)
   return (
     <GlassCard hover={false} className={cn('relative overflow-hidden p-5 transition-colors duration-700 md:p-6', mood.surface)}>
@@ -85,9 +138,17 @@ export function AiInsightsPanel({ insights, busy, error, onGenerate, hasData }: 
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text disabled:opacity-50"
           >
             <RefreshCw className={cn('h-3.5 w-3.5', busy && 'animate-spin')} />
-            {insights ? 'Regenerate' : 'Analyse'}
+            {insights ? (periodMatches ? 'Regenerate' : 'Analyse this period') : 'Analyse'}
           </button>
         </div>
+
+        {picker}
+        {insights && shownPeriod && (
+          <p className="mb-3 text-xs text-text-secondary">
+            Showing the analysis of <span className="font-semibold text-text">{periodLabel(shownPeriod)}</span>
+            {!periodMatches && ' — pick "Analyse this period" to run it for your selection.'}
+          </p>
+        )}
 
         {error && <p role="alert" className="mb-3 rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{error}</p>}
         {busy && !insights ? (

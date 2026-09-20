@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { Landmark, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { AiInsightsPanel, AskAi } from '@/components/statements/AiPanel'
+import { AiInsightsPanel, AiPeriodPicker, AskAi } from '@/components/statements/AiPanel'
 import { StatementLibrary } from '@/components/statements/StatementLibrary'
 import { StatementUploader } from '@/components/statements/StatementUploader'
 import { TransactionsTable } from '@/components/statements/TransactionsTable'
@@ -23,6 +23,8 @@ import {
   merchantTotals,
   monthLabel,
   monthlyFlow,
+  type AiPeriod,
+  type AiPeriodId,
   recurringCharges,
   topWithOther,
   weekdaySpend,
@@ -38,7 +40,11 @@ export function BankStatements() {
   const [uploaderOpen, setUploaderOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const options = useMemo(() => ({ excludeTransfers }), [excludeTransfers])
-  const s = useStatements('bank', options, !uploading)
+  // The AI reads the newest month by default; the period can be changed and analysed on request.
+  const [periodId, setPeriodId] = useState<AiPeriodId>('last1')
+  const [customPeriod, setCustomPeriod] = useState<AiPeriod>({ from: '', to: '' })
+  const choice = useMemo(() => ({ id: periodId, custom: customPeriod }), [periodId, customPeriod])
+  const s = useStatements('bank', options, !uploading, choice)
   const { data } = s
 
   const accounts = useMemo(() => {
@@ -154,7 +160,16 @@ export function BankStatements() {
             </div>
 
             <Reveal>
-              <AiInsightsPanel insights={s.insights} busy={s.insightsBusy} error={s.insightsError} onGenerate={() => void s.generate()} hasData={hasData} />
+              <AiInsightsPanel
+                insights={s.insights}
+                busy={s.insightsBusy}
+                error={s.insightsError}
+                onGenerate={() => void s.generate()}
+                hasData={hasData}
+                picker={<AiPeriodPicker id={periodId} custom={customPeriod} onId={setPeriodId} onCustom={setCustomPeriod} resolved={s.period} />}
+                shownPeriod={s.shownPeriod}
+                periodMatches={s.periodMatches}
+              />
             </Reveal>
 
             <div className="grid gap-5 lg:grid-cols-2">

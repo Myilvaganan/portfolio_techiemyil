@@ -405,7 +405,59 @@ export function monthlySpendByCard(txns: Txn[]): { months: string[]; keys: strin
   return { months, keys, values }
 }
 
+// ---------- AI analysis period ----------
+
+export interface AiPeriod {
+  from: string
+  to: string
+}
+export type AiPeriodId = 'last1' | 'last3' | 'last6' | 'all' | 'custom'
+
+export const AI_PERIOD_OPTIONS: { id: AiPeriodId; label: string }[] = [
+  { id: 'last1', label: 'Last month' },
+  { id: 'last3', label: 'Last 3 months' },
+  { id: 'last6', label: 'Last 6 months' },
+  { id: 'all', label: 'All time' },
+  { id: 'custom', label: 'Custom' },
+]
+
+const monthEnd = (month: string) => {
+  const [y, m] = month.split('-').map(Number)
+  return `${month}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`
+}
+
+// "Last month" is the newest month present in the statements, so it works even when the latest upload is a while old.
+export function presetPeriod(id: AiPeriodId, txns: Txn[], custom: AiPeriod): AiPeriod | null {
+  if (id === 'custom') return custom.from && custom.to && custom.from <= custom.to ? custom : null
+  const dates = txns.map((t) => t.date).sort()
+  if (!dates.length) return null
+  if (id === 'all') return { from: dates[0], to: dates.at(-1)! }
+  const last = monthOf(dates.at(-1)!)
+  const [y, m] = last.split('-').map(Number)
+  const back = id === 'last1' ? 0 : id === 'last3' ? 2 : 5
+  const first = new Date(Date.UTC(y, m - 1 - back, 1)).toISOString().slice(0, 7)
+  return { from: `${first}-01`, to: monthEnd(last) }
+}
+
+export function inPeriod(txns: Txn[], p: AiPeriod): Txn[] {
+  return txns.filter((t) => t.date >= p.from && t.date <= p.to)
+}
+
+export function periodLabel(p: AiPeriod): string {
+  const sameMonth = monthOf(p.from) === monthOf(p.to)
+  if (p.from.endsWith('-01') && p.to === monthEnd(monthOf(p.to))) return sameMonth ? monthLabel(monthOf(p.from), true) : `${monthLabel(monthOf(p.from), true)} – ${monthLabel(monthOf(p.to), true)}`
+  return `${dayLabel(p.from)} – ${dayLabel(p.to)}`
+}
+
 // ---------- Fingerprint + AI context ----------
+
+// Saved insights carry the data fingerprint plus the period they were written for: `<data>|<from>~<to>`.
+export const insightsFingerprint = (data: string, p?: AiPeriod | null) => (p ? `${data}|${p.from}~${p.to}` : data)
+
+export function periodOfFingerprint(fp: string): AiPeriod | null {
+  const m = /\|(\d{4}-\d{2}-\d{2})~(\d{4}-\d{2}-\d{2})$/.exec(fp)
+  return m ? { from: m[1], to: m[2] } : null
+}
 
 export function fingerprint(txns: Txn[]): string {
   const dates = txns.map((t) => t.date).sort()

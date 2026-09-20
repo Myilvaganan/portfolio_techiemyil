@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  inPeriod,
+  insightsFingerprint,
+  periodLabel,
+  periodOfFingerprint,
+  presetPeriod,
   aiContext,
   anomalies,
   balanceSeries,
@@ -45,6 +50,36 @@ const bank: Txn[] = [
   tx('2026-08-03', 'Netflix', 649, 0, 'Subscriptions', { balance: 296853 }),
   tx('2026-08-14', 'Swiggy', 600, 0, 'Food & Dining', { balance: 296253 }),
 ]
+
+describe('AI analysis period', () => {
+  const t = (date: string) => ({ date }) as Txn
+  const list = [t('2026-03-05'), t('2026-05-20'), t('2026-06-02'), t('2026-06-18')]
+  const none = { from: '', to: '' }
+
+  it('defaults to the newest month in the data and counts back for wider presets', () => {
+    expect(presetPeriod('last1', list, none)).toEqual({ from: '2026-06-01', to: '2026-06-30' })
+    expect(presetPeriod('last3', list, none)).toEqual({ from: '2026-04-01', to: '2026-06-30' })
+    expect(presetPeriod('all', list, none)).toEqual({ from: '2026-03-05', to: '2026-06-18' })
+    expect(presetPeriod('last1', [], none)).toBeNull()
+  })
+
+  it('uses a valid custom range only', () => {
+    expect(presetPeriod('custom', list, { from: '2026-05-01', to: '2026-05-31' })).toEqual({ from: '2026-05-01', to: '2026-05-31' })
+    expect(presetPeriod('custom', list, { from: '2026-06-01', to: '2026-05-01' })).toBeNull()
+    expect(presetPeriod('custom', list, none)).toBeNull()
+  })
+
+  it('filters, labels and round-trips the period through the fingerprint', () => {
+    const p = { from: '2026-06-01', to: '2026-06-30' }
+    expect(inPeriod(list, p)).toHaveLength(2)
+    expect(periodLabel(p)).toBe('Jun 2026')
+    expect(periodLabel({ from: '2026-04-01', to: '2026-06-30' })).toBe('Apr 2026 – Jun 2026')
+    const fp = insightsFingerprint('12:1:2:a:b', p)
+    expect(fp.length).toBeLessThan(200)
+    expect(periodOfFingerprint(fp)).toEqual(p)
+    expect(periodOfFingerprint('12:1:2:a:b')).toBeNull()
+  })
+})
 
 describe('bank analytics', () => {
   it('builds monthly cash flow and can leave out transfers', () => {
