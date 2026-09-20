@@ -1,30 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import {
-  Archive,
-  Bell,
-  Calculator,
-  Briefcase,
-  Code2,
-  Download,
-  FileText,
-  FolderOpen,
-  Image,
-  LayoutDashboard,
-  ListTree,
-  LogOut,
-  Mail,
-  Menu,
-  Newspaper,
-  Palette,
-  PieChart,
-  Search,
-  Settings,
-  Shield,
-  SlidersHorizontal,
-  UserCog,
-  Users,
-} from 'lucide-react'
+import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -44,19 +20,6 @@ interface NavSection {
 const NAV_SECTIONS: NavSection[] = [
   { items: [{ label: 'Dashboard', to: '/admin', icon: LayoutDashboard }] },
   {
-    label: 'Content',
-    items: [
-      { label: 'Projects', to: '/admin/projects', icon: Briefcase },
-      { label: 'Services', to: '/admin/services', icon: SlidersHorizontal },
-      { label: 'Blog Posts', to: '/admin/blog', icon: Newspaper },
-      { label: 'Enquiries', to: '/admin/enquiries', icon: Mail },
-      { label: 'Subscribers', to: '/admin/subscribers', icon: Users },
-      { label: 'Media Library', to: '/admin/media', icon: Image },
-      { label: 'Pages', to: '/admin/pages', icon: FileText },
-      { label: 'Portfolio Downloads', to: '/admin/downloads', icon: Download },
-    ],
-  },
-  {
     label: 'Documents',
     items: [{ label: 'Document Manager', to: '/admin/documents', icon: FolderOpen }],
   },
@@ -65,24 +28,6 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
       { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
-    ],
-  },
-  {
-    label: 'Settings',
-    items: [
-      { label: 'Appearance', to: '/admin/appearance', icon: Palette },
-      { label: 'Menus', to: '/admin/menus', icon: ListTree },
-      { label: 'Theme Settings', to: '/admin/theme-settings', icon: SlidersHorizontal },
-      { label: 'Custom Code', to: '/admin/custom-code', icon: Code2 },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      { label: 'Users', to: '/admin/users', icon: UserCog },
-      { label: 'Roles', to: '/admin/roles', icon: Shield },
-      { label: 'Settings', to: '/admin/settings', icon: Settings },
-      { label: 'Backup & Tools', to: '/admin/backup', icon: Archive },
     ],
   },
 ]

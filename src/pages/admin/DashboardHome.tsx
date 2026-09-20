@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Briefcase, ExternalLink, FolderOpen, HardDrive, Image, Newspaper, Tags, TrendingUp } from 'lucide-react'
+import { Calculator, ExternalLink, FolderOpen, HardDrive, PieChart, Tags, TrendingUp } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
@@ -43,9 +43,8 @@ function StatCard({
 
 const QUICK_ACTIONS = [
   { label: 'Document Manager', to: '/admin/documents', icon: FolderOpen },
-  { label: 'Projects', to: '/admin/projects', icon: Briefcase },
-  { label: 'Blog Posts', to: '/admin/blog', icon: Newspaper },
-  { label: 'Media Library', to: '/admin/media', icon: Image },
+  { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
+  { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
 ]
 
 export function DashboardHome() {
@@ -91,7 +90,7 @@ export function DashboardHome() {
 
       <div>
         <h2 className="mb-4 font-display text-lg font-semibold text-text">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.to}
@@ -108,11 +107,6 @@ export function DashboardHome() {
           ))}
         </div>
       </div>
-
-      <p className="text-xs text-text-secondary">
-        Only the Document Manager is wired to real data right now — other sections in the sidebar are placeholders
-        ready to be built out.
-      </p>
     </div>
   )
 }
