@@ -20,6 +20,8 @@ type PriceStatus = 'loading' | 'live' | 'est'
 
 const INSTRUMENT_IDS = Object.keys(INSTRUMENTS) as InstrumentId[]
 const QUICK_LOTS = [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2]
+// India taxes crypto gains flat at 30%, unlike forex/indices — shown only for Bitcoin profit.
+const BITCOIN_TAX_RATE = 0.3
 
 const inputClass =
   'w-full rounded-lg border border-border bg-surface-2 px-3 py-2 font-mono text-sm text-text outline-none transition-colors focus:border-accent/50'
@@ -58,6 +60,7 @@ function Stat({
   value,
   inr,
   sub,
+  tax,
   className,
   valueClassName,
 }: {
@@ -65,6 +68,7 @@ function Stat({
   value: string
   inr?: string
   sub?: string
+  tax?: string
   className?: string
   valueClassName?: string
 }) {
@@ -73,6 +77,7 @@ function Stat({
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
       <p className={cn('mt-1.5 font-mono text-2xl font-bold text-text', valueClassName)}>{value}</p>
       {inr && <p className="mt-0.5 font-mono text-[11px] text-text-secondary/60">{inr}</p>}
+      {tax && <p className="mt-0.5 font-mono text-[11px] text-amber-500/80">{tax}</p>}
       {sub && <p className="mt-1 text-[11px] text-text-secondary/70">{sub}</p>}
     </div>
   )
@@ -414,6 +419,11 @@ export function MarginCalculator() {
             label="✅ TP profit"
             value={signed(pnl.tpProfit)}
             inr={inr(pnl.tpProfit)}
+            tax={
+              current === 'BITCOIN' && pnl.tpProfit > 0
+                ? `30% tax: -$${fmt(pnl.tpProfit * BITCOIN_TAX_RATE)}`
+                : undefined
+            }
             sub={`${fmt(Math.abs(pnl.tpPoints), 0)} pts`}
             valueClassName={pnl.tpProfit >= 0 ? 'text-accent' : 'text-error'}
           />
