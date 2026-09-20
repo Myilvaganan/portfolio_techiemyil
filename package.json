@@ -33,6 +33,7 @@
     "react-hook-form": "^7.83.0",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.1",
+    "read-excel-file": "^9.3.10",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.1"
   },

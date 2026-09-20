@@ -208,3 +208,30 @@ POST /admin/kite/logout    { accessToken }  200 { ok: true }   # revokes the Kit
 The access token is never stored server-side: the browser keeps it in
 `sessionStorage` (Kite expires it around 6 AM IST) and sends it with each
 snapshot request. It is never logged.
+
+## Options trade history (`/admin/options-analytics`)
+
+Trades imported from broker tradebook exports (Zerodha, Dhan, ICICI Direct,
+Groww, Pocketful, INDmoney, or any custom broker) are parsed in the browser —
+columns and contract names are normalised to NSE-style symbols there — and
+stored per broker as one JSON object in the vault bucket:
+
+| Broker | Key |
+|---|---|
+| `zerodha` (default) | `_data/options-fills.json` |
+| any other id (`^[a-z0-9-]{2,24}$`) | `_data/options-fills-<id>.json` |
+
+The bucket is versioned, SSE-S3 and private. The `_data/` prefix is hidden
+from the document list and rejected by the document download/delete routes.
+Uploads are merged and de-duplicated server-side (`id|symbol|ts`), so
+re-importing or importing from two devices never overwrites anything. No IAM
+changes are needed — the existing bucket permissions cover it.
+
+```
+GET    /admin/options/brokers                      200 { "brokers": [ { broker, size } ] }
+GET    /admin/options/fills?broker=<id>            200 { broker, fills: [ { id, orderId, symbol, side, qty, price, ts, date, time } ] }
+POST   /admin/options/fills?broker=<id> { fills }  200 { added, skipped, total }   # max 10,000 per request
+DELETE /admin/options/fills?broker=<id>            200 { ok: true }
+```
+
+`broker` defaults to `zerodha` when omitted.

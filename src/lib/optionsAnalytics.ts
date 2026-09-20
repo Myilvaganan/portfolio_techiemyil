@@ -1,6 +1,5 @@
-// Options-trade analytics built from a Zerodha Console tradebook export.
-// Kite Connect only returns today's orders, so history has to come from Console
-// (Reports → Tradebook → F&O → Download CSV).
+// Options-trade analytics built from broker tradebook exports (see tradeImport.ts for parsing).
+// Broker APIs only return today's orders, so history comes from the exported files.
 
 export interface Fill {
   id: string
@@ -43,6 +42,7 @@ export interface RoundTrip {
   pnl: number
   holdMin: number
   expired: boolean
+  broker?: string
 }
 
 export interface OpenPosition {
@@ -110,102 +110,6 @@ export function parseOptionSymbol(symbol: string): OptionSymbol | null {
   }
   const month = WEEKLY_MONTH[wMon]
   return { underlying, type: type as 'CE' | 'PE', strike: Number(strike), expiry: `${year}-${pad(month)}-${wDay}`, exactExpiry: true }
-}
-
-// ---------- CSV import ----------
-
-function splitCsvLine(line: string): string[] {
-  const out: string[] = []
-  let cur = ''
-  let quoted = false
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i]
-    if (quoted) {
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"'
-        i++
-      } else if (c === '"') quoted = false
-      else cur += c
-    } else if (c === '"') quoted = true
-    else if (c === ',') {
-      out.push(cur)
-      cur = ''
-    } else cur += c
-  }
-  out.push(cur)
-  return out.map((s) => s.trim())
-}
-
-const ALIASES: Record<string, string[]> = {
-  symbol: ['symbol', 'tradingsymbol', 'scrip', 'instrument'],
-  date: ['trade_date', 'date', 'tradedate'],
-  side: ['trade_type', 'type', 'buy/sell', 'side', 'transaction_type'],
-  qty: ['quantity', 'qty'],
-  price: ['price', 'trade_price', 'average_price'],
-  tradeId: ['trade_id', 'tradeid'],
-  orderId: ['order_id', 'orderid'],
-  time: ['order_execution_time', 'execution_time', 'trade_time', 'time'],
-}
-
-function parseTimestamp(dateCell: string, timeCell: string): { ts: number; date: string; time: string } | null {
-  const source = /\d{4}-\d{2}-\d{2}/.test(timeCell) ? timeCell : `${dateCell} ${timeCell}`
-  const m = /(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(source.trim() || dateCell)
-  if (!m) return null
-  const [, y, mo, d, hh = '00', mm = '00', ss = '00'] = m
-  return {
-    ts: Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(hh), Number(mm), Number(ss)),
-    date: `${y}-${mo}-${d}`,
-    time: `${hh}:${mm}:${ss}`,
-  }
-}
-
-export interface ParseResult {
-  fills: Fill[]
-  optionRows: number
-  ignoredRows: number
-  error?: string
-}
-
-export function parseTradebookCsv(text: string): ParseResult {
-  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim())
-  if (lines.length < 2) return { fills: [], optionRows: 0, ignoredRows: 0, error: 'The file is empty.' }
-
-  const header = splitCsvLine(lines[0]).map((h) => h.toLowerCase())
-  const col: Record<string, number> = {}
-  for (const [key, names] of Object.entries(ALIASES)) col[key] = header.findIndex((h) => names.includes(h))
-  if (col.symbol < 0 || col.side < 0 || col.qty < 0 || col.price < 0 || (col.date < 0 && col.time < 0)) {
-    return { fills: [], optionRows: 0, ignoredRows: 0, error: 'This doesn’t look like a Zerodha Console tradebook (symbol, trade type, quantity, price and date columns are needed).' }
-  }
-
-  const fills: Fill[] = []
-  let ignoredRows = 0
-  lines.slice(1).forEach((line, i) => {
-    const cells = splitCsvLine(line)
-    const symbol = (cells[col.symbol] ?? '').toUpperCase()
-    if (!parseOptionSymbol(symbol)) {
-      ignoredRows++
-      return
-    }
-    const sideText = (cells[col.side] ?? '').toLowerCase()
-    const qty = Number(cells[col.qty])
-    const price = Number(cells[col.price])
-    const when = parseTimestamp(cells[col.date] ?? '', cells[col.time] ?? '')
-    if (!(qty > 0) || !(price >= 0) || !when || !/^(buy|sell)/.test(sideText)) {
-      ignoredRows++
-      return
-    }
-    const tradeId = cells[col.tradeId] || `row${i}`
-    fills.push({
-      id: tradeId,
-      orderId: cells[col.orderId] || `t${tradeId}`,
-      symbol,
-      side: sideText.startsWith('buy') ? 'BUY' : 'SELL',
-      qty,
-      price,
-      ...when,
-    })
-  })
-  return { fills, optionRows: fills.length, ignoredRows }
 }
 
 export function mergeFills(existing: Fill[], incoming: Fill[]): Fill[] {
@@ -419,7 +323,7 @@ export interface Analytics {
   worstDay: DayPnl | null
   topWins: RoundTrip[]
   topLosses: RoundTrip[]
-  breakdowns: Record<'underlying' | 'type' | 'direction' | 'weekday' | 'entryHour' | 'dte' | 'hold', Slice[]>
+  breakdowns: Record<'broker' | 'underlying' | 'type' | 'direction' | 'weekday' | 'entryHour' | 'dte' | 'hold', Slice[]>
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -534,6 +438,7 @@ export function analyze(trips: RoundTrip[], charges: ChargeItem[]): Analytics {
     topWins: byPnl.filter((t) => t.pnl > 0).slice(0, 5),
     topLosses: byPnl.filter((t) => t.pnl < 0).slice(-5).reverse(),
     breakdowns: {
+      broker: group(sorted, (t) => t.broker ?? 'Unknown'),
       underlying: group(sorted, (t) => t.underlying),
       type: group(sorted, (t) => (t.type === 'CE' ? 'Calls (CE)' : 'Puts (PE)')),
       direction: group(sorted, (t) => (t.direction === 'LONG' ? 'Buying options' : 'Selling options')),
@@ -559,6 +464,7 @@ export function buildInsights(a: Analytics): Insight[] {
   const out: Insight[] = []
   const labelled: [string, Slice][] = []
   const names: Record<string, string> = {
+    broker: 'Trading with',
     underlying: 'Trading',
     type: 'Trading',
     direction: '',

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { ArrowDownRight, ArrowUpRight, FileUp, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
@@ -11,7 +11,6 @@ import {
   estimateCharges,
   mergeFills,
   parseOptionSymbol,
-  parseTradebookCsv,
   type Analytics,
   type ChargeRates,
   type Fill,
@@ -19,6 +18,9 @@ import {
   type Slice,
 } from '@/lib/optionsAnalytics'
 import { demoFills } from '@/lib/optionsDemo'
+import { clearStoredFills, fetchStoredBrokers, fetchStoredFills, saveFills } from '@/lib/optionsStore'
+import { BROKERS, SAMPLE_BROKER, brokerHint, brokerLabel, slugifyBroker } from '@/lib/brokers'
+import { FIELDS, analyseRows, autoMapping, cellText, mappingProblems, readTradeFile, rowsToFills, type Cell, type Mapping } from '@/lib/tradeImport'
 
 const STORAGE_KEY = 'options_fills_v1'
 const PAGE = 25
@@ -39,7 +41,8 @@ const RANGES: { id: Range; label: string }[] = [
 
 const tone = (n: number) => (n > 0 ? 'text-accent' : n < 0 ? 'text-error' : 'text-text-secondary')
 
-function loadFills(): Fill[] {
+// Older versions kept imports in this browser only; they're uploaded to the vault once, then removed.
+function takeLegacyFills(): Fill[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? (JSON.parse(raw) as Fill[]) : []
@@ -48,12 +51,11 @@ function loadFills(): Fill[] {
   }
 }
 
-function saveFills(fills: Fill[]) {
+function dropLegacyFills() {
   try {
-    if (fills.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(fills))
-    else localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(STORAGE_KEY)
   } catch {
-    // Storage full or blocked: the import just won't survive a reload.
+    // ignore
   }
 }
 
@@ -289,43 +291,221 @@ function ChargeInput({ label, value, onChange, step = '0.001' }: { label: string
   )
 }
 
+interface Acc {
+  fills: Fill[]
+  ignored: number
+  files: number
+}
+
+interface Pending {
+  brokerId: string
+  fileName: string
+  rows: Cell[][]
+  headerIdx: number
+  mapping: Mapping
+  rest: File[]
+  acc: Acc
+}
+
+const RATES_KEY = 'options_rates_v1'
+
+function loadRates(): Record<string, ChargeRates> {
+  try {
+    return JSON.parse(localStorage.getItem(RATES_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+}
+
+function MappingCard({ pending, onChange, onConfirm, onSkip }: { pending: Pending; onChange: (p: Pending) => void; onConfirm: () => void; onSkip: () => void }) {
+  const header = pending.rows[pending.headerIdx] ?? []
+  const problems = mappingProblems(pending.mapping)
+  const preview = pending.rows.slice(pending.headerIdx + 1, pending.headerIdx + 4)
+  const setHeaderRow = (idx: number) => {
+    const i = Math.min(Math.max(idx, 0), Math.max(pending.rows.length - 2, 0))
+    onChange({ ...pending, headerIdx: i, mapping: autoMapping(pending.rows[i] ?? [], pending.rows.slice(i + 1)) })
+  }
+  return (
+    <GlassCard hover={false} className="space-y-4 p-5">
+      <div>
+        <h2 className="font-display text-lg font-semibold text-text">Match the columns in {pending.fileName}</h2>
+        <p className="mt-1 text-xs text-text-secondary">
+          Couldn&apos;t recognise every column automatically. Pick which column holds each value; this mapping applies to this file only.
+        </p>
+      </div>
+      <label className="flex items-center gap-2 text-xs text-text-secondary">
+        Header is on row
+        <input
+          type="number"
+          min={1}
+          value={pending.headerIdx + 1}
+          onChange={(e) => setHeaderRow((parseInt(e.target.value, 10) || 1) - 1)}
+          className="w-16 rounded-md border border-border bg-surface-2 px-2 py-1 font-mono text-xs text-text outline-none focus:border-accent/50"
+        />
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {FIELDS.map((f) => (
+          <label key={f.key} className="flex flex-col gap-1 text-[11px] text-text-secondary">
+            {f.label}
+            <select
+              value={pending.mapping[f.key] ?? ''}
+              onChange={(e) => {
+                const next = { ...pending.mapping }
+                if (e.target.value === '') delete next[f.key]
+                else next[f.key] = Number(e.target.value)
+                onChange({ ...pending, mapping: next })
+              }}
+              className="rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs text-text outline-none focus:border-accent/50"
+            >
+              <option value="" className="bg-card">— not in file —</option>
+              {header.map((h, i) => (
+                <option key={i} value={i} className="bg-card">
+                  {cellText(h) || `Column ${i + 1}`}
+                </option>
+              ))}
+            </select>
+            {f.hint && <span className="text-[10px] text-text-secondary/70">{f.hint}</span>}
+          </label>
+        ))}
+      </div>
+      {preview.length > 0 && (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="bg-surface-2 text-text-secondary">
+                {header.map((h, i) => (
+                  <th key={i} className="whitespace-nowrap px-2 py-1.5 text-left font-medium">{cellText(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {preview.map((r, ri) => (
+                <tr key={ri} className="border-t border-border/60">
+                  {header.map((_, i) => (
+                    <td key={i} className="whitespace-nowrap px-2 py-1.5 font-mono text-text-secondary">{cellText(r[i])}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {problems.length > 0 && <p className="text-xs text-error">Still needed: {problems.join(', ')}.</p>}
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          data-cursor="hover"
+          disabled={problems.length > 0}
+          onClick={onConfirm}
+          className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          Import with this mapping
+        </button>
+        <button
+          type="button"
+          data-cursor="hover"
+          onClick={onSkip}
+          className="rounded-full border border-border px-5 py-2 text-sm text-text-secondary transition-colors hover:text-text"
+        >
+          Skip this file
+        </button>
+      </div>
+    </GlassCard>
+  )
+}
+
 export function OptionsAnalytics() {
-  const [stored, setStored] = useState<Fill[]>(loadFills)
+  const [data, setData] = useState<Record<string, Fill[]>>({})
+  const [active, setActive] = useState('all')
+  const [extraBrokers, setExtraBrokers] = useState<string[]>([])
+  const [addingBroker, setAddingBroker] = useState(false)
+  const [newBroker, setNewBroker] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
   const [demo, setDemo] = useState(false)
   const [range, setRange] = useState<Range>('all')
-  const [rates, setRates] = useState<ChargeRates>(DEFAULT_CHARGE_RATES)
+  const [ratesByBroker, setRatesByBroker] = useState<Record<string, ChargeRates>>(loadRates)
   const [tab, setTab] = useState<'trades' | 'orders'>('trades')
   const [filter, setFilter] = useState<'all' | 'wins' | 'losses'>('all')
   const [shown, setShown] = useState(PAGE)
   const [message, setMessage] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
+  const [pending, setPending] = useState<Pending | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const ids = await fetchStoredBrokers()
+        const loaded: Record<string, Fill[]> = {}
+        await Promise.all(
+          ids.map(async (id) => {
+            loaded[id] = await fetchStoredFills(id)
+          }),
+        )
+        const legacy = takeLegacyFills()
+        if (legacy.length) {
+          await saveFills('zerodha', legacy)
+          dropLegacyFills()
+          loaded.zerodha = mergeFills(loaded.zerodha ?? [], legacy)
+        }
+        if (cancelled) return
+        setData(loaded)
+        const withData = Object.keys(loaded).filter((id) => loaded[id].length)
+        setActive(withData.length === 1 ? withData[0] : withData.length > 1 ? 'all' : 'zerodha')
+      } catch (e) {
+        if (!cancelled) {
+          setActive('zerodha')
+          setMessage({ tone: 'bad', text: (e as Error).message })
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const today = new Date().toISOString().slice(0, 10)
-  const fills = useMemo(() => (demo ? demoFills() : stored), [demo, stored])
+  const viewData = useMemo<Record<string, Fill[]>>(() => (demo ? { [SAMPLE_BROKER]: demoFills() } : data), [demo, data])
+  const ratesFor = (id: string) => ratesByBroker[id] ?? DEFAULT_CHARGE_RATES
+  const brokerTabs = [...BROKERS.map((b) => b.id), ...Object.keys(data).filter((id) => !BROKERS.some((b) => b.id === id)), ...extraBrokers.filter((id) => !BROKERS.some((b) => b.id === id) && !(id in data))]
 
   const model = useMemo(() => {
     const from = rangeStart(range, today)
-    const { trips, open } = buildRoundTrips(fills, today)
-    const charges = estimateCharges(fills, rates)
     const inRange = (date: string) => !from || date >= from
-    const t = trips.filter((x) => inRange(x.closeDate))
+    const ids = demo ? [SAMPLE_BROKER] : active === 'all' ? Object.keys(data).filter((id) => data[id].length) : [active]
+    const per = ids.map((id) => {
+      const f = viewData[id] ?? []
+      const { trips, open } = buildRoundTrips(f, today)
+      return {
+        id,
+        fills: f,
+        open,
+        trips: trips.map((t) => ({ ...t, broker: brokerLabel(id) })),
+        charges: estimateCharges(f, ratesByBroker[id] ?? DEFAULT_CHARGE_RATES),
+      }
+    })
+    const trips = per.flatMap((p) => p.trips).filter((x) => inRange(x.closeDate))
     return {
-      trips: t,
-      open,
-      fills: fills.filter((f) => inRange(f.date)),
-      analytics: analyze(t, charges.filter((c) => inRange(c.date))),
-      expired: t.filter((x) => x.expired).length,
+      trips,
+      open: per.flatMap((p) => p.open),
+      allFills: per.flatMap((p) => p.fills).sort((x, y) => x.ts - y.ts),
+      fills: per.flatMap((p) => p.fills.filter((f) => inRange(f.date)).map((f) => ({ ...f, broker: p.id }))),
+      analytics: analyze(trips, per.flatMap((p) => p.charges).filter((c) => inRange(c.date))),
+      expired: trips.filter((x) => x.expired).length,
     }
-  }, [fills, rates, range, today])
+  }, [demo, active, data, viewData, ratesByBroker, range, today])
 
   const a = model.analytics
   const insights = useMemo(() => buildInsights(a), [a])
 
   const orders = useMemo(() => {
-    const map = new Map<string, { key: string; ts: number; date: string; time: string; symbol: string; side: string; qty: number; value: number }>()
+    const map = new Map<string, { key: string; broker: string; ts: number; date: string; time: string; symbol: string; side: string; qty: number; value: number }>()
     for (const f of model.fills) {
-      const key = f.orderId || f.id
-      const o = map.get(key) ?? { key, ts: f.ts, date: f.date, time: f.time, symbol: f.symbol, side: f.side, qty: 0, value: 0 }
+      const key = `${f.broker}:${f.orderId || f.id}`
+      const o = map.get(key) ?? { key, broker: f.broker, ts: f.ts, date: f.date, time: f.time, symbol: f.symbol, side: f.side, qty: 0, value: 0 }
       o.qty += f.qty
       o.value += f.qty * f.price
       map.set(key, o)
@@ -338,45 +518,147 @@ export function OptionsAnalytics() {
     return filter === 'wins' ? rows.filter((r) => r.pnl > 0) : filter === 'losses' ? rows.filter((r) => r.pnl < 0) : rows
   }, [model.trips, filter])
 
+  async function finishImport(brokerId: string, acc: Acc) {
+    try {
+      if (!acc.fills.length) {
+        setMessage({ tone: 'bad', text: 'No option trades were found. Make sure this is your F&O trade book (not equity or a summary) with buy/sell, quantity and price for each trade.' })
+        return
+      }
+      const { added } = await saveFills(brokerId, acc.fills)
+      setData((prev) => ({ ...prev, [brokerId]: mergeFills(prev[brokerId] ?? [], acc.fills) }))
+      setDemo(false)
+      setShown(PAGE)
+      const dupes = acc.fills.length - added
+      setMessage({
+        tone: 'good',
+        text: `Saved ${added} new ${brokerLabel(brokerId)} option trade${added === 1 ? '' : 's'} to your vault from ${acc.files} file${acc.files === 1 ? '' : 's'}${dupes ? ` · ${dupes} already there` : ''}${acc.ignored ? ` · ${acc.ignored} non-option row${acc.ignored === 1 ? '' : 's'} ignored` : ''}.`,
+      })
+    } catch (err) {
+      setMessage({ tone: 'bad', text: (err as Error).message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function importFiles(brokerId: string, files: File[], acc: Acc = { fills: [], ignored: 0, files: 0 }) {
+    let cur = acc
+    for (let i = 0; i < files.length; i++) {
+      let rows: Cell[][]
+      try {
+        rows = await readTradeFile(files[i])
+      } catch (err) {
+        setMessage({ tone: 'bad', text: `${files[i].name}: ${(err as Error).message}` })
+        setBusy(false)
+        return
+      }
+      const analysis = analyseRows(rows)
+      if (analysis.result) {
+        cur = { fills: cur.fills.concat(analysis.result.fills), ignored: cur.ignored + analysis.result.ignoredRows, files: cur.files + 1 }
+        continue
+      }
+      setPending({ brokerId, fileName: files[i].name, rows, headerIdx: analysis.headerIdx, mapping: analysis.mapping, rest: files.slice(i + 1), acc: cur })
+      setBusy(false)
+      return
+    }
+    await finishImport(brokerId, cur)
+  }
+
   async function handleFiles(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
-    if (!files.length) return
-    let merged = stored
-    let added = 0
-    let ignored = 0
-    for (const file of files) {
-      const result = parseTradebookCsv(await file.text())
-      if (result.error) {
-        setMessage({ tone: 'bad', text: `${file.name}: ${result.error}` })
-        return
-      }
-      const before = merged.length
-      merged = mergeFills(merged, result.fills)
-      added += merged.length - before
-      ignored += result.ignoredRows
-    }
-    setStored(merged)
-    saveFills(merged)
-    setDemo(false)
-    setShown(PAGE)
-    setMessage({
-      tone: 'good',
-      text: `Added ${added} option trade${added === 1 ? '' : 's'} from ${files.length} file${files.length === 1 ? '' : 's'}${ignored ? ` · ${ignored} non-option row${ignored === 1 ? '' : 's'} ignored` : ''}.`,
-    })
+    if (!files.length || active === 'all') return
+    setBusy(true)
+    setMessage(null)
+    await importFiles(active, files)
   }
 
-  function clearAll() {
-    setStored([])
-    saveFills([])
-    setDemo(false)
+  function confirmMapping() {
+    if (!pending) return
+    const res = rowsToFills(pending.rows, pending.headerIdx, pending.mapping)
+    const next = { fills: pending.acc.fills.concat(res.fills), ignored: pending.acc.ignored + res.ignoredRows, files: pending.acc.files + 1 }
+    const { brokerId, rest } = pending
+    setPending(null)
+    setBusy(true)
+    void importFiles(brokerId, rest, next)
+  }
+
+  function skipFile() {
+    if (!pending) return
+    const { brokerId, rest, acc } = pending
+    setPending(null)
+    setBusy(true)
+    void importFiles(brokerId, rest, acc)
+  }
+
+  async function clearBroker() {
+    if (demo) {
+      setDemo(false)
+      return
+    }
+    if (active === 'all') return
+    if (!window.confirm(`Delete all saved ${brokerLabel(active)} option trades from your vault? You can re-import the files later.`)) return
+    setBusy(true)
+    try {
+      await clearStoredFills(active)
+      setData((prev) => {
+        const next = { ...prev }
+        delete next[active]
+        return next
+      })
+      setMessage(null)
+    } catch (err) {
+      setMessage({ tone: 'bad', text: (err as Error).message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function addBroker() {
+    const id = slugifyBroker(newBroker)
+    if (id.length < 2) return
+    setExtraBrokers((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    setActive(id)
+    setNewBroker('')
+    setAddingBroker(false)
+    setShown(PAGE)
+  }
+
+  function pickBroker(id: string) {
+    setActive(id)
+    setShown(PAGE)
     setMessage(null)
   }
 
+  const setRate = (k: keyof ChargeRates) => (n: number) =>
+    setRatesByBroker((prev) => {
+      const next = { ...prev, [active]: { ...(prev[active] ?? DEFAULT_CHARGE_RATES), [k]: n } }
+      try {
+        localStorage.setItem(RATES_KEY, JSON.stringify(next))
+      } catch {
+        // ignore
+      }
+      return next
+    })
+  const resetRates = () =>
+    setRatesByBroker((prev) => {
+      const next = { ...prev }
+      delete next[active]
+      try {
+        localStorage.setItem(RATES_KEY, JSON.stringify(next))
+      } catch {
+        // ignore
+      }
+      return next
+    })
+
+  const fills = model.allFills
   const hasData = fills.length > 0
   const firstDate = fills[0]?.date
   const lastDate = fills.at(-1)?.date
-  const setRate = (k: keyof ChargeRates) => (n: number) => setRates((r) => ({ ...r, [k]: n }))
+  const activeLabel = demo ? 'Sample' : active === 'all' ? 'All brokers' : brokerLabel(active)
+  const canImport = !demo && active !== 'all' && !busy && !loading
+  const hasStoredForActive = active !== 'all' && (data[active]?.length ?? 0) > 0
+  const rates = ratesFor(active)
 
   return (
     <div className="opt-viz mx-auto max-w-6xl space-y-5">
@@ -387,33 +669,87 @@ export function OptionsAnalytics() {
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Options only</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-text">Options trading analytics</h1>
           <p className="mt-1 max-w-2xl text-sm text-text-secondary">
-            {demo ? 'Showing sample trades — not your account.' : 'Where you win, where you leak, and what it costs — from your Zerodha Console tradebook.'}
+            {demo
+              ? 'Showing sample trades — not your account.'
+              : 'Where you win, where you leak, and what it costs — kept separately for each broker, saved to your private vault.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <input ref={fileRef} type="file" accept=".csv,text/csv" multiple className="hidden" onChange={handleFiles} aria-label="Upload tradebook CSV" />
-          <button
-            type="button"
-            data-cursor="hover"
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90"
-          >
-            <FileUp className="h-3.5 w-3.5" />
-            {stored.length ? 'Add more CSVs' : 'Import tradebook CSV'}
-          </button>
-          {(stored.length > 0 || demo) && (
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            multiple
+            className="hidden"
+            onChange={handleFiles}
+            aria-label="Upload tradebook file"
+          />
+          {!demo && (
             <button
               type="button"
               data-cursor="hover"
-              onClick={clearAll}
+              disabled={!canImport}
+              title={active === 'all' ? 'Pick a broker tab to import into' : undefined}
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <FileUp className="h-3.5 w-3.5" />
+              {busy ? 'Saving…' : `${hasStoredForActive ? 'Add more files' : 'Import file'}${active === 'all' ? '' : ` → ${brokerLabel(active)}`}`}
+            </button>
+          )}
+          {(demo || hasStoredForActive) && (
+            <button
+              type="button"
+              data-cursor="hover"
+              disabled={busy}
+              onClick={clearBroker}
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-error/40 hover:text-error"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              {demo ? 'Exit preview' : 'Clear data'}
+              {demo ? 'Exit preview' : `Clear ${brokerLabel(active)}`}
             </button>
           )}
         </div>
       </div>
+
+      {!demo && (
+        <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Broker">
+          <Chip active={active === 'all'} onClick={() => pickBroker('all')}>
+            All brokers
+          </Chip>
+          {brokerTabs.map((id) => (
+            <Chip key={id} active={active === id} onClick={() => pickBroker(id)}>
+              {brokerLabel(id)}
+              {data[id]?.length ? <span className="ml-1.5 font-mono text-[10px] opacity-70">{data[id].length}</span> : null}
+            </Chip>
+          ))}
+          {addingBroker ? (
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                addBroker()
+              }}
+            >
+              <input
+                autoFocus
+                value={newBroker}
+                onChange={(e) => setNewBroker(e.target.value)}
+                placeholder="Broker name"
+                aria-label="New broker name"
+                className="w-36 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs text-text outline-none focus:border-accent/50"
+              />
+              <button type="submit" data-cursor="hover" className="rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary hover:text-text">
+                Add
+              </button>
+            </form>
+          ) : (
+            <Chip active={false} onClick={() => setAddingBroker(true)}>
+              + Add broker
+            </Chip>
+          )}
+        </div>
+      )}
 
       {message && (
         <p role="status" className={cn('rounded-lg border px-3 py-2 text-xs', message.tone === 'good' ? 'border-accent/30 bg-accent/10 text-accent' : 'border-error/30 bg-error/10 text-error')}>
@@ -421,28 +757,45 @@ export function OptionsAnalytics() {
         </p>
       )}
 
-      {!hasData ? (
+      {pending && <MappingCard pending={pending} onChange={setPending} onConfirm={confirmMapping} onSkip={skipFile} />}
+
+      {loading ? (
+        <GlassCard hover={false} className="flex items-center justify-center gap-3 py-24 text-sm text-text-secondary">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          Loading your trade history…
+        </GlassCard>
+      ) : !hasData ? (
         <GlassCard hover={false} className="mx-auto max-w-2xl space-y-4 px-6 py-10">
-          <h2 className="font-display text-xl font-semibold text-text">Import your options trade history</h2>
-          <p className="text-sm text-text-secondary">
-            Kite&apos;s API only returns today&apos;s orders, so past trades come from a Console export. Your file is read in this browser and kept on this device
-            only — nothing is uploaded.
-          </p>
-          <ol className="list-decimal space-y-1.5 pl-5 text-sm text-text-secondary">
-            <li>Open Zerodha Console → Reports → <strong className="text-text">Tradebook</strong>.</li>
-            <li>Pick segment <strong className="text-text">F&amp;O</strong> and a date range (Console limits how long a range can be — download several if needed).</li>
-            <li>Download as <strong className="text-text">CSV</strong>, then import every file here. Duplicates are skipped.</li>
-          </ol>
+          {active === 'all' ? (
+            <>
+              <h2 className="font-display text-xl font-semibold text-text">Import your options trade history</h2>
+              <p className="text-sm text-text-secondary">
+                Choose your broker above, then import its F&amp;O trade book as CSV or Excel. Each broker is stored and analysed separately; this tab combines them.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="font-display text-xl font-semibold text-text">Import your {activeLabel} options trades</h2>
+              <p className="text-sm text-text-secondary">{brokerHint(active)}</p>
+              <p className="text-sm text-text-secondary">
+                Files are read in your browser; only the option trades are saved to your private vault, so they&apos;re there on any device. Columns are detected
+                automatically, and you can map them by hand if a file is unusual. Quantities should be in units, not lots. Duplicates are skipped.
+              </p>
+            </>
+          )}
           <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              type="button"
-              data-cursor="hover"
-              onClick={() => fileRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
-            >
-              <FileUp className="h-4 w-4" />
-              Import tradebook CSV
-            </button>
+            {active !== 'all' && (
+              <button
+                type="button"
+                data-cursor="hover"
+                disabled={!canImport}
+                onClick={() => fileRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <FileUp className="h-4 w-4" />
+                Import {activeLabel} file
+              </button>
+            )}
             <button
               type="button"
               data-cursor="hover"
@@ -541,11 +894,14 @@ export function OptionsAnalytics() {
               <div>
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Where you win and lose <span className="font-normal normal-case">· gross P&amp;L before charges</span></h2>
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {active === 'all' && !demo && a.breakdowns.broker.length > 1 && <BreakdownCard title="By broker" slices={a.breakdowns.broker} />}
                   <BreakdownCard title="By index / stock" slices={a.breakdowns.underlying} />
                   <BreakdownCard title="Calls vs puts" slices={a.breakdowns.type} />
                   <BreakdownCard title="Buying vs selling" slices={a.breakdowns.direction} />
                   <BreakdownCard title="By weekday" note="day of entry" slices={a.breakdowns.weekday} />
-                  <BreakdownCard title="By entry time" note="hour of entry (IST)" slices={a.breakdowns.entryHour} />
+                  {a.breakdowns.entryHour.some((x) => x.key !== '00:00') && (
+                    <BreakdownCard title="By entry time" note="hour of entry (IST)" slices={a.breakdowns.entryHour} />
+                  )}
                   <BreakdownCard title="By days to expiry" note="monthly = approx." slices={a.breakdowns.dte} />
                   <BreakdownCard title="By holding time" slices={a.breakdowns.hold} />
                 </div>
@@ -575,10 +931,14 @@ export function OptionsAnalytics() {
                     </li>
                   ))}
                 </ul>
+                {active === 'all' && !demo ? (
+                  <p className="mt-4 text-xs text-text-secondary">Each broker uses its own charge assumptions — open a broker tab to edit them.</p>
+                ) : (
                 <details className="mt-4 rounded-xl border border-border bg-surface-2 p-3 text-xs text-text-secondary">
-                  <summary className="cursor-pointer font-medium text-text">Charge assumptions</summary>
+                  <summary className="cursor-pointer font-medium text-text">Charge assumptions{demo ? '' : ` — ${activeLabel}`}</summary>
                   <p className="mt-2">
-                    These are estimates from a standard Zerodha options fee schedule. Rates change (STT especially) — match them to your contract notes.
+                    Estimates from a typical ₹20-flat options fee schedule (Zerodha-style). Brokerage plans and rates (STT especially) differ by broker and change over time — match these to your contract notes.
+                    Saved per broker in this browser.
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <ChargeInput label="Brokerage / order (₹)" value={rates.brokeragePerOrder} onChange={setRate('brokeragePerOrder')} step="1" />
@@ -591,13 +951,14 @@ export function OptionsAnalytics() {
                     <button
                       type="button"
                       data-cursor="hover"
-                      onClick={() => setRates(DEFAULT_CHARGE_RATES)}
+                      onClick={resetRates}
                       className="self-end rounded-md border border-border px-2 py-1.5 text-text-secondary transition-colors hover:text-text"
                     >
                       Reset
                     </button>
                   </div>
                 </details>
+                )}
               </GlassCard>
 
               <GlassCard hover={false} className="p-5">
@@ -623,10 +984,11 @@ export function OptionsAnalytics() {
 
                 <div className="overflow-x-auto">
                   {tab === 'trades' ? (
-                    <table className="w-full min-w-[640px] text-left text-xs">
+                    <table className="w-full min-w-[700px] text-left text-xs">
                       <thead>
                         <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
                           <th className="py-2 pr-3 font-medium">Closed</th>
+                          {active === 'all' && !demo && <th className="py-2 pr-3 font-medium">Broker</th>}
                           <th className="py-2 pr-3 font-medium">Contract</th>
                           <th className="py-2 pr-3 font-medium">Side</th>
                           <th className="py-2 pr-3 text-right font-medium">Qty</th>
@@ -640,6 +1002,7 @@ export function OptionsAnalytics() {
                         {tripRows.slice(0, shown).map((t) => (
                           <tr key={t.id + t.closeTs} className="border-b border-border/60 transition-colors hover:bg-surface-3">
                             <td className="py-2.5 pr-3 text-text-secondary">{fmtDate(t.closeDate)}</td>
+                            {active === 'all' && !demo && <td className="py-2.5 pr-3 text-text-secondary">{t.broker}</td>}
                             <td className="py-2.5 pr-3 font-mono font-semibold text-text">{contractLabel(t.symbol)}</td>
                             <td className="py-2.5 pr-3 text-text-secondary">{t.direction === 'LONG' ? 'Bought' : 'Sold'}</td>
                             <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{t.qty}</td>
@@ -656,6 +1019,7 @@ export function OptionsAnalytics() {
                       <thead>
                         <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
                           <th className="py-2 pr-3 font-medium">Executed</th>
+                          {active === 'all' && !demo && <th className="py-2 pr-3 font-medium">Broker</th>}
                           <th className="py-2 pr-3 font-medium">Contract</th>
                           <th className="py-2 pr-3 font-medium">Side</th>
                           <th className="py-2 pr-3 text-right font-medium">Qty</th>
@@ -667,6 +1031,7 @@ export function OptionsAnalytics() {
                         {orders.slice(0, shown).map((o) => (
                           <tr key={o.key} className="border-b border-border/60 transition-colors hover:bg-surface-3">
                             <td className="py-2.5 pr-3 text-text-secondary">{fmtDate(o.date)} · {o.time.slice(0, 5)}</td>
+                            {active === 'all' && !demo && <td className="py-2.5 pr-3 text-text-secondary">{brokerLabel(o.broker)}</td>}
                             <td className="py-2.5 pr-3 font-mono font-semibold text-text">{contractLabel(o.symbol)}</td>
                             <td className={cn('py-2.5 pr-3 font-semibold', o.side === 'BUY' ? 'text-accent' : 'text-error')}>{o.side}</td>
                             <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{o.qty}</td>
