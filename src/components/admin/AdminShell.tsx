@@ -17,6 +17,7 @@ import {
   Menu,
   Newspaper,
   Palette,
+  PieChart,
   Search,
   Settings,
   Shield,
@@ -61,7 +62,10 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: 'Tools',
-    items: [{ label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator }],
+    items: [
+      { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
+      { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
+    ],
   },
   {
     label: 'Settings',

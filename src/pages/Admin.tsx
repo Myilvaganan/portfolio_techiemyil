@@ -25,6 +25,7 @@ import { DocumentManager } from '@/components/admin/DocumentManager'
 import { PlaceholderScreen } from '@/components/admin/PlaceholderScreen'
 import { DashboardHome } from '@/pages/admin/DashboardHome'
 import { MarginCalculator } from '@/pages/admin/MarginCalculator'
+import { PortfolioRebalance } from '@/pages/admin/PortfolioRebalance'
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
@@ -42,6 +43,7 @@ export function Admin() {
               <Route index element={<DashboardHome />} />
               <Route path="documents" element={<DocumentManager />} />
               <Route path="margin-calculator" element={<MarginCalculator />} />
+              <Route path="portfolio-rebalance" element={<PortfolioRebalance />} />
               <Route
                 path="projects"
                 element={<PlaceholderScreen title="Projects" description="Manage portfolio projects." icon={Briefcase} />}
