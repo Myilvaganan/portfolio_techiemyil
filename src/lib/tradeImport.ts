@@ -7,7 +7,9 @@ import { parseOptionSymbol, type Fill } from './optionsAnalytics'
 
 export type Cell = string | number | boolean | Date | null | undefined
 
-export type FieldKey = 'symbol' | 'underlying' | 'expiry' | 'strike' | 'right' | 'side' | 'qty' | 'price' | 'date' | 'time' | 'tradeId' | 'orderId'
+export type ChargeKey = 'chgStt' | 'chgExchange' | 'chgStamp' | 'chgSebi' | 'chgBrokerage' | 'chgGst' | 'chgOther' | 'chgTotal'
+
+export type FieldKey = 'symbol' | 'underlying' | 'expiry' | 'strike' | 'right' | 'side' | 'qty' | 'price' | 'date' | 'time' | 'tradeId' | 'orderId' | 'buyQty' | 'buyValue' | 'sellQty' | 'sellValue' | ChargeKey
 
 export const FIELDS: { key: FieldKey; label: string; hint?: string }[] = [
   { key: 'symbol', label: 'Contract / symbol', hint: 'e.g. NIFTY25SEP24500CE or NIFTY 25 SEP 2025 24500 CE' },
@@ -20,6 +22,10 @@ export const FIELDS: { key: FieldKey; label: string; hint?: string }[] = [
   { key: 'price', label: 'Trade price' },
   { key: 'date', label: 'Trade date' },
   { key: 'time', label: 'Trade time' },
+  { key: 'buyQty', label: 'Buy quantity', hint: 'daily-summary reports (e.g. Dhan) — instead of buy/sell + qty + price' },
+  { key: 'buyValue', label: 'Buy value' },
+  { key: 'sellQty', label: 'Sell quantity' },
+  { key: 'sellValue', label: 'Sell value' },
   { key: 'tradeId', label: 'Trade ID' },
   { key: 'orderId', label: 'Order ID' },
 ]
@@ -29,7 +35,7 @@ export type Mapping = Partial<Record<FieldKey, number>>
 const norm = (h: unknown) => String(h ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
 const ALIASES: Record<FieldKey, string[]> = {
-  symbol: ['symbol', 'tradingsymbol', 'scrip', 'scripname', 'scripsymbol', 'instrument', 'instrumentname', 'contract', 'contractname', 'securityname', 'security', 'stocksymbol', 'symbolname', 'description', 'name'],
+  symbol: ['symbol', 'tradingsymbol', 'scrip', 'scripname', 'scripsymbol', 'instrument', 'instrumentname', 'contract', 'contractname', 'securityname', 'security', 'stocksymbol', 'symbolname', 'contractdescriptor', 'descriptor', 'contractdescription', 'description', 'name'],
   underlying: ['underlying', 'underlyingsymbol', 'underlyingname', 'stockcode', 'stock'],
   expiry: ['expiry', 'expirydate', 'expiryday', 'expdate', 'contractexpiry'],
   strike: ['strike', 'strikeprice', 'strikeprc'],
@@ -41,6 +47,20 @@ const ALIASES: Record<FieldKey, string[]> = {
   time: ['orderexecutiontime', 'executiontime', 'tradetime', 'time', 'exchangetime', 'tradetimestamp', 'timestamp', 'datetime', 'executiondatetime', 'tradedatetime', 'ordertime'],
   tradeId: ['tradeid', 'tradeno', 'tradenumber', 'exchangetradeid', 'fillid', 'exchangetradeno'],
   orderId: ['orderid', 'orderno', 'ordernumber', 'exchangeorderid', 'orderref', 'orderrefno', 'exchangeorderno'],
+  // Some brokers (e.g. ICICI Direct) print the real charges on every row — use them instead of estimating.
+  // Daily-summary reports (Dhan) give one row per contract per day with totals for each side.
+  buyQty: ['buyqty', 'buyquantity', 'boughtqty', 'totalbuyqty'],
+  buyValue: ['buyvalue', 'buyamount', 'boughtvalue', 'buyturnover', 'totalbuyvalue'],
+  sellQty: ['sellqty', 'sellquantity', 'soldqty', 'totalsellqty'],
+  sellValue: ['sellvalue', 'sellamount', 'soldvalue', 'sellturnover', 'totalsellvalue'],
+  chgOther: ['othcharges', 'othercharges', 'otherchg', 'miscellaneouscharges'],
+  chgStt: ['securitiestransactiontaxstt', 'securitiestransactiontax', 'stt'],
+  chgExchange: ['transactioncharges', 'exchangetransactioncharges', 'exchangecharges', 'exchangetxncharges', 'txncharges', 'txncharge', 'txnchg'],
+  chgStamp: ['stampduty'],
+  chgSebi: ['sebiturnovercharges', 'sebicharges', 'sebifees'],
+  chgBrokerage: ['brokerage'],
+  chgGst: ['servicetaxonbrokerage', 'gstonbrokerage', 'gst', 'servicetax'],
+  chgTotal: ['totalcharges', 'totalcharge'],
 }
 
 // ---------- Cells ----------
@@ -118,7 +138,7 @@ function samplesMatch(rows: Cell[][], col: number, re: RegExp) {
 export function autoMapping(headerRow: Cell[], dataRows: Cell[][]): Mapping {
   const headers = headerRow.map(norm)
   const mapping: Mapping = {}
-  for (const { key } of FIELDS) {
+  for (const key of Object.keys(ALIASES) as FieldKey[]) {
     const candidates = findColumn(headers, key)
     const pick =
       key === 'side'
@@ -131,13 +151,16 @@ export function autoMapping(headerRow: Cell[], dataRows: Cell[][]): Mapping {
   return mapping
 }
 
+const hasSummaryColumns = (m: Mapping) => m.buyQty !== undefined && m.sellQty !== undefined && m.buyValue !== undefined && m.sellValue !== undefined
+
 export function mappingProblems(m: Mapping): string[] {
   const problems: string[] = []
   const composite = m.underlying !== undefined && m.strike !== undefined && m.right !== undefined && m.expiry !== undefined
+  const summary = hasSummaryColumns(m)
   if (m.symbol === undefined && !composite) problems.push('Contract (or underlying + expiry + strike + call/put)')
-  if (m.side === undefined) problems.push('Buy / sell')
-  if (m.qty === undefined) problems.push('Quantity')
-  if (m.price === undefined) problems.push('Trade price')
+  if (m.side === undefined && !summary) problems.push('Buy / sell (or buy & sell quantity and value columns)')
+  if (m.qty === undefined && !summary) problems.push('Quantity')
+  if (m.price === undefined && !summary) problems.push('Trade price')
   if (m.date === undefined && m.time === undefined) problems.push('Trade date')
   return problems
 }
@@ -203,7 +226,7 @@ function parseWhen(dateCell: string, timeCell: string): When | null {
     ts: Date.UTC(ymd.y, ymd.m - 1, ymd.d, hh, mm, ss),
     date: `${ymd.y}-${p2(ymd.m)}-${p2(ymd.d)}`,
     time,
-    hasTime: clock !== null,
+    hasTime: clock !== null && clock !== '00:00:00',
   }
 }
 
@@ -278,7 +301,9 @@ function parseContractText(raw: string): Parts | null {
         parts.day = before[0].v
         parts.year = 2000 + before[1].v
       } else if (before.length === 1) {
-        parts.year = 2000 + before[0].v
+        // "25SEP" (attached) is the NSE year+month form; "28 AUG" (separate) is a day, checked against the trade date later.
+        if (/\d{2}[A-Za-z]{3}/.test(raw) || before[0].v > 31) parts.year = 2000 + before[0].v
+        else parts.day = before[0].v
       }
     }
   }
@@ -298,10 +323,46 @@ export interface ContractInput {
 }
 
 // Returns an NSE-style symbol (weekly form when the exact expiry day is known), or null if this isn't an option.
+function compose(parts: Parts, refDate: string): string | null {
+  if (!parts.underlying || !parts.type || !parts.strike || !parts.month) return null
+  const [refY, refM] = refDate.split('-').map(Number)
+  let { day, year } = parts
+  if (day && year === undefined) {
+    // A bare "28 AUG" is only a day if that date lands shortly after the trade; otherwise the number was a year.
+    const inferred = parts.month < refM ? refY + 1 : refY
+    const gap = (Date.UTC(inferred, parts.month - 1, day) - Date.parse(`${refDate}T00:00:00Z`)) / 86_400_000
+    if (gap >= -1 && gap <= 70) year = inferred
+    else {
+      year = 2000 + day
+      day = undefined
+    }
+  }
+  year ??= parts.month < refM ? refY + 1 : refY
+  const yy = p2(year % 100)
+  const strike = String(parts.strike)
+  const symbol = day
+    ? `${parts.underlying}${yy}${'123456789OND'[parts.month - 1]}${p2(day)}${strike}${parts.type}`
+    : `${parts.underlying}${yy}${MONTHS[parts.month - 1]}${strike}${parts.type}`
+  return parseOptionSymbol(symbol) ? symbol : null
+}
+
+// ICICI Direct: OPT-SENSEX-10-Sep-2026-74900-P-E-I  (P/C = put/call, E = European, I/S = index/stock)
+const ICICI_DESCRIPTOR = /^OPT[A-Z]*[-\s]+(.+?)[-\s]+(\d{1,2})[-\s]+([A-Za-z]{3,9})[-\s]+(\d{4})[-\s]+(\d+(?:\.\d+)?)[-\s]+(C|P|CE|PE|CALL|PUT)(?:[-\s]+[A-Z])*\s*$/i
+
+// Returns an NSE-style symbol (weekly form when the exact expiry day is known), or null if this isn't an option.
 export function normalizeContract(input: ContractInput, refDate: string): string | null {
   // Only a single unbroken token can be trusted as-is; "NIFTY 25 SEP 2025 24500 CE" would otherwise collapse into a wrong strike.
   const direct = input.symbol ? input.symbol.trim().toUpperCase() : ''
   if (direct && !/\s/.test(direct) && parseOptionSymbol(direct)) return direct
+
+  const descriptor = input.symbol ? ICICI_DESCRIPTOR.exec(input.symbol.trim()) : null
+  if (descriptor && monthOf(descriptor[3])) {
+    const type = descriptor[6].toUpperCase().startsWith('C') ? 'CE' : 'PE'
+    return compose(
+      { underlying: applyIndexAliases(descriptor[1].toUpperCase()).replace(/[^A-Z&-]/g, ''), type, strike: parseFloat(descriptor[5]), day: +descriptor[2], month: monthOf(descriptor[3]), year: +descriptor[4] },
+      refDate,
+    )
+  }
 
   const parts: Parts = (input.symbol ? parseContractText(input.symbol) : null) ?? {}
   if (input.underlying) parts.underlying = applyIndexAliases(input.underlying.toUpperCase()).replace(/[^A-Z&]/g, '') || parts.underlying
@@ -315,16 +376,7 @@ export function normalizeContract(input: ContractInput, refDate: string): string
       if (t && monthOf(t[1])) Object.assign(parts, { month: monthOf(t[1]), year: fullYear(+t[2]), day: undefined })
     }
   }
-  if (!parts.underlying || !parts.type || !parts.strike || !parts.month) return null
-
-  const [refY, refM] = refDate.split('-').map(Number)
-  const year = parts.year ?? (parts.month < refM ? refY + 1 : refY)
-  const yy = p2(year % 100)
-  const strike = String(parts.strike)
-  const symbol = parts.day
-    ? `${parts.underlying}${yy}${'123456789OND'[parts.month - 1]}${p2(parts.day)}${strike}${parts.type}`
-    : `${parts.underlying}${yy}${MONTHS[parts.month - 1]}${strike}${parts.type}`
-  return parseOptionSymbol(symbol) ? symbol : null
+  return compose(parts, refDate)
 }
 
 // ---------- Rows → fills ----------
@@ -333,6 +385,8 @@ export interface ImportResult {
   fills: Fill[]
   optionRows: number
   ignoredRows: number
+  unrecognised: string[]
+  notes: string[]
 }
 
 function hash(s: string) {
@@ -345,11 +399,76 @@ function hash(s: string) {
 }
 
 export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping): ImportResult {
-  const get = (row: Cell[], key: FieldKey) => (mapping[key] === undefined ? '' : cellText(row[mapping[key]!]))
+  // Excel sometimes hands back dates/times as raw serial numbers instead of date cells.
+  const get = (row: Cell[], key: FieldKey) => {
+    if (mapping[key] === undefined) return ''
+    const c = row[mapping[key]!]
+    if ((key === 'date' || key === 'time' || key === 'expiry') && typeof c === 'number') {
+      if (c > 20000 && c < 90000) return cellText(new Date(Math.round((c - 25569) * 86_400_000)))
+      if (c >= 0 && c < 1) {
+        const t = Math.round(c * 86400)
+        return `${p2(Math.floor(t / 3600))}:${p2(Math.floor((t % 3600) / 60))}:${p2(t % 60)}`
+      }
+    }
+    return cellText(c)
+  }
+  const chargeCols = (['chgStt', 'chgExchange', 'chgStamp', 'chgSebi', 'chgBrokerage', 'chgGst', 'chgOther', 'chgTotal'] as const).filter((k) => mapping[k] !== undefined)
+  const money = (row: Cell[], key: ChargeKey) => (mapping[key] === undefined ? 0 : Math.max(0, toNumber(row[mapping[key]!]) || 0))
+  const unrecognised = new Set<string>()
+  const notes: string[] = []
+  const summaryMode = mapping.side === undefined && hasSummaryColumns(mapping)
   const parsed: { fill: Omit<Fill, 'ts'> & { ts: number }; hasTime: boolean }[] = []
   let ignoredRows = 0
 
-  for (const row of rows.slice(headerIdx + 1)) {
+  // Daily-summary reports have one row per contract per day: split each into a buy and a sell at the average price.
+  // The report doesn't say which came first, so buy-first is assumed (the day's P&L is the same either way).
+  if (summaryMode) {
+    const dated: { row: Cell[]; when: NonNullable<ReturnType<typeof parseWhen>> }[] = []
+    for (const row of rows.slice(headerIdx + 1)) {
+      if (row.every((c) => cellText(c) === '')) continue
+      const when = parseWhen(get(row, 'date'), get(row, 'time'))
+      if (!when) {
+        ignoredRows++
+        continue
+      }
+      dated.push({ row, when })
+    }
+    dated.sort((a, b) => a.when.ts - b.when.ts)
+    for (const { row, when } of dated) {
+      const buyQty = Math.abs(toNumber(row[mapping.buyQty!])) || 0
+      const sellQty = Math.abs(toNumber(row[mapping.sellQty!])) || 0
+      if (!(buyQty > 0) && !(sellQty > 0)) {
+        ignoredRows++
+        continue
+      }
+      const symbol = normalizeContract({ symbol: get(row, 'symbol') || undefined, underlying: get(row, 'underlying') || undefined, expiry: get(row, 'expiry') || undefined, strike: mapping.strike === undefined ? undefined : toNumber(row[mapping.strike]), right: get(row, 'right') || undefined }, when.date)
+      if (!symbol) {
+        ignoredRows++
+        const raw = get(row, 'symbol')
+        if (raw && unrecognised.size < 3) unrecognised.add(raw.slice(0, 60))
+        continue
+      }
+      let chg: Fill['chg']
+      if (chargeCols.length) {
+        const parts = { stt: money(row, 'chgStt'), exchange: money(row, 'chgExchange'), stamp: money(row, 'chgStamp'), sebi: money(row, 'chgSebi'), brokerage: money(row, 'chgBrokerage'), gst: money(row, 'chgGst') }
+        const sum = parts.stt + parts.exchange + parts.stamp + parts.sebi + parts.brokerage + parts.gst + money(row, 'chgOther')
+        chg = { ...parts, total: money(row, 'chgTotal') || sum }
+      }
+      const rowKey = `s${hash(`${symbol}|${when.date}|${get(row, 'orderId')}`)}`
+      const sides: { side: 'BUY' | 'SELL'; qty: number; value: number }[] = []
+      if (buyQty > 0) sides.push({ side: 'BUY', qty: buyQty, value: Math.abs(toNumber(row[mapping.buyValue!])) || 0 })
+      if (sellQty > 0) sides.push({ side: 'SELL', qty: sellQty, value: Math.abs(toNumber(row[mapping.sellValue!])) || 0 })
+      sides.forEach((x, i) => {
+        parsed.push({
+          hasTime: false,
+          fill: { id: '', orderId: rowKey, symbol, side: x.side, qty: x.qty, price: Math.round((x.value / x.qty) * 1e9) / 1e9, ts: when.ts, date: when.date, time: when.time, ...(i === 0 && chg ? { chg } : {}) },
+        })
+      })
+    }
+    if (parsed.length) notes.push('This is a daily summary report, so each contract-day was split into one buy and one sell at the average price (buy first). Real charges are included.')
+  }
+
+  for (const row of summaryMode ? [] : rows.slice(headerIdx + 1)) {
     if (row.every((c) => cellText(c) === '')) continue
     const when = parseWhen(get(row, 'date'), get(row, 'time'))
     const sideText = get(row, 'side').toLowerCase()
@@ -371,7 +490,15 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
     )
     if (!symbol) {
       ignoredRows++
+      const raw = get(row, 'symbol') || [get(row, 'underlying'), get(row, 'expiry'), get(row, 'strike'), get(row, 'right')].filter(Boolean).join(' ')
+      if (raw && unrecognised.size < 3) unrecognised.add(raw.slice(0, 60))
       continue
+    }
+    let chg: Fill['chg']
+    if (chargeCols.length) {
+      const parts = { stt: money(row, 'chgStt'), exchange: money(row, 'chgExchange'), stamp: money(row, 'chgStamp'), sebi: money(row, 'chgSebi'), brokerage: money(row, 'chgBrokerage'), gst: money(row, 'chgGst') }
+      const sum = parts.stt + parts.exchange + parts.stamp + parts.sebi + parts.brokerage + parts.gst + money(row, 'chgOther')
+      chg = { ...parts, total: money(row, 'chgTotal') || sum }
     }
     parsed.push({
       hasTime: when.hasTime,
@@ -385,6 +512,7 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
         ts: when.ts,
         date: when.date,
         time: when.time,
+        ...(chg ? { chg } : {}),
       },
     })
   }
@@ -408,7 +536,7 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
     const id = fill.id || `h${hash(base)}-${n}`
     return { ...fill, id, orderId: fill.orderId || `o${id}` }
   })
-  return { fills, optionRows: fills.length, ignoredRows }
+  return { fills, optionRows: fills.length, ignoredRows, unrecognised: [...unrecognised], notes }
 }
 
 export interface FileParse {

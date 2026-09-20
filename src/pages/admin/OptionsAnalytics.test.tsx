@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { OptionsAnalytics } from './OptionsAnalytics'
 import * as store from '@/lib/optionsStore'
 import { demoFills } from '@/lib/optionsDemo'
+import dhanCsv from '@/lib/fixtures/dhanGlobalTransaction.csv?raw'
 
 vi.mock('@/lib/optionsStore', () => ({
   fetchStoredBrokers: vi.fn(),
@@ -34,6 +35,12 @@ const mockVault = (vault: Record<string, unknown[]>) => {
   vi.mocked(store.fetchStoredBrokers).mockResolvedValue(Object.keys(vault))
   vi.mocked(store.fetchStoredFills).mockImplementation(async (id) => (vault[id] ?? []) as never)
 }
+
+const ICICI_CSV = [
+  'Trade Date,Contract Descriptor,Exchange,Action,Qty,Price,Value,Order Ref.,Securities Transaction Tax-STT,Transaction Charges,Stamp Duty,SEBI Turnover Charges,Brokerage,Service Tax On Brokerage,Total Charges',
+  '"10-Sep-26","OPT-SENSEX-10-Sep-2026-74900-P-E-I","BSE","Sell","1000","1.82","1812","#20260910A400081220","2.72","0.59","0","0","20","3.72","27.03"',
+  '"10-Sep-26","OPT-SENSEX-10-Sep-2026-74900-P-E-I","BSE","Buy","1000","0.59","621","#20260910A400081063","0","0.2","0.02","0","20","3.62","23.84"',
+].join('\n')
 
 describe('OptionsAnalytics', () => {
   beforeEach(() => {
@@ -96,6 +103,33 @@ describe('OptionsAnalytics', () => {
     expect(vi.mocked(store.saveFills).mock.calls[0][1][0]).toMatchObject({ symbol: 'NIFTY2592524500CE', side: 'BUY', time: '09:31:10' })
   })
 
+  it('imports an ICICI Direct order book and shows the real charges from the statement', async () => {
+    const user = userEvent.setup()
+    render(<OptionsAnalytics />)
+    await screen.findByRole('heading', { name: /import your zerodha options trades/i })
+    await user.click(screen.getByRole('button', { name: 'ICICI Direct' }))
+    await user.upload(screen.getByLabelText('Upload tradebook file'), csvFile(ICICI_CSV, 'OrderBook_FNO.csv'))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/saved 2 new icici direct option trades/i))
+    const saved = vi.mocked(store.saveFills).mock.calls[0]
+    expect(saved[0]).toBe('icici')
+    expect(saved[1][0]).toMatchObject({ symbol: 'SENSEX2691074900PE', chg: { stt: expect.any(Number), total: expect.any(Number) } })
+    expect(screen.getByText('after your actual charges')).toBeInTheDocument()
+    expect(screen.getAllByText('₹51').length).toBeGreaterThan(0)
+  })
+
+  it('imports a Dhan daily-summary report and shows the totals from the statement', async () => {
+    const user = userEvent.setup()
+    render(<OptionsAnalytics />)
+    await screen.findByRole('heading', { name: /import your zerodha options trades/i })
+    await user.click(screen.getByRole('button', { name: 'Dhan' }))
+    await user.upload(screen.getByLabelText('Upload tradebook file'), csvFile(dhanCsv, 'Dhan_GlobalTransction_Report.csv'))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/new dhan option trades.*daily summary report/i))
+    expect(vi.mocked(store.saveFills).mock.calls[0][0]).toBe('dhan')
+    expect(screen.getByText('after your actual charges')).toBeInTheDocument()
+    expect(screen.getAllByText('₹11,654').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/-₹2,78,410/).length).toBeGreaterThan(0)
+  })
+
   it('lets you map columns by hand when they can’t be detected', async () => {
     const user = userEvent.setup()
     render(<OptionsAnalytics />)
@@ -107,7 +141,7 @@ describe('OptionsAnalytics', () => {
     const pick = (label: RegExp, col: string) => user.selectOptions(within(card).getByLabelText(label), col)
     await pick(/contract \/ symbol/i, 'c1')
     await pick(/buy \/ sell/i, 'c2')
-    await pick(/quantity/i, 'c3')
+    await pick(/^quantity/i, 'c3')
     await pick(/trade price/i, 'c4')
     await pick(/trade date/i, 'c5')
     await user.click(within(card).getByRole('button', { name: /import with this mapping/i }))

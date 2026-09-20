@@ -252,8 +252,8 @@ Environment variables (in addition to the ones above):
 | Variable | Default | Purpose |
 |---|---|---|
 | `OPENAI_API_KEY` | — | required |
-| `OPENAI_MODEL_EXTRACT` | `gpt-5.5` | reads transactions (fast enough for 30 s chunks) |
-| `OPENAI_MODEL_INSIGHTS` | `gpt-6-astra` | insights and Q&A |
-| `OPENAI_MODEL_FAST` | `gpt-5.5` | fallback when the insights model times out |
+| `OPENAI_MODEL_EXTRACT` | `gpt-5.4-mini` | reads transactions (60-row test: exact amounts, 60/60 categories, ~13 s) |
+| `OPENAI_MODEL_INSIGHTS` | `gpt-5.4-mini` | insights and Q&A (~5 s). Set to `gpt-6-astra` for deeper analysis (~20 s, several times the cost) |
+| `OPENAI_MODEL_FAST` | `gpt-5.4-mini` | fallback when the insights model times out |
 
 Function settings: memory **1024 MB**, timeout **29 s**. The bucket needs no extra IAM permissions or CORS changes.

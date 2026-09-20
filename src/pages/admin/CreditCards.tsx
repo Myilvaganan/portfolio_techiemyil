@@ -33,7 +33,8 @@ export function CreditCards() {
   const [range, setRange] = useState<RangeId>('all')
   const [selected, setSelected] = useState('all')
   const [uploaderOpen, setUploaderOpen] = useState(false)
-  const s = useStatements('card')
+  const [uploading, setUploading] = useState(false)
+  const s = useStatements('card', {}, !uploading)
   const { data } = s
 
   const latest = useMemo(() => data.transactions.map((t) => t.date).sort().at(-1) ?? '', [data.transactions])
@@ -103,7 +104,7 @@ export function CreditCards() {
           {showUploader && (
             <motion.div key="uploader" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <GlassCard hover={false} className="p-5">
-                <StatementUploader kind="card" compact={hasData} onSaved={() => void s.reload()} />
+                <StatementUploader kind="card" compact={hasData} onSaved={() => void s.reload()} onBusyChange={setUploading} />
               </GlassCard>
             </motion.div>
           )}

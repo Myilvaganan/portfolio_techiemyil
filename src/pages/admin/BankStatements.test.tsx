@@ -85,6 +85,17 @@ describe('BankStatements', () => {
     expect(screen.getByRole('img', { name: /health score 82/i })).toBeInTheDocument()
   })
 
+  it('does not run the AI analysis again on a plain reload once insights are saved', async () => {
+    const { fingerprint } = await import('@/lib/statements')
+    vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: fingerprint(data.transactions) } })
+    const first = render(<BankStatements />)
+    await screen.findByText('Steady saver with lean subscriptions')
+    first.unmount()
+    render(<BankStatements />)
+    await screen.findByText('Steady saver with lean subscriptions')
+    expect(api.generateInsights).not.toHaveBeenCalled()
+  })
+
   it('reuses saved insights instead of calling the AI again', async () => {
     const { fingerprint } = await import('@/lib/statements')
     vi.mocked(api.fetchStatements).mockResolvedValue({ ...data, insights: { ...insights, fingerprint: fingerprint(data.transactions) } })

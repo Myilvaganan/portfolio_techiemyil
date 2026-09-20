@@ -36,8 +36,9 @@ export function BankStatements() {
   const [account, setAccount] = useState('all')
   const [excludeTransfers, setExcludeTransfers] = useState(true)
   const [uploaderOpen, setUploaderOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const options = useMemo(() => ({ excludeTransfers }), [excludeTransfers])
-  const s = useStatements('bank', options)
+  const s = useStatements('bank', options, !uploading)
   const { data } = s
 
   const accounts = useMemo(() => {
@@ -103,7 +104,7 @@ export function BankStatements() {
           {showUploader && (
             <motion.div key="uploader" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
               <GlassCard hover={false} className="p-5">
-                <StatementUploader kind="bank" compact={hasData} onSaved={() => void s.reload()} />
+                <StatementUploader kind="bank" compact={hasData} onSaved={() => void s.reload()} onBusyChange={setUploading} />
               </GlassCard>
             </motion.div>
           )}

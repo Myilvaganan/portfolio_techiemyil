@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type DragEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, CheckCircle2, Eye, EyeOff, FileText, KeyRound, Loader2, UploadCloud, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,7 @@ interface Job {
   percent: number
   message?: string
   resumeId?: string
+  prepared?: { id: string; chunks: number }
   txns?: number
 }
 
@@ -30,7 +31,7 @@ function percentOf(p: Progress) {
 const ACCEPT = '.pdf,.csv,.txt,application/pdf,text/csv,text/plain'
 const CONCURRENCY = 2
 
-export function StatementUploader({ kind, onSaved, compact }: { kind: StatementKind; onSaved: () => void; compact?: boolean }) {
+export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { kind: StatementKind; onSaved: () => void; onBusyChange?: (busy: boolean) => void; compact?: boolean }) {
   const [jobs, setJobs] = useState<Job[]>([])
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -50,6 +51,7 @@ export function StatementUploader({ kind, onSaved, compact }: { kind: StatementK
           file: job.file,
           password: passwordRef.current,
           resumeId: job.resumeId,
+          prepared: job.prepared,
           onProgress: (p) => patch(job.key, { stage: STAGE_LABEL[p.stage], percent: percentOf(p) }),
         })
         patch(job.key, { status: 'done', percent: 100, stage: 'Done', txns: res.statement.txnCount, message: res.replaced ? 'Replaced an earlier upload of the same period' : undefined })
@@ -59,7 +61,7 @@ export function StatementUploader({ kind, onSaved, compact }: { kind: StatementK
         if (err.code === 'password_required' || err.code === 'wrong_password') {
           patch(job.key, { status: 'locked', resumeId: err.uploadId, message: err.code === 'wrong_password' ? 'That password did not open this PDF.' : 'Password protected — enter the password below.' })
         } else {
-          patch(job.key, { status: 'error', resumeId: err.uploadId, message: err.message })
+          patch(job.key, { status: 'error', resumeId: err.uploadId, prepared: err.prepared, message: err.message })
         }
       }
     },
@@ -97,7 +99,7 @@ export function StatementUploader({ kind, onSaved, compact }: { kind: StatementK
   )
 
   const retryLocked = () => {
-    const locked = jobs.filter((j) => j.status === 'locked' || (j.status === 'error' && j.resumeId))
+    const locked = jobs.filter((j) => j.status === 'locked')
     void runAll(locked)
   }
 
@@ -108,7 +110,12 @@ export function StatementUploader({ kind, onSaved, compact }: { kind: StatementK
   }
 
   const lockedCount = jobs.filter((j) => j.status === 'locked').length
-  const busy = jobs.some((j) => j.status === 'working')
+  const busy = jobs.some((j) => j.status === 'working' || j.status === 'queued')
+
+  useEffect(() => {
+    onBusyChange?.(busy)
+    return () => onBusyChange?.(false)
+  }, [busy, onBusyChange])
 
   return (
     <div className="space-y-4">
@@ -186,6 +193,17 @@ export function StatementUploader({ kind, onSaved, compact }: { kind: StatementK
                     {j.status === 'done' ? `${j.txns} transactions saved${j.message ? ` · ${j.message}` : ''}` : (j.message ?? j.stage ?? 'Waiting…')}
                   </p>
                 </div>
+                {j.status === 'error' && (j.prepared || j.resumeId) && (
+                  <button
+                    type="button"
+                    data-cursor="hover"
+                    disabled={busy}
+                    onClick={() => void run(j)}
+                    className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-text transition-colors hover:border-accent/50 hover:text-accent disabled:opacity-50"
+                  >
+                    Retry
+                  </button>
+                )}
                 {(j.status === 'done' || j.status === 'error' || j.status === 'locked') && (
                   <button type="button" aria-label={`Remove ${j.file.name} from list`} onClick={() => setJobs((prev) => prev.filter((x) => x.key !== j.key))} className="text-text-secondary hover:text-text">
                     <X className="h-4 w-4" />

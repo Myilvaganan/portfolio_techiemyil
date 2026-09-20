@@ -55,6 +55,25 @@ describe('StatementUploader', () => {
     expect(await screen.findByText(/did not open this pdf/i)).toBeInTheDocument()
   })
 
+  it('shows the real reason when the AI step fails and retries without re-uploading', async () => {
+    let attempt = 0
+    vi.mocked(api.processStatementFile).mockImplementation(async ({ prepared }) => {
+      attempt++
+      if (attempt === 1) {
+        throw Object.assign(new api.StatementError('OpenAI says the account has no credits left.', 'ai_no_credits'), { uploadId: 'id1', prepared: { id: 'id1', chunks: 4 } })
+      }
+      expect(prepared).toEqual({ id: 'id1', chunks: 4 })
+      return saved(70)
+    })
+    const user = userEvent.setup()
+    render(<StatementUploader kind="bank" onSaved={() => {}} />)
+    await user.upload(screen.getByLabelText('Upload statements'), pdf('aug.pdf'))
+    expect(await screen.findByText(/no credits left/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByText(/70 transactions saved/i)).toBeInTheDocument()
+    expect(api.processStatementFile).toHaveBeenCalledTimes(2)
+  })
+
   it('rejects unsupported file types without uploading them', async () => {
     const user = userEvent.setup({ applyAccept: false })
     render(<StatementUploader kind="bank" onSaved={() => {}} />)

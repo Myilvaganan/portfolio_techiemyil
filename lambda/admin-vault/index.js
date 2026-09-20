@@ -277,7 +277,7 @@ function sanitizeFill(f) {
   if (f.side !== 'BUY' && f.side !== 'SELL') return null
   if (!(qty > 0) || !(price >= 0) || !Number.isFinite(ts)) return null
   if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date) || !/^\d{2}:\d{2}:\d{2}$/.test(f.time)) return null
-  return {
+  const out = {
     id: String(f.id).slice(0, 64),
     orderId: String(f.orderId || '').slice(0, 64),
     symbol,
@@ -288,6 +288,12 @@ function sanitizeFill(f) {
     date: f.date,
     time: f.time,
   }
+  // Real charges printed on some brokers' statements (STT, brokerage, GST…).
+  if (f.chg && typeof f.chg === 'object') {
+    const n = (v) => (Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) < 1e7 ? Math.round(Number(v) * 100) / 100 : 0)
+    out.chg = { stt: n(f.chg.stt), exchange: n(f.chg.exchange), stamp: n(f.chg.stamp), sebi: n(f.chg.sebi), brokerage: n(f.chg.brokerage), gst: n(f.chg.gst), total: n(f.chg.total) }
+  }
+  return out
 }
 
 async function readOptionsFills(broker) {

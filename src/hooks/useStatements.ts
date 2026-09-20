@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { aiContext, emptyStatements, fingerprint, type AiInsights, type Options, type StatementKind, type StatementsData } from '@/lib/statements'
 import { askAi, deleteStatement, fetchStatements, generateInsights, statementFileUrl } from '@/lib/statementsApi'
 
-export function useStatements(kind: StatementKind, options: Options = {}) {
+// `autoInsights` can be switched off (e.g. while files are still uploading) so the analysis runs once after the last one.
+export function useStatements(kind: StatementKind, options: Options = {}, autoInsights = true) {
   const [data, setData] = useState<StatementsData>(emptyStatements)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,10 +48,10 @@ export function useStatements(kind: StatementKind, options: Options = {}) {
   // Insights are generated once per change to the data, then stored and simply reloaded on the next visit.
   const stale = !insights || insights.fingerprint !== print
   useEffect(() => {
-    if (loading || !data.transactions.length || !stale || insightsBusy || attempted.current === print) return
+    if (!autoInsights || loading || !data.transactions.length || !stale || insightsBusy || attempted.current === print) return
     attempted.current = print
     void generate()
-  }, [loading, data.transactions.length, stale, insightsBusy, print, generate])
+  }, [autoInsights, loading, data.transactions.length, stale, insightsBusy, print, generate])
 
   const ask = useCallback((question: string) => askAi(kind, question, aiContext(kind, data, options)), [kind, data, options])
 

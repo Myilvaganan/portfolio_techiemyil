@@ -6,6 +6,7 @@ const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
 export class StatementError extends Error {
   code?: string
   uploadId?: string
+  prepared?: { id: string; chunks: number }
   constructor(message: string, code?: string) {
     super(message)
     this.code = code
@@ -90,7 +91,7 @@ async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
       return await fn()
     } catch (e) {
       last = e
-      if (e instanceof StatementError && e.code === 'ai_not_configured') throw e
+      if (e instanceof StatementError && (e.code === 'ai_not_configured' || e.code === 'ai_no_credits')) throw e
       await new Promise((r) => setTimeout(r, 600 * (i + 1)))
     }
   }
@@ -102,38 +103,45 @@ export interface ProcessOptions {
   file: File
   password?: string
   resumeId?: string
+  // Set when the file was already unlocked and saved but the AI step failed — retry skips straight to reading.
+  prepared?: { id: string; chunks: number }
   onProgress: (p: Progress) => void
 }
 
 export const isPdf = (file: File) => /\.pdf$/i.test(file.name) || file.type === 'application/pdf'
 
 // Uploads to the vault, unlocks the PDF with the one password, reads it with AI, and saves the result.
-export async function processStatementFile({ kind, file, password, resumeId, onProgress }: ProcessOptions): Promise<{ statement: Statement; replaced: number }> {
-  let id = resumeId
-  if (!id) {
-    onProgress({ stage: 'uploading' })
-    const contentType = isPdf(file) ? 'application/pdf' : 'text/csv'
-    const up = await post('/admin/statements/upload-url', { kind, contentType })
-    const put = await fetch(up.uploadUrl, { method: 'PUT', headers: { 'Content-Type': up.contentType }, body: file })
-    if (!put.ok) throw new StatementError('Upload failed. Please try again.')
-    id = up.id as string
-  }
+export async function processStatementFile({ kind, file, password, resumeId, prepared, onProgress }: ProcessOptions): Promise<{ statement: Statement; replaced: number }> {
+  let id = prepared?.id ?? resumeId
+  let prep: { chunks: number } | undefined = prepared
+  if (!prep) {
+    if (!id) {
+      onProgress({ stage: 'uploading' })
+      const contentType = isPdf(file) ? 'application/pdf' : 'text/csv'
+      const up = await post('/admin/statements/upload-url', { kind, contentType })
+      const put = await fetch(up.uploadUrl, { method: 'PUT', headers: { 'Content-Type': up.contentType }, body: file })
+      if (!put.ok) throw new StatementError('Upload failed. Please try again.')
+      id = up.id as string
+    }
 
-  onProgress({ stage: 'unlocking' })
-  let prep: { chunks: number }
-  try {
-    prep = await post('/admin/statements/prepare', { kind, id, password: password || undefined })
-  } catch (e) {
-    if (e instanceof StatementError) e.uploadId = id
-    throw e
+    onProgress({ stage: 'unlocking' })
+    try {
+      prep = await post('/admin/statements/prepare', { kind, id, password: password || undefined })
+    } catch (e) {
+      if (e instanceof StatementError) e.uploadId = id
+      throw e
+    }
   }
+  const statementId = id as string
+  id = statementId
+  const chunks = (prep as { chunks: number }).chunks
 
-  const total = prep.chunks + 1
+  const total = chunks + 1
   let done = 0
   onProgress({ stage: 'reading', done, total })
   let meta: unknown
-  const transactions: unknown[][] = Array.from({ length: prep.chunks }, () => [])
-  const jobs: (number | 'meta')[] = ['meta', ...Array.from({ length: prep.chunks }, (_, i) => i)]
+  const transactions: unknown[][] = Array.from({ length: chunks }, () => [])
+  const jobs: (number | 'meta')[] = ['meta', ...Array.from({ length: chunks }, (_, i) => i)]
   try {
     await pool(jobs, 3, async (job) => {
       const res = await withRetry(() => post('/admin/statements/extract', { kind, id, chunk: job }))
@@ -142,7 +150,10 @@ export async function processStatementFile({ kind, file, password, resumeId, onP
       onProgress({ stage: 'reading', done: ++done, total })
     })
   } catch (e) {
-    if (e instanceof StatementError) e.uploadId = id
+    if (e instanceof StatementError) {
+      e.uploadId = id
+      e.prepared = { id: statementId, chunks }
+    }
     throw e
   }
 

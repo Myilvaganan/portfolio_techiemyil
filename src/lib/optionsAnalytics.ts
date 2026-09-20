@@ -1,6 +1,16 @@
 // Options-trade analytics built from broker tradebook exports (see tradeImport.ts for parsing).
 // Broker APIs only return today's orders, so history comes from the exported files.
 
+export interface FillCharges {
+  stt: number
+  exchange: number
+  stamp: number
+  sebi: number
+  brokerage: number
+  gst: number
+  total: number
+}
+
 export interface Fill {
   id: string
   orderId: string
@@ -12,6 +22,7 @@ export interface Fill {
   date: string
   time: string
   synthetic?: boolean
+  chg?: FillCharges
 }
 
 export interface OptionSymbol {
@@ -83,6 +94,7 @@ export interface ChargeItem {
   gst: number
   stamp: number
   total: number
+  actual?: boolean
 }
 
 // ---------- Symbols ----------
@@ -257,6 +269,13 @@ export function estimateCharges(fills: Fill[], rates: ChargeRates = DEFAULT_CHAR
   for (const group of orders.values()) {
     const first = group[0]
     const meta = parseOptionSymbol(first.symbol)
+    // Real charges printed on the statement beat any estimate.
+    const real = group.filter((f) => f.chg)
+    if (real.length) {
+      const sum = (k: keyof FillCharges) => real.reduce((s, f) => s + (f.chg?.[k] ?? 0), 0)
+      items.push({ date: first.date, underlying: meta?.underlying ?? '', brokerage: sum('brokerage'), stt: sum('stt'), exchange: sum('exchange'), sebi: sum('sebi'), gst: sum('gst'), stamp: sum('stamp'), total: sum('total'), actual: true })
+      continue
+    }
     const turnover = group.reduce((s, f) => s + f.qty * f.price, 0)
     const sellTurnover = group.filter((f) => f.side === 'SELL').reduce((s, f) => s + f.qty * f.price, 0)
     const buyTurnover = turnover - sellTurnover
@@ -307,6 +326,7 @@ export interface Analytics {
   charges: number
   net: number
   chargeParts: { brokerage: number; stt: number; exchange: number; sebi: number; gst: number; stamp: number }
+  chargesSource: 'actual' | 'estimated' | 'mixed' | 'none'
   avgWin: number
   avgLoss: number
   payoff: number | null
@@ -328,7 +348,7 @@ export interface Analytics {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DTE_ORDER = ['0 DTE (expiry day)', '1 DTE', '2–3 DTE', '4–7 DTE', '8+ DTE', 'Unknown']
-const HOLD_ORDER = ['Under 5 min', '5–30 min', '30 min–2 hr', 'Rest of day', 'Overnight+']
+const HOLD_ORDER = ['Under 5 min', '5–30 min', '30 min–2 hr', 'Rest of day', 'Same day (no times)', 'Overnight+']
 
 function dteBucket(t: RoundTrip) {
   if (!t.exactExpiry) return 'Unknown'
@@ -337,7 +357,9 @@ function dteBucket(t: RoundTrip) {
 }
 
 function holdBucket(t: RoundTrip) {
-  if (t.closeDate !== t.openDate) return HOLD_ORDER[4]
+  if (t.closeDate !== t.openDate) return HOLD_ORDER[5]
+  // Statements without trade times can't say how long a same-day trade lasted.
+  if (t.openTime === '00:00:00') return HOLD_ORDER[4]
   return t.holdMin < 5 ? HOLD_ORDER[0] : t.holdMin < 30 ? HOLD_ORDER[1] : t.holdMin < 120 ? HOLD_ORDER[2] : HOLD_ORDER[3]
 }
 
@@ -421,6 +443,7 @@ export function analyze(trips: RoundTrip[], charges: ChargeItem[]): Analytics {
     charges: chargeTotal,
     net: gross - chargeTotal,
     chargeParts: parts,
+    chargesSource: !charges.length ? 'none' : charges.every((c) => c.actual) ? 'actual' : charges.some((c) => c.actual) ? 'mixed' : 'estimated',
     avgWin,
     avgLoss,
     payoff: avgLoss ? avgWin / avgLoss : null,
@@ -488,7 +511,7 @@ export function buildInsights(a: Analytics): Insight[] {
   }
   if (a.charges > 0) {
     const share = a.gross > 0 ? `${Math.round((a.charges / a.gross) * 100)}% of your gross profit` : 'on top of a gross loss'
-    out.push({ tone: a.gross > 0 && a.charges / a.gross < 0.25 ? 'neutral' : 'bad', text: `Estimated charges were ${money(a.charges)} — ${share}.` })
+    out.push({ tone: a.gross > 0 && a.charges / a.gross < 0.25 ? 'neutral' : 'bad', text: `${a.chargesSource === 'actual' ? 'Charges' : 'Estimated charges'} were ${money(a.charges)} — ${share}.` })
   }
   if (a.payoff !== null) {
     out.push({

@@ -297,6 +297,8 @@ interface Acc {
   fills: Fill[]
   ignored: number
   files: number
+  samples: string[]
+  notes: string[]
 }
 
 interface Pending {
@@ -524,7 +526,10 @@ export function OptionsAnalytics() {
   async function finishImport(brokerId: string, acc: Acc) {
     try {
       if (!acc.fills.length) {
-        setMessage({ tone: 'bad', text: 'No option trades were found. Make sure this is your F&O trade book (not equity or a summary) with buy/sell, quantity and price for each trade.' })
+        setMessage({
+          tone: 'bad',
+          text: `No option trades were found. Make sure this is your F&O trade book (not equity or a summary) with buy/sell, quantity and price for each trade.${acc.samples.length ? ` Contracts I couldn't read, e.g. ${acc.samples.map((x) => `“${x}”`).join(', ')} — send me one and I'll add support.` : ''}`,
+        })
         return
       }
       const { added } = await saveFills(brokerId, acc.fills)
@@ -534,7 +539,7 @@ export function OptionsAnalytics() {
       const dupes = acc.fills.length - added
       setMessage({
         tone: 'good',
-        text: `Saved ${added} new ${brokerLabel(brokerId)} option trade${added === 1 ? '' : 's'} to your vault from ${acc.files} file${acc.files === 1 ? '' : 's'}${dupes ? ` · ${dupes} already there` : ''}${acc.ignored ? ` · ${acc.ignored} non-option row${acc.ignored === 1 ? '' : 's'} ignored` : ''}.`,
+        text: `Saved ${added} new ${brokerLabel(brokerId)} option trade${added === 1 ? '' : 's'} to your vault from ${acc.files} file${acc.files === 1 ? '' : 's'}${dupes ? ` · ${dupes} already there` : ''}${acc.ignored ? ` · ${acc.ignored} non-option row${acc.ignored === 1 ? '' : 's'} ignored` : ''}.${acc.notes.length ? ` ${acc.notes.join(' ')}` : ''}`,
       })
     } catch (err) {
       setMessage({ tone: 'bad', text: (err as Error).message })
@@ -543,7 +548,7 @@ export function OptionsAnalytics() {
     }
   }
 
-  async function importFiles(brokerId: string, files: File[], acc: Acc = { fills: [], ignored: 0, files: 0 }) {
+  async function importFiles(brokerId: string, files: File[], acc: Acc = { fills: [], ignored: 0, files: 0, samples: [], notes: [] }) {
     let cur = acc
     for (let i = 0; i < files.length; i++) {
       let rows: Cell[][]
@@ -556,7 +561,7 @@ export function OptionsAnalytics() {
       }
       const analysis = analyseRows(rows)
       if (analysis.result) {
-        cur = { fills: cur.fills.concat(analysis.result.fills), ignored: cur.ignored + analysis.result.ignoredRows, files: cur.files + 1 }
+        cur = { fills: cur.fills.concat(analysis.result.fills), ignored: cur.ignored + analysis.result.ignoredRows, files: cur.files + 1, samples: [...cur.samples, ...analysis.result.unrecognised].slice(0, 3), notes: [...new Set([...cur.notes, ...analysis.result.notes])] }
         continue
       }
       setPending({ brokerId, fileName: files[i].name, rows, headerIdx: analysis.headerIdx, mapping: analysis.mapping, rest: files.slice(i + 1), acc: cur })
@@ -584,7 +589,7 @@ export function OptionsAnalytics() {
   function confirmMapping() {
     if (!pending) return
     const res = rowsToFills(pending.rows, pending.headerIdx, pending.mapping)
-    const next = { fills: pending.acc.fills.concat(res.fills), ignored: pending.acc.ignored + res.ignoredRows, files: pending.acc.files + 1 }
+    const next = { fills: pending.acc.fills.concat(res.fills), ignored: pending.acc.ignored + res.ignoredRows, files: pending.acc.files + 1, samples: [...pending.acc.samples, ...res.unrecognised].slice(0, 3), notes: [...new Set([...pending.acc.notes, ...res.notes])] }
     const { brokerId, rest } = pending
     setPending(null)
     setBusy(true)
@@ -869,10 +874,10 @@ export function OptionsAnalytics() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-                <Kpi label="Net P&L" value={<Money value={a.net} className="text-xl" />} sub="after est. charges" />
+                <Kpi label="Net P&L" value={<Money value={a.net} className="text-xl" />} sub={a.chargesSource === 'actual' ? 'after your actual charges' : 'after est. charges'} />
                 <Kpi label="Gross P&L" value={<Money value={a.gross} className="text-xl" />} sub={`${a.trades} closed trades`} />
                 <Kpi
-                  label="Charges (est.)"
+                  label={a.chargesSource === 'actual' ? 'Charges' : 'Charges (est.)'}
                   value={formatInr(a.charges)}
                   valueClassName="text-amber-500"
                   sub={a.gross > 0 ? `${Math.round((a.charges / a.gross) * 100)}% of gross profit` : 'brokerage, STT, GST…'}
@@ -954,7 +959,7 @@ export function OptionsAnalytics() {
               </div>
 
               <GlassCard hover={false} className="p-5">
-                <SectionTitle aside={<span className="text-xs font-mono text-text">{formatInr(a.charges)}</span>}>Charges (estimated)</SectionTitle>
+                <SectionTitle aside={<span className="text-xs font-mono text-text">{formatInr(a.charges)}</span>}>{a.chargesSource === 'actual' ? 'Charges (from your statements)' : a.chargesSource === 'mixed' ? 'Charges (statement + estimated)' : 'Charges (estimated)'}</SectionTitle>
                 <ul className="grid gap-x-8 gap-y-2 text-xs sm:grid-cols-2">
                   {(
                     [
@@ -977,6 +982,7 @@ export function OptionsAnalytics() {
                 ) : (
                 <details className="mt-4 rounded-xl border border-border bg-surface-2 p-3 text-xs text-text-secondary">
                   <summary className="cursor-pointer font-medium text-text">Charge assumptions{demo ? '' : ` — ${activeLabel}`}</summary>
+                  {a.chargesSource === 'actual' && <p className="mt-2 text-accent">Your statements include the actual charges, so these assumptions aren&apos;t being used.</p>}
                   <p className="mt-2">
                     Estimates from a typical ₹20-flat options fee schedule (Zerodha-style). Brokerage plans and rates (STT especially) differ by broker and change over time — match these to your contract notes.
                     Saved per broker in this browser.
