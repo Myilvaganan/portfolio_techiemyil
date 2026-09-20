@@ -15,6 +15,7 @@ import {
   foreclosure,
   foreclosureTimeline,
   loanAiContext,
+  loanFingerprint,
   pmt,
   prepayImpact,
   simulate,
@@ -182,6 +183,15 @@ describe('calculators', () => {
     expect(none.endDate).toBe('2032-05-05')
     const rollOnly = simulatePortfolio([a, b], 0, 'balance')
     expect(rollOnly.months).toBeLessThan(none.months)
+  })
+})
+
+describe('fingerprint', () => {
+  it('is short enough to round-trip through the server and changes with the documents', () => {
+    const f = loanFingerprint(docs)
+    expect(f.length).toBeLessThan(30)
+    expect(loanFingerprint([...docs].reverse())).toBe(f)
+    expect(loanFingerprint(docs.slice(1))).not.toBe(f)
   })
 })
 

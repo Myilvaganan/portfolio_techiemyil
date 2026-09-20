@@ -606,9 +606,16 @@ export function loanAiContext(loans: Loan[], fee: FeeAssumption = DEFAULT_FEE) {
   }
 }
 
+// Short and stable: the server stores this next to the saved insights, so it must survive a round trip unchanged.
 export function loanFingerprint(docs: LoanDoc[]): string {
-  return docs
+  const text = docs
     .map((d) => `${d.accountNo}:${d.docType}:${d.uploadedAt}`)
     .sort()
     .join('|')
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return `${docs.length}-${(h >>> 0).toString(16).padStart(8, '0')}`
 }

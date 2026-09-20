@@ -26,7 +26,8 @@ describe('Loans', () => {
     localStorage.clear()
     data = { statements: allLoanDocs(), insights: null }
     vi.mocked(api.fetchLoanDocs).mockImplementation(async () => data)
-    vi.mocked(api.generateInsights).mockImplementation(async (_k, _c, fp) => ({ ...insights, fingerprint: fp }))
+    // The real server stores the fingerprint it is given (previously it cut it to 64 characters).
+    vi.mocked(api.generateInsights).mockImplementation(async (_k, _c, fp) => ({ ...insights, fingerprint: fp.slice(0, 64) }))
   })
 
   it('asks for loan documents when there are none', async () => {

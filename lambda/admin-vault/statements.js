@@ -704,7 +704,7 @@ score.value is a 0-100 loan-health score (payment discipline incl. bounced EMIs,
       maxTokens: 4000,
     })
     result.score.value = Math.max(0, Math.min(100, Math.round(result.score.value)))
-    const saved = { fingerprint: typeof payload.fingerprint === 'string' ? payload.fingerprint.slice(0, 64) : '', generatedAt: new Date().toISOString(), model, ...result }
+    const saved = { fingerprint: typeof payload.fingerprint === 'string' ? payload.fingerprint.slice(0, 200) : '', generatedAt: new Date().toISOString(), model, ...result }
     const data = await store.getJson(store.key(kind, 'data.json'), null)
     if (data) {
       data.insights = saved
