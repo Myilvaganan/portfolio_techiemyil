@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { rebalanceReport } from '@/lib/moduleReports'
 import {
   BUCKETS,
   BUCKET_IDS,
@@ -106,13 +108,16 @@ export function PortfolioRebalance() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Portfolio intelligence</p>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-text">Portfolio Rebalance Blueprint</h1>
-        <p className="mt-1 max-w-2xl text-sm text-text-secondary">
-          A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
-          goal is long-term wealth building, not a guaranteed daily return.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Portfolio intelligence</p>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Portfolio Rebalance Blueprint</h1>
+          <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+            A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
+            goal is long-term wealth building, not a guaranteed daily return.
+          </p>
+        </div>
+        <ReportMenu filename="portfolio-rebalance-report" report={() => rebalanceReport(rows, HOLDINGS, total)} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

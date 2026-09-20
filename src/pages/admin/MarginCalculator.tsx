@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { marginReport } from '@/lib/moduleReports'
 import { fetchLivePrices, fetchUsdInr } from '@/lib/livePrices'
 import {
   DEFAULT_LEVERAGE,
@@ -196,7 +198,30 @@ export function MarginCalculator() {
   return (
     <div className="mx-auto max-w-xl space-y-5">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-text">MT5 Margin Calculator</h1>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="font-display text-2xl font-semibold text-text">MT5 Margin Calculator</h1>
+          <ReportMenu
+            filename="trade-plan-report"
+            report={() =>
+              marginReport({
+                instrumentName: instrument.name,
+                unit: instrument.unit,
+                direction,
+                lots,
+                leverage,
+                entry,
+                exit: parseFloat(exit) || null,
+                stopLoss: parseFloat(stopLoss) || null,
+                usdInr: usdInr.rate,
+                margin: marginResult,
+                pnl,
+                risk,
+                balance: parseFloat(balance) || 1000,
+                slPointsInput: parseFloat(slPoints) || 20,
+              })
+            }
+          />
+        </div>
         <p className="mt-1 text-sm text-text-secondary">XAUUSD · Bitcoin · US30 — margin, P&amp;L and risk.</p>
         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs text-text-secondary">
           <span

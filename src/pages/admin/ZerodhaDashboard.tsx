@@ -26,6 +26,8 @@ import {
   type KiteSnapshot,
 } from '@/lib/kite'
 import { demoSnapshot } from '@/lib/kiteDemo'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { zerodhaHoldingsCsv, zerodhaReport } from '@/lib/moduleReports'
 
 const AUTO_REFRESH_MS = 30_000
 
@@ -614,6 +616,7 @@ export function ZerodhaDashboard() {
               <Unplug className="h-3.5 w-3.5" />
               {demo ? 'Exit preview' : 'Disconnect'}
             </button>
+            {data && <ReportMenu filename="zerodha-portfolio-report" report={() => zerodhaReport(data, userName ?? 'Zerodha', demo)} csv={() => zerodhaHoldingsCsv(data)} />}
           </div>
         )}
       </div>

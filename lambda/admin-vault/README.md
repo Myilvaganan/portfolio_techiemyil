@@ -235,3 +235,25 @@ DELETE /admin/options/fills?broker=<id>            200 { ok: true }
 ```
 
 `broker` defaults to `zerodha` when omitted.
+
+## Bank & credit-card statements (`/admin/bank-statements`, `/admin/credit-cards`)
+
+`statements.js` handles ICICI/Axis account statements and ICICI credit-card statements. Each step is its own request so it stays under API Gateway's 30 s limit:
+
+1. `POST /admin/statements/upload-url {kind, contentType}` → presigned S3 PUT (`kind` is `bank` or `card`). The browser uploads the file directly.
+2. `POST /admin/statements/prepare {kind, id, password?}` → opens the PDF with [MuPDF](https://www.npmjs.com/package/mupdf) (WASM, **AGPL-3.0** — fine for this private, unmodified use, but keep in mind if the backend is ever distributed), unlocks it with the password (used once, never stored or logged), saves the **unlocked** copy as `_data/statements/<kind>/<id>/statement.pdf`, deletes the locked original, and stores text rows. `422 {code: password_required | wrong_password}` when the PDF is locked.
+3. `POST /admin/statements/extract {kind, id, chunk: 'meta' | n}` → one OpenAI call per ~30 text rows (plus one for the statement header). Account/card numbers and PAN are masked before text leaves the Lambda; requests use `store: false`.
+4. `POST /admin/statements/commit {kind, id, filename, meta, transactions}` → merges into `_data/statements/<kind>/data.json`. Re-uploading the same account/period replaces the earlier statement; overlapping statements are de-duplicated.
+5. `GET /admin/statements/data?kind=` · `DELETE /admin/statements?kind=&id=` · `GET /admin/statements/file-url?kind=&id=` (presigned link to the unlocked PDF).
+6. `POST /admin/statements/insights {kind, context, fingerprint, fast?}` and `POST /admin/statements/ask {kind, question, context}` → strongest model, on aggregated numbers only. Insights are stored with the data fingerprint so they reload without another AI call.
+
+Environment variables (in addition to the ones above):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | — | required |
+| `OPENAI_MODEL_EXTRACT` | `gpt-5.5` | reads transactions (fast enough for 30 s chunks) |
+| `OPENAI_MODEL_INSIGHTS` | `gpt-6-astra` | insights and Q&A |
+| `OPENAI_MODEL_FAST` | `gpt-5.5` | fallback when the insights model times out |
+
+Function settings: memory **1024 MB**, timeout **29 s**. The bucket needs no extra IAM permissions or CORS changes.

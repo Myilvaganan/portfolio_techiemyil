@@ -10,6 +10,8 @@ import { MarginCalculator } from '@/pages/admin/MarginCalculator'
 import { PortfolioRebalance } from '@/pages/admin/PortfolioRebalance'
 import { ZerodhaDashboard } from '@/pages/admin/ZerodhaDashboard'
 import { OptionsAnalytics } from '@/pages/admin/OptionsAnalytics'
+import { BankStatements } from '@/pages/admin/BankStatements'
+import { CreditCards } from '@/pages/admin/CreditCards'
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
@@ -30,6 +32,8 @@ export function Admin() {
               <Route path="portfolio-rebalance" element={<PortfolioRebalance />} />
               <Route path="zerodha" element={<ZerodhaDashboard />} />
               <Route path="options-analytics" element={<OptionsAnalytics />} />
+              <Route path="bank-statements" element={<BankStatements />} />
+              <Route path="credit-cards" element={<CreditCards />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </AdminShell>

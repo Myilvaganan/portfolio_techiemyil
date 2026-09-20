@@ -20,6 +20,8 @@ import {
 import { demoFills } from '@/lib/optionsDemo'
 import { clearStoredFills, fetchStoredBrokers, fetchStoredFills, saveFills } from '@/lib/optionsStore'
 import { BROKERS, SAMPLE_BROKER, brokerHint, brokerLabel, slugifyBroker } from '@/lib/brokers'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { optionsReport, optionsTradesCsv } from '@/lib/moduleReports'
 import { FIELDS, analyseRows, autoMapping, cellText, mappingProblems, readTradeFile, rowsToFills, type Cell, type Mapping } from '@/lib/tradeImport'
 
 const STORAGE_KEY = 'options_fills_v1'
@@ -430,6 +432,7 @@ export function OptionsAnalytics() {
   const [shown, setShown] = useState(PAGE)
   const [message, setMessage] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
   const [pending, setPending] = useState<Pending | null>(null)
+  const [dragging, setDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -563,14 +566,20 @@ export function OptionsAnalytics() {
     await finishImport(brokerId, cur)
   }
 
-  async function handleFiles(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    e.target.value = ''
-    if (!files.length || active === 'all') return
+  async function importFileList(files: File[]) {
+    if (!files.length || active === 'all' || demo || busy || loading) return
     setBusy(true)
     setMessage(null)
     await importFiles(active, files)
   }
+
+  async function handleFiles(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    await importFileList(files)
+  }
+
+  const canDrop = !demo && active !== 'all' && !busy && !loading && !pending
 
   function confirmMapping() {
     if (!pending) return
@@ -661,8 +670,33 @@ export function OptionsAnalytics() {
   const rates = ratesFor(active)
 
   return (
-    <div className="opt-viz mx-auto max-w-6xl space-y-5">
+    <div
+      className="opt-viz relative mx-auto max-w-6xl space-y-5"
+      onDragOver={(e) => {
+        if (!canDrop || !e.dataTransfer.types.includes('Files')) return
+        e.preventDefault()
+        setDragging(true)
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false)
+      }}
+      onDrop={(e) => {
+        if (!canDrop) return
+        e.preventDefault()
+        setDragging(false)
+        void importFileList(Array.from(e.dataTransfer.files))
+      }}
+    >
       <style>{VIZ_CSS}</style>
+      {dragging && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-bg/70 backdrop-blur-sm" aria-hidden>
+          <div className="rounded-3xl border-2 border-dashed border-accent bg-card/90 px-10 py-8 text-center shadow-2xl">
+            <FileUp className="mx-auto mb-2 h-8 w-8 text-accent" />
+            <p className="text-sm font-semibold text-text">Drop your {brokerLabel(active)} tradebooks here</p>
+            <p className="mt-1 text-xs text-text-secondary">Any number of CSV or Excel files</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -696,6 +730,13 @@ export function OptionsAnalytics() {
               <FileUp className="h-3.5 w-3.5" />
               {busy ? 'Saving…' : `${hasStoredForActive ? 'Add more files' : 'Import file'}${active === 'all' ? '' : ` → ${brokerLabel(active)}`}`}
             </button>
+          )}
+          {hasData && a.trades > 0 && (
+            <ReportMenu
+              filename={`options-report-${demo ? 'sample' : active}`}
+              report={() => optionsReport(a, model.trips, insights, activeLabel, RANGES.find((r) => r.id === range)?.label ?? 'All time')}
+              csv={() => optionsTradesCsv(model.trips)}
+            />
           )}
           {(demo || hasStoredForActive) && (
             <button
@@ -778,7 +819,7 @@ export function OptionsAnalytics() {
               <h2 className="font-display text-xl font-semibold text-text">Import your {activeLabel} options trades</h2>
               <p className="text-sm text-text-secondary">{brokerHint(active)}</p>
               <p className="text-sm text-text-secondary">
-                Files are read in your browser; only the option trades are saved to your private vault, so they&apos;re there on any device. Columns are detected
+                Drag in as many files as you like, or choose them. Files are read in your browser; only the option trades are saved to your private vault, so they&apos;re there on any device. Columns are detected
                 automatically, and you can map them by hand if a file is unusual. Quantities should be in units, not lots. Duplicates are skipped.
               </p>
             </>
