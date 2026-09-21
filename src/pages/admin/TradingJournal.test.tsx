@@ -7,6 +7,8 @@ import { setHidden } from '@/lib/privacy'
 import { deleteTrade, fetchJournal, fetchSettings, importTrades, saveDayNote, saveSettings, saveTrade } from '@/lib/journalStore'
 import { loadBackfillPlan, summarise } from '@/lib/journalBackfill'
 import { MemoryRouter } from 'react-router-dom'
+import { getKiteSession } from '@/lib/kite'
+import { syncZerodhaToJournal } from '@/lib/kiteSync'
 import { fetchUsdInr } from '@/lib/livePrices'
 
 vi.mock('@/lib/journalStore', () => ({
@@ -20,6 +22,9 @@ vi.mock('@/lib/journalStore', () => ({
 }))
 vi.mock('@/lib/journalBackfill', async (orig) => ({ ...(await orig<typeof import('@/lib/journalBackfill')>()), loadBackfillPlan: vi.fn() }))
 vi.mock('@/lib/livePrices', () => ({ fetchUsdInr: vi.fn() }))
+
+vi.mock('@/lib/kite', async (orig) => ({ ...(await orig<typeof import('@/lib/kite')>()), getKiteSession: vi.fn() }))
+vi.mock('@/lib/kiteSync', async (orig) => ({ ...(await orig<typeof import('@/lib/kiteSync')>()), syncZerodhaToJournal: vi.fn() }))
 
 const TODAY = '2026-09-15'
 
@@ -58,6 +63,7 @@ describe('TradingJournal', () => {
     vi.mocked(saveTrade).mockImplementation(async (t) => ({ ...t, createdAt: '2026-09-15T06:00:00Z' }))
     vi.mocked(deleteTrade).mockResolvedValue()
     vi.mocked(saveDayNote).mockImplementation(async (d) => d)
+    vi.mocked(getKiteSession).mockReturnValue(null)
     vi.mocked(loadBackfillPlan).mockResolvedValue([])
     vi.mocked(importTrades).mockImplementation(async (t) => ({ added: t.length, skipped: 0, invalid: 0 }))
     load([OPTIONS, BITCOIN])
@@ -535,6 +541,72 @@ describe('TradingJournal', () => {
 
       release({ trades: [OPTIONS], days: {}, months: ['2026-09'] })
       await waitFor(() => expect(loadBackfillPlan).toHaveBeenCalled())
+    })
+  })
+
+  describe('Zerodha sync', () => {
+    const synced = (over = {}) => ({
+      userName: 'Myil',
+      fetched: 2,
+      newFills: 2,
+      tradesAdded: 1,
+      tradesSkipped: 0,
+      latestDate: '2026-09-15',
+      today: { date: '2026-09-15', closed: 1, wins: 1, losses: 0, gross: 1500, fees: 40, net: 1460, open: [] },
+      ...over,
+    })
+
+    it('shows a connected dot on the button only when a Zerodha session exists', async () => {
+      vi.mocked(getKiteSession).mockReturnValue({ accessToken: 'a', userId: 'AB1', userName: 'Myil' })
+      render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+      await screen.findByText('NIFTY 25000 CE')
+
+      expect(screen.getByRole('button', { name: /sync zerodha/i })).toContainElement(screen.getByLabelText('Zerodha connected'))
+    })
+
+    it('has no connected dot when Zerodha is not connected', async () => {
+      render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+      await screen.findByText('NIFTY 25000 CE')
+
+      expect(screen.queryByLabelText('Zerodha connected')).not.toBeInTheDocument()
+    })
+
+    it('syncs on click and reloads the journal', async () => {
+      const user = userEvent.setup()
+      vi.mocked(syncZerodhaToJournal).mockResolvedValue(synced())
+      render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+      await screen.findByText('NIFTY 25000 CE')
+      const loadsBefore = vi.mocked(fetchJournal).mock.calls.length
+
+      await user.click(screen.getByRole('button', { name: /sync zerodha/i }))
+
+      expect(await screen.findByText('Fetched 2 option fills from Zerodha')).toBeInTheDocument()
+      expect(syncZerodhaToJournal).toHaveBeenCalledWith(TODAY)
+      await waitFor(() => expect(vi.mocked(fetchJournal).mock.calls.length).toBeGreaterThan(loadsBefore))
+    })
+
+    it('jumps to the month of the newest synced trade', async () => {
+      const user = userEvent.setup()
+      vi.mocked(syncZerodhaToJournal).mockResolvedValue(synced({ latestDate: '2026-08-31' }))
+      render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+      await screen.findByText('NIFTY 25000 CE')
+
+      await user.click(screen.getByRole('button', { name: /sync zerodha/i }))
+
+      await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08'))
+      expect(await screen.findByText('August 2026')).toBeInTheDocument()
+    })
+
+    it('stays on the current month when nothing new was added', async () => {
+      const user = userEvent.setup()
+      vi.mocked(syncZerodhaToJournal).mockResolvedValue(synced({ tradesAdded: 0, latestDate: '' }))
+      render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+      await screen.findByText('NIFTY 25000 CE')
+
+      await user.click(screen.getByRole('button', { name: /sync zerodha/i }))
+      await screen.findByText('Fetched 2 option fills from Zerodha')
+
+      expect(screen.getByText('September 2026')).toBeInTheDocument()
     })
   })
 })

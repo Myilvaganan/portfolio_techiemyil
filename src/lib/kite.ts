@@ -56,6 +56,20 @@ export interface KiteSnapshot {
   orders: KiteOrder[] | null
 }
 
+/** One executed trade (fill) from Kite's /trades — only ever the current trading day. */
+export interface KiteTrade {
+  trade_id: string
+  order_id?: string
+  exchange: string
+  tradingsymbol: string
+  transaction_type: 'BUY' | 'SELL'
+  quantity: number
+  average_price: number
+  fill_timestamp?: string
+  exchange_timestamp?: string
+  order_timestamp?: string
+}
+
 export interface KiteSession {
   accessToken: string
   userId: string
@@ -119,6 +133,10 @@ export async function createKiteSession(requestToken: string): Promise<KiteSessi
 
 export async function fetchKiteSnapshot(accessToken: string): Promise<KiteSnapshot> {
   return kiteFetch('/admin/kite/snapshot', { method: 'POST', body: JSON.stringify({ accessToken }) })
+}
+
+export async function fetchKiteTrades(accessToken: string): Promise<{ trades: KiteTrade[]; fetchedAt: string }> {
+  return kiteFetch('/admin/kite/trades', { method: 'POST', body: JSON.stringify({ accessToken }) })
 }
 
 export async function endKiteSession(accessToken: string) {

@@ -4,6 +4,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { BackfillDialog, type ImportSummary } from '@/components/journal/BackfillDialog'
+import { ZerodhaSyncDialog } from '@/components/journal/ZerodhaSyncDialog'
 import { DayDialog } from '@/components/journal/DayDialog'
 import { DayPanel } from '@/components/journal/DayPanel'
 import { JournalCalendar } from '@/components/journal/JournalCalendar'
@@ -29,6 +30,8 @@ import { analyze } from '@/lib/journalAnalytics'
 import { deleteTrade, fetchJournal, fetchSettings, saveDayNote, saveSettings, saveTrade } from '@/lib/journalStore'
 import { fetchUsdInr } from '@/lib/livePrices'
 import { FALLBACK_USD_INR } from '@/lib/margin'
+import { getKiteSession } from '@/lib/kite'
+import type { SyncResult } from '@/lib/kiteSync'
 import { useMoney, usePrivacy } from '@/lib/privacy'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useBackfillStatus } from '@/hooks/useBackfillStatus'
@@ -67,6 +70,7 @@ export function TradingJournal() {
   const [dayOpen, setDayOpen] = useState(false)
   const [backfillOpen, setBackfillOpen] = useState(false)
   const [backfillCheck, setBackfillCheck] = useState(0)
+  const [zerodhaOpen, setZerodhaOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -166,6 +170,17 @@ export function TradingJournal() {
     if (summary.added > 0 && summary.latestDate) goToMonth(monthOf(summary.latestDate))
   }
 
+  // After a Zerodha sync: reload, refresh the badge, and open the day the newest trade landed on.
+  function handleSynced(result: SyncResult) {
+    setRefreshKey((k) => k + 1)
+    setAttempt((n) => n + 1)
+    setBackfillCheck((n) => n + 1)
+    if (result.tradesAdded > 0 && result.latestDate) {
+      goToMonth(monthOf(result.latestDate))
+      setSelected(result.latestDate)
+    }
+  }
+
   async function handleSaveSettings(next: JournalSettings) {
     setSettings(await saveSettings(next))
   }
@@ -225,6 +240,16 @@ export function TradingJournal() {
           >
             {hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             {hidden ? 'Numbers hidden' : 'Hide numbers'}
+          </button>
+          <button
+            type="button"
+            data-cursor="hover"
+            onClick={() => setZerodhaOpen(true)}
+            title="Fetch today’s options trades from Zerodha and add them to the journal"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Sync Zerodha
+            {getKiteSession() && <span className="h-2 w-2 rounded-full bg-positive" title="Zerodha is connected" aria-label="Zerodha connected" />}
           </button>
           <button
             type="button"
@@ -339,6 +364,7 @@ export function TradingJournal() {
         knownStrategies={knownStrategies}
         onSave={handleSaveTrade}
       />
+      <ZerodhaSyncDialog open={zerodhaOpen} onOpenChange={setZerodhaOpen} asOf={today} onSynced={handleSynced} />
       <BackfillDialog
         open={backfillOpen}
         onOpenChange={(open) => {

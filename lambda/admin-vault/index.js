@@ -478,6 +478,25 @@ async function handleKiteSnapshot(payload) {
   return { statusCode: 200, body: snapshot }
 }
 
+// Today's executed trades (fills). Kite only keeps the current trading day here — older history has to come from
+// the tradebook export — so this is meant to be run once a day, after the market closes.
+async function handleKiteTrades(payload) {
+  if (!kiteConfigured()) return kiteNotConfigured()
+  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken : ''
+  if (!accessToken) return { statusCode: 400, body: { error: 'An access token is required.' } }
+
+  try {
+    const trades = await kiteRequest('/trades', { accessToken })
+    return { statusCode: 200, body: { trades: Array.isArray(trades) ? trades : [], fetchedAt: new Date().toISOString() } }
+  } catch (err) {
+    if (isKiteTokenError(err)) {
+      return { statusCode: 403, body: { error: 'Your Zerodha session has expired. Please reconnect.', code: 'token_expired' } }
+    }
+    console.error('kite trades fetch failed', err.kiteType || '', err.message)
+    return { statusCode: 502, body: { error: 'Could not fetch today’s trades from Zerodha. Please try again shortly.' } }
+  }
+}
+
 async function handleKiteLogout(payload) {
   if (!kiteConfigured()) return kiteNotConfigured()
   const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken : ''
@@ -599,6 +618,11 @@ exports.handler = async (event) => {
 
     if (method === 'POST' && path === '/admin/kite/snapshot') {
       const result = await handleKiteSnapshot(payload)
+      return respond(result.statusCode, result.body)
+    }
+
+    if (method === 'POST' && path === '/admin/kite/trades') {
+      const result = await handleKiteTrades(payload)
       return respond(result.statusCode, result.body)
     }
 

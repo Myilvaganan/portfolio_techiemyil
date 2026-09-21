@@ -202,8 +202,15 @@ GET  /admin/kite/login-url                  200 { "url": "<kite login url>" }
 POST /admin/kite/session   { requestToken } 200 { accessToken, userId, userName, ... }
 POST /admin/kite/snapshot  { accessToken }  200 { profile, margins, holdings, positions, orders, errors, fetchedAt }
                                             403 { code: "token_expired" } when Kite rejects the token
+POST /admin/kite/trades    { accessToken }  200 { trades, fetchedAt }   # today's executed trades (fills)
+                                            403 { code: "token_expired" } when Kite rejects the token
 POST /admin/kite/logout    { accessToken }  200 { ok: true }   # revokes the Kite session
 ```
+
+`/admin/kite/trades` backs the journal's **Sync Zerodha** button. Kite only returns the *current trading day's* trades
+there, so it has to be run each day (after the market closes); older history comes from tradebook imports. The browser
+keeps only the option fills, saves them into the same `_data/options-fills` store Options Analytics reads (deduplicated
+by Kite's `trade_id`), and copies the newly closed round trips into the journal.
 
 The access token is never stored server-side: the browser keeps it in
 `sessionStorage` (Kite expires it around 6 AM IST) and sends it with each
