@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -271,3 +271,26 @@ in `_data/statements/loan/data.json` (`statements[]`, each holding its `parsed` 
 summary and payment events). Re-uploading a newer document of the same type for the same loan replaces the old one.
 `insights` / `ask` accept `kind: 'loan'` with compact aggregates (balances, rates, what-if results) — never
 identifiers. Everything else (data, delete, file-url) is shared with bank and card statements.
+
+## Trading journal (`/admin/trading-journal`)
+
+Implemented in [`journal.js`](journal.js) and stored as JSON under `_data/journal/` in the vault bucket (hidden from the
+document list). One file per month (`<YYYY-MM>.json` holding that month's trades and day notes) keeps the calendar a single
+small read, plus `settings.json`. Everything from the browser is re-validated server-side. Writes are POST (or DELETE with
+query parameters) because the entry-point router only parses POST bodies.
+
+| Method & path | What it does |
+|---|---|
+| `GET /admin/journal/data?from=YYYY-MM&to=YYYY-MM` | Trades and day notes for the months in range (omit both for everything), plus the list of months that have data |
+| `POST /admin/journal/trade` `{ trade, previousDate? }` | Create or update a trade; pass `previousDate` when the date moved to another month |
+| `DELETE /admin/journal/trade?date=&id=` | Remove a trade |
+| `POST /admin/journal/trades/import` `{ trades }` | Backfill (up to 2000 per request). **Never overwrites**: a trade whose id already exists is skipped, so re-running is safe and edits are kept |
+| `POST /admin/journal/day` `{ day }` | Save a day's notes; an empty note deletes the entry |
+| `GET` / `POST /admin/journal/settings` | Tax rate and method (with per-instrument overrides), starting capital, daily loss limit, max trades a day |
+
+Limits: 3000 trades per month, 240 months per request. The API Gateway route is the existing `$default`, so a new journal
+route needs no gateway change — only a redeploy of the function (see above). To roll back, redeploy the previous zip.
+
+The backfill button reads the closed round trips Options Analytics builds from your stored broker fills and sends them
+here with stable ids (`oa-<broker>-<hash>`), so the same history is recognised on every run.
+

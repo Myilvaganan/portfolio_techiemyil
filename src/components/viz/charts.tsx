@@ -66,7 +66,7 @@ export interface AreaSeries {
   values: number[]
 }
 
-export function AreaChart({ labels, series, height = 230, format }: { labels: string[]; series: AreaSeries[]; height?: number; format: (n: number) => string }) {
+export function AreaChart({ labels, series, height = 230, format, axisFormat = compact }: { labels: string[]; series: AreaSeries[]; height?: number; format: (n: number) => string; axisFormat?: (n: number) => string }) {
   const [hover, setHover] = useState<number | null>(null)
   const { ref, width: W } = useWidth<HTMLDivElement>()
   const inView = useInView(ref, { once: true, margin: '-40px' })
@@ -125,7 +125,7 @@ export function AreaChart({ labels, series, height = 230, format }: { labels: st
           <g key={g}>
             <line x1={PX} x2={W - PR + 4} y1={y(g)} y2={y(g)} stroke="currentColor" className="text-border" strokeDasharray={g === 0 ? undefined : '3 5'} />
             <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={11}>
-              {compact(g)}
+              {axisFormat(g)}
             </text>
           </g>
         ))}
@@ -178,6 +178,7 @@ export function BarChart({
   stacked = false,
   height = 250,
   format,
+  axisFormat = compact,
 }: {
   labels: string[]
   bars: BarSeries[]
@@ -185,6 +186,7 @@ export function BarChart({
   stacked?: boolean
   height?: number
   format: (n: number) => string
+  axisFormat?: (n: number) => string
 }) {
   const [hover, setHover] = useState<number | null>(null)
   const { ref, width: W } = useWidth<HTMLDivElement>()
@@ -237,7 +239,7 @@ export function BarChart({
           <g key={g}>
             <line x1={PX} x2={W - PR + 4} y1={y(g)} y2={y(g)} stroke="currentColor" className="text-border" strokeDasharray={g === 0 ? undefined : '3 5'} />
             <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={11}>
-              {compact(g)}
+              {axisFormat(g)}
             </text>
           </g>
         ))}

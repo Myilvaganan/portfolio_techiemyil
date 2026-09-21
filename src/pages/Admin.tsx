@@ -9,6 +9,7 @@ import { DashboardHome } from '@/pages/admin/DashboardHome'
 import { MarginCalculator } from '@/pages/admin/MarginCalculator'
 import { PortfolioRebalance } from '@/pages/admin/PortfolioRebalance'
 import { ZerodhaDashboard } from '@/pages/admin/ZerodhaDashboard'
+import { TradingJournal } from '@/pages/admin/TradingJournal'
 import { OptionsAnalytics } from '@/pages/admin/OptionsAnalytics'
 import { BankStatements } from '@/pages/admin/BankStatements'
 import { CreditCards } from '@/pages/admin/CreditCards'
@@ -33,6 +34,7 @@ export function Admin() {
               <Route path="portfolio-rebalance" element={<PortfolioRebalance />} />
               <Route path="zerodha" element={<ZerodhaDashboard />} />
               <Route path="options-analytics" element={<OptionsAnalytics />} />
+              <Route path="trading-journal" element={<TradingJournal />} />
               <Route path="bank-statements" element={<BankStatements />} />
               <Route path="credit-cards" element={<CreditCards />} />
               <Route path="loans" element={<Loans />} />

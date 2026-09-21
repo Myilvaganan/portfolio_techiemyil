@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins } from 'lucide-react'
+import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -38,6 +38,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
       { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
       { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
+      { label: 'Trading Journal', to: '/admin/trading-journal', icon: NotebookPen },
     ],
   },
 ]

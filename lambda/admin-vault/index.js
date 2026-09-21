@@ -7,6 +7,7 @@ const crypto = require('crypto')
 const { S3Client, ListObjectsV2Command, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { createStatementsApi } = require('./statements')
+const { createJournalApi } = require('./journal')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -31,6 +32,7 @@ const DATA_PREFIX = '_data/'
 
 const s3 = new S3Client({})
 const statementsApi = createStatementsApi({ s3, bucket: S3_BUCKET })
+const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 
 // ---------- CORS / request helpers ----------
 
@@ -560,6 +562,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/statements')) {
       const result = await statementsApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path.startsWith('/admin/journal')) {
+      const result = await journalApi({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 

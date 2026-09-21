@@ -22,3 +22,17 @@ class NoopResizeObserver {
 }
 globalThis.IntersectionObserver ??= VisibleObserver as unknown as typeof IntersectionObserver
 globalThis.ResizeObserver ??= NoopResizeObserver as unknown as typeof ResizeObserver
+
+// jsdom has no matchMedia: default to "no query matches" (narrow, desktop-less layout). Tests that care install their own.
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia
+}
