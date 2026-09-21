@@ -8,6 +8,7 @@ vi.mock('@/lib/livePrices', () => ({ fetchLivePrices: vi.fn(), fetchUsdInr: vi.f
 
 describe('MarginCalculator', () => {
   beforeEach(() => {
+    localStorage.clear()
     vi.mocked(fetchLivePrices).mockResolvedValue({})
     vi.mocked(fetchUsdInr).mockResolvedValue(null)
   })
@@ -98,6 +99,63 @@ describe('MarginCalculator', () => {
 
       // SL loss $50.00 × 100
       expect(screen.getByText('≈ -₹5,000.00')).toBeInTheDocument()
+    })
+  })
+
+  describe('after-tax profit', () => {
+    it('shows the profit after 30% tax on a winning target', async () => {
+      const user = userEvent.setup()
+      render(<MarginCalculator />)
+
+      await user.type(screen.getByPlaceholderText('your TP'), '4388')
+
+      // $100.00 profit − 30% tax = $70.00
+      expect(screen.getByText(/After tax: \+\$70\.00/)).toBeInTheDocument()
+    })
+
+    it('shows no after-tax line when there is no profit', () => {
+      render(<MarginCalculator />)
+
+      expect(screen.queryByText(/After tax/)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('remembered inputs', () => {
+    it('restores the previous session after a reload', async () => {
+      const user = userEvent.setup()
+      const first = render(<MarginCalculator />)
+
+      await user.click(screen.getByRole('button', { name: '1.00' }))
+      await user.click(screen.getByRole('button', { name: /sell/i }))
+      await user.type(screen.getByPlaceholderText('your TP'), '4368')
+      first.unmount()
+
+      render(<MarginCalculator />)
+
+      // 1.00 lot on gold → $437.80 margin, SELL target 4368 → +$1,000.00
+      expect(screen.getByText('$437.80')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('your TP')).toHaveValue(4368)
+      expect(screen.getByRole('textbox', { name: 'Lot size' })).toHaveValue('1.00')
+    })
+
+    it('restores the selected instrument', async () => {
+      const user = userEvent.setup()
+      const first = render(<MarginCalculator />)
+
+      await user.click(screen.getByRole('button', { name: /BITCOIN/ }))
+      first.unmount()
+
+      render(<MarginCalculator />)
+
+      // 0.1 lot × 1 BTC × 63000 ÷ 1000
+      expect(screen.getByText('$6.30')).toBeInTheDocument()
+    })
+
+    it('ignores corrupt saved data', () => {
+      localStorage.setItem('margin-calculator-inputs', '{not json')
+      render(<MarginCalculator />)
+
+      expect(screen.getByText('$43.78')).toBeInTheDocument()
     })
   })
 })

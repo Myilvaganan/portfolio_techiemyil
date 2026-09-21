@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { INSTRUMENTS, calcMargin, calcPnL, calcRisk, pointValue } from './margin'
+import { INSTRUMENTS, afterTaxProfit, calcMargin, calcPnL, calcRisk, pointValue } from './margin'
 
 const GOLD = INSTRUMENTS.XAUUSD
 const BTC = INSTRUMENTS.BITCOIN
@@ -71,5 +71,16 @@ describe('calcRisk', () => {
     const r = calcRisk(GOLD, 0.1, 1000, 20)
     expect(calcRisk(GOLD, r.maxLots1Percent, 1000, 20).percent).toBeCloseTo(1)
     expect(calcRisk(GOLD, r.maxLots2Percent, 1000, 20).percent).toBeCloseTo(2)
+  })
+})
+
+describe('afterTaxProfit', () => {
+  it('withholds 30% of a gain', () => {
+    expect(afterTaxProfit(100)).toBeCloseTo(70)
+  })
+
+  it('leaves a loss or zero unchanged', () => {
+    expect(afterTaxProfit(-50)).toBe(-50)
+    expect(afterTaxProfit(0)).toBe(0)
   })
 })

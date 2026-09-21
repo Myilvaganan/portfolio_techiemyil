@@ -27,6 +27,14 @@ export const FALLBACK_USD_INR = 96
 export const LOT_MIN = 0.01
 export const LOT_MAX = 5
 
+/** Tax withheld from a winning trade's profit. */
+export const TAX_RATE = 0.3
+
+/** Profit after tax. Only gains are taxed; a loss is returned unchanged. */
+export function afterTaxProfit(profit: number): number {
+  return profit > 0 ? profit * (1 - TAX_RATE) : profit
+}
+
 /** Money made or lost per 1-point move at the given lot size. */
 export function pointValue(instrument: Instrument, lots: number): number {
   return lots * instrument.contractSize * instrument.tick

@@ -1,5 +1,6 @@
 // Report builders for the older admin modules (the finance dashboards have their own in statementReports.ts).
 import type { ReportDoc } from './report'
+import { TAX_RATE, afterTaxProfit } from './margin'
 import { formatInr, formatSignedInr, formatSignedPct, holdingRows, marginSummary, openPositions, portfolioTotals, type KiteSnapshot } from './kite'
 import type { Analytics, Insight, RoundTrip } from './optionsAnalytics'
 import type { BucketRow, Holding } from './portfolio'
@@ -121,7 +122,7 @@ export interface MarginReportInput {
 
 export function marginReport(i: MarginReportInput): ReportDoc {
   const both = (n: number) => `${usd(n)} (${formatInr(n * i.usdInr)})`
-  const tax = i.pnl.tpProfit > 0 ? i.pnl.tpProfit * 0.3 : 0
+  const tax = i.pnl.tpProfit > 0 ? i.pnl.tpProfit * TAX_RATE : 0
   return {
     title: `${i.instrumentName} trade plan`,
     subtitle: `${i.direction} ${i.lots.toFixed(2)} lot · 1:${i.leverage} · 1 USD = ₹${i.usdInr.toFixed(2)}`,
@@ -133,7 +134,8 @@ export function marginReport(i: MarginReportInput): ReportDoc {
           { label: 'Entry', value: i.entry.toLocaleString('en-US') },
           { label: 'Target', value: i.exit ? i.exit.toLocaleString('en-US') : '—' },
           { label: 'Stop loss', value: i.stopLoss ? i.stopLoss.toLocaleString('en-US') : '—' },
-          { label: 'TP profit', value: both(i.pnl.tpProfit), tone: i.pnl.tpProfit >= 0 ? 'good' : 'bad', note: tax ? `30% tax: ${both(tax)}` : `${Math.abs(i.pnl.tpPoints).toFixed(0)} pts` },
+          { label: 'TP profit', value: both(i.pnl.tpProfit), tone: i.pnl.tpProfit >= 0 ? 'good' : 'bad', note: tax ? `${TAX_RATE * 100}% tax: ${both(tax)}` : `${Math.abs(i.pnl.tpPoints).toFixed(0)} pts` },
+          ...(tax ? [{ label: 'TP profit after tax', value: both(afterTaxProfit(i.pnl.tpProfit)), tone: 'good' as const, note: `after ${TAX_RATE * 100}% tax` }] : []),
           { label: 'SL loss', value: both(-i.pnl.slLoss), tone: 'bad', note: `${Math.abs(i.pnl.slPoints).toFixed(0)} pts` },
           { label: 'ROI on margin', value: `${i.pnl.roi.toFixed(1)}%` },
           { label: 'Risk : reward', value: i.pnl.riskReward ? `1 : ${i.pnl.riskReward.toFixed(2)}` : '—' },
