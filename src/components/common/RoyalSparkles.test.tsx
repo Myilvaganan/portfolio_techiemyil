@@ -20,7 +20,7 @@ describe('royal theme', () => {
   })
 
   it('only shows the sparkles in the royal theme, reached by cycling the toggle', () => {
-    localStorage.setItem('theme', 'dark')
+    localStorage.setItem('theme_v2', 'dark')
     setup()
     expect(screen.queryByTestId('royal-sparkles')).toBeNull()
 
@@ -37,7 +37,7 @@ describe('royal theme', () => {
 
   it('throws a burst of stars where you click, then clears them', () => {
     vi.useFakeTimers()
-    localStorage.setItem('theme', 'royal')
+    localStorage.setItem('theme_v2', 'royal')
     const { container } = setup()
     expect(container.querySelectorAll('.royal-star').length).toBeGreaterThan(10)
     fireEvent.pointerDown(window, { clientX: 100, clientY: 120 })

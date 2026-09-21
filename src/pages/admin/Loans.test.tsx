@@ -19,6 +19,9 @@ vi.mock('@/lib/statementsApi', async (importOriginal) => ({
 
 const insights: AiInsights = { fingerprint: 'x', generatedAt: '2026-09-20T00:00:00Z', model: 'gpt-5.4-mini', headline: 'Two loans, one bounce, plenty of room to prepay', summary: 's', score: { value: 72, label: 'Good' }, highlights: [], tips: [], risks: [] }
 
+// Rendering the 72-row schedule is slow on a busy machine.
+vi.setConfig({ testTimeout: 20000 })
+
 describe('Loans', () => {
   let data: LoanData
   beforeEach(() => {

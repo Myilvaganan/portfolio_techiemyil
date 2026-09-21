@@ -32,43 +32,46 @@ describe('useTheme', () => {
     expect(() => renderHook(() => useTheme())).toThrow('useTheme must be used within a ThemeProvider')
   })
 
-  it('defaults to dark when the system does not prefer light and nothing is stored', () => {
-    mockMatchMedia(false)
-    const { result } = renderHook(() => useTheme(), { wrapper })
-    expect(result.current.theme).toBe('dark')
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+  it('defaults to royal when nothing is stored, whatever the system prefers', () => {
+    for (const prefersLight of [false, true]) {
+      mockMatchMedia(prefersLight)
+      const { result, unmount } = renderHook(() => useTheme(), { wrapper })
+      expect(result.current.theme).toBe('royal')
+      expect(document.documentElement.getAttribute('data-theme')).toBe('royal')
+      unmount()
+    }
   })
 
-  it('defaults to light when the system prefers light and nothing is stored', () => {
-    mockMatchMedia(true)
+  it('ignores the old un-versioned theme value', () => {
+    localStorage.setItem('theme', 'dark')
     const { result } = renderHook(() => useTheme(), { wrapper })
-    expect(result.current.theme).toBe('light')
+    expect(result.current.theme).toBe('royal')
   })
 
   it('prefers a stored theme over the system preference', () => {
-    localStorage.setItem('theme', 'light')
+    localStorage.setItem('theme_v2', 'light')
     mockMatchMedia(false)
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(result.current.theme).toBe('light')
   })
 
   it('toggles the theme and persists the change', () => {
-    localStorage.setItem('theme', 'dark')
+    localStorage.setItem('theme_v2', 'dark')
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(result.current.theme).toBe('dark')
 
     act(() => result.current.toggleTheme())
     expect(result.current.theme).toBe('light')
-    expect(localStorage.getItem('theme')).toBe('light')
+    expect(localStorage.getItem('theme_v2')).toBe('light')
     expect(document.documentElement.getAttribute('data-theme')).toBe('light')
 
     act(() => result.current.toggleTheme())
     expect(result.current.theme).toBe('dark')
-    expect(localStorage.getItem('theme')).toBe('dark')
+    expect(localStorage.getItem('theme_v2')).toBe('dark')
   })
 
   it('accepts a stored royal theme and cycles dark → light → royal → dark', () => {
-    localStorage.setItem('theme', 'royal')
+    localStorage.setItem('theme_v2', 'royal')
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(result.current.theme).toBe('royal')
     expect(document.documentElement.getAttribute('data-theme')).toBe('royal')
@@ -80,7 +83,7 @@ describe('useTheme', () => {
     expect(result.current.theme).toBe('light')
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('royal')
-    expect(localStorage.getItem('theme')).toBe('royal')
+    expect(localStorage.getItem('theme_v2')).toBe('royal')
   })
 
   it('can jump straight to a theme', () => {
@@ -90,7 +93,7 @@ describe('useTheme', () => {
   })
 
   it('updates the theme-color meta tag when the theme changes', () => {
-    localStorage.setItem('theme', 'dark')
+    localStorage.setItem('theme_v2', 'dark')
     const { result } = renderHook(() => useTheme(), { wrapper })
     const meta = () => document.querySelector('meta[name="theme-color"]')
     expect(meta()?.getAttribute('content')).toBe('#090909')

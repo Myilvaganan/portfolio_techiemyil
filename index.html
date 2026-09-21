@@ -11,18 +11,16 @@
   <meta name="apple-mobile-web-app-title" content="Techie Myil" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#090909" />
+  <meta name="theme-color" content="#0a0612" />
   <meta name="color-scheme" content="dark light" />
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem('theme');
-        var theme = stored === 'dark' || stored === 'light' || stored === 'royal'
-          ? stored
-          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        var stored = localStorage.getItem('theme_v2');
+        var theme = stored === 'dark' || stored === 'light' || stored === 'royal' ? stored : 'royal';
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) {
-        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'royal');
       }
     })();
   </script>

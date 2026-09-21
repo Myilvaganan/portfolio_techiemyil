@@ -4,7 +4,8 @@ export type Theme = 'dark' | 'light' | 'royal'
 
 const THEMES: Theme[] = ['dark', 'light', 'royal']
 
-const STORAGE_KEY = 'theme'
+// Royal is the default. The key was bumped so earlier automatic dark/light values don't hide it; only a choice made from now on is kept.
+const STORAGE_KEY = 'theme_v2'
 
 const THEME_COLOR = {
   dark: '#090909',
@@ -15,7 +16,7 @@ const THEME_COLOR = {
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'dark' || stored === 'light' || stored === 'royal') return stored
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  return 'royal'
 }
 
 interface ThemeContextValue {
