@@ -18,7 +18,6 @@ export interface Stat {
   suffix: string
   label: string
   icon: IconComponent
-  tooltip?: string
 }
 
 export interface ExperienceEntry {

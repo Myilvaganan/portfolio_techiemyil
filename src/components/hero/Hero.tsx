@@ -89,7 +89,7 @@ export function Hero() {
           </motion.div>
 
           <motion.div variants={item} className="mt-10 flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {socials.map((social) => (
                 <a
                   key={social.label}

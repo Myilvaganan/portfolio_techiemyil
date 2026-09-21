@@ -1,38 +1,57 @@
-import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Dumbbell, Globe, Mail, MapPin, Phone } from 'lucide-react'
-import { FaInstagram, FaTelegram, FaWhatsapp } from 'react-icons/fa'
-import { SiTradingview } from 'react-icons/si'
-import { Button } from '@/components/ui/Button'
-import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
-import { Tooltip } from '@/components/ui/Tooltip'
-import { personal } from '@/data/personal'
-import { stats } from '@/data/stats'
-import { formatExperienceDuration, getExperienceDuration } from '@/lib/experience'
-import { useTheme } from '@/hooks/useTheme'
-import profileImgDark from '@/assets/images/profile.jpg'
-import profileImgLight from '@/assets/images/profile_light.png'
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowRight, Dumbbell, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { FaInstagram, FaTelegram, FaWhatsapp } from "react-icons/fa";
+import { SiTradingview } from "react-icons/si";
+import { Button } from "@/components/ui/Button";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { personal } from "@/data/personal";
+import { stats } from "@/data/stats";
+import {
+  formatExperienceDuration,
+  getExperienceDuration,
+} from "@/lib/experience";
+import { useTheme } from "@/hooks/useTheme";
+import profileImgDark from "@/assets/images/profile.jpg";
+import profileImgLight from "@/assets/images/profile_light.png";
+import profileImgGold from "@/assets/images/profile_gold.jpg";
 
 export function GlanceHero() {
-  const { theme } = useTheme()
-  const profileImg = theme === 'light' ? profileImgLight : profileImgDark
+  const { theme } = useTheme();
+  const profileImg =
+    theme === "light"
+      ? profileImgLight
+      : theme === "royal"
+        ? profileImgGold
+        : profileImgDark;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.15fr_auto_0.85fr] lg:items-center lg:gap-10">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <p className="text-sm font-medium text-accent">Hello, I'm</p>
         <h1 className="mt-1 text-balance font-display text-4xl font-semibold leading-[1.1] tracking-tight text-text sm:text-5xl">
-          {personal.firstName} <span className="text-gradient-accent">Sakthivel</span>
+          {personal.firstName}{" "}
+          <span className="text-gradient-accent">Sakthivel</span>
         </h1>
-        <p className="mt-2 text-sm font-medium text-text-secondary sm:text-base">{personal.title}</p>
+        <p className="mt-2 text-sm font-medium text-text-secondary sm:text-base">
+          {personal.title}
+        </p>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-text-secondary">
-          {formatExperienceDuration(getExperienceDuration())} of experience building scalable full-stack
-          applications, leading high-performing teams, and delivering intelligent solutions with AI, cloud, and
-          modern technologies.
+          {formatExperienceDuration(getExperienceDuration())} of experience
+          building scalable full-stack applications, leading high-performing
+          teams, and delivering intelligent solutions with AI, cloud, and modern
+          technologies.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-text-secondary">
-          <a href={`tel:${personal.phone}`} className="flex items-center gap-2 transition-colors hover:text-accent">
+          <a
+            href={`tel:${personal.phone}`}
+            className="flex items-center gap-2 transition-colors hover:text-accent"
+          >
             <Phone className="h-4 w-4 text-accent" />
             {personal.phone}
           </a>
@@ -104,7 +123,10 @@ export function GlanceHero() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button size="sm" onClick={() => window.open(`mailto:${personal.email}`)}>
+          <Button
+            size="sm"
+            onClick={() => window.open(`mailto:${personal.email}`)}
+          >
             Let's Connect
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -138,26 +160,21 @@ export function GlanceHero() {
         transition={{ duration: 0.5, delay: 0.15 }}
         className="grid grid-cols-2 gap-3"
       >
-        {stats.map((stat) => {
-          const card = (
-            <div className="h-full rounded-2xl border border-border bg-card/50 p-4">
-              <stat.icon className="mb-2 h-4 w-4 text-accent" />
-              <div className="font-display text-xl font-semibold text-text">
-                <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-              </div>
-              <div className="mt-0.5 text-xs text-text-secondary">{stat.label}</div>
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="h-full rounded-2xl border border-border bg-card/50 p-4"
+          >
+            <stat.icon className="mb-2 h-4 w-4 text-accent" />
+            <div className="font-display text-xl font-semibold text-text">
+              <AnimatedCounter value={stat.value} suffix={stat.suffix} />
             </div>
-          )
-
-          return stat.tooltip ? (
-            <Tooltip key={stat.label} content={stat.tooltip}>
-              {card}
-            </Tooltip>
-          ) : (
-            <div key={stat.label}>{card}</div>
-          )
-        })}
+            <div className="mt-0.5 text-xs text-text-secondary">
+              {stat.label}
+            </div>
+          </div>
+        ))}
       </motion.div>
     </div>
-  )
+  );
 }

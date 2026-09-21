@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { motion } from 'framer-motion'
 import profileImgDark from '@/assets/images/profile.jpg'
 import profileImgLight from '@/assets/images/profile_light.png'
+import profileImgGold from '@/assets/images/profile_gold.jpg'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { useTheme } from '@/hooks/useTheme'
 import { FloatingIcons } from './FloatingIcons'
@@ -10,7 +11,7 @@ const HeroCanvas = lazy(() => import('./HeroCanvas').then((m) => ({ default: m.H
 
 export function HeroPortrait() {
   const { theme } = useTheme()
-  const profileImg = theme === 'light' ? profileImgLight : profileImgDark
+  const profileImg = theme === 'light' ? profileImgLight : theme === 'royal' ? profileImgGold : profileImgDark
 
   return (
     <div className="relative mx-auto flex h-[380px] w-[300px] items-center justify-center sm:h-[440px] sm:w-[340px]">

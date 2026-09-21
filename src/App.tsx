@@ -50,7 +50,7 @@ function AppShell() {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-clip">
       <LoadingScreen />
       <LuxuryBackground />
       <RoyalSparkles />

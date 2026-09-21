@@ -12,12 +12,6 @@ export const stats: Stat[] = [
     icon: Briefcase,
   },
   { value: 20, suffix: '+', label: 'Projects Delivered', icon: Code2 },
-  {
-    value: 4256,
-    suffix: '+',
-    label: 'Lines of Code Written',
-    icon: FileCode,
-    tooltip: 'This site was built with Claude Code — AI pair-programming across code, design, QA, and deployment.',
-  },
+  { value: 4, suffix: ' Lakh+', label: 'Lines of Code Written', icon: FileCode },
   { value: 3, suffix: '+', label: 'Enterprise Clients Served', icon: Building2 },
 ]
