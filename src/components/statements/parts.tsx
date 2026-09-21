@@ -15,7 +15,7 @@ export const pct = (n: number, d = 0) => `${n.toFixed(d)}%`
 
 // Sentiment shows in the tile itself: a tinted background and border, not just the number's colour.
 export const TONE_SURFACE = {
-  good: 'border-accent/35 bg-gradient-to-br from-accent/[0.14] to-accent/[0.03]',
+  good: 'border-positive/35 bg-gradient-to-br from-positive/[0.14] to-positive/[0.03]',
   warn: 'border-amber-500/40 bg-gradient-to-br from-amber-500/[0.15] to-amber-500/[0.03]',
   bad: 'border-error/40 bg-gradient-to-br from-error/[0.15] to-error/[0.03]',
 } as const
@@ -44,12 +44,12 @@ export function Kpi({
         <FitValue
           max={24}
           text={format(value)}
-          className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', tone === 'good' && 'text-accent', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500')}
+          className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', tone === 'good' && 'text-positive', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500')}
         >
           <CountNumber value={value} format={format} />
         </FitValue>
         {sub && <p className="mt-1 text-[11px] text-text-secondary">{sub}</p>}
-        {spark && spark.length > 1 && <div className="mt-2 opacity-90"><Sparkline values={spark} color={tone === 'bad' ? 'var(--color-error)' : tone === 'good' ? 'var(--color-accent)' : tone === 'warn' ? '#f59e0b' : 'var(--viz-1)'} /></div>}
+        {spark && spark.length > 1 && <div className="mt-2 opacity-90"><Sparkline values={spark} color={tone === 'bad' ? 'var(--color-error)' : tone === 'good' ? 'var(--color-positive)' : tone === 'warn' ? '#f59e0b' : 'var(--viz-1)'} /></div>}
       </GlassCard>
     </Reveal>
   )

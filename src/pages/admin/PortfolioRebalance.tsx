@@ -248,7 +248,7 @@ export function PortfolioRebalance() {
                   <td
                     className={cn(
                       'py-2.5 text-right font-mono font-semibold',
-                      r.delta >= 0 ? 'text-accent' : 'text-error',
+                      r.delta >= 0 ? 'text-positive' : 'text-error',
                     )}
                   >
                     {signedInr(r.delta)}

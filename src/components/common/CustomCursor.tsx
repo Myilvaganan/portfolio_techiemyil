@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useTheme } from '@/hooks/useTheme'
 
 export function CustomCursor() {
+  const { theme } = useTheme()
+  const tint = theme === 'royal' ? '224,184,74' : '34,197,94'
   const isCoarse = useMediaQuery('(pointer: coarse)')
   const [isHovering, setIsHovering] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
@@ -70,7 +73,7 @@ export function CustomCursor() {
         animate={{
           width: isHovering ? 56 : 28,
           height: isHovering ? 56 : 28,
-          backgroundColor: isHovering ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0)',
+          backgroundColor: isHovering ? `rgba(${tint},0.12)` : `rgba(${tint},0)`,
         }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
       />

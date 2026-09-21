@@ -42,7 +42,7 @@ const RANGES: { id: Range; label: string }[] = [
   { id: '1y', label: '1 year' },
 ]
 
-const tone = (n: number) => (n > 0 ? 'text-accent' : n < 0 ? 'text-error' : 'text-text-secondary')
+const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 'text-text-secondary')
 
 // Older versions kept imports in this browser only; they're uploaded to the vault once, then removed.
 function takeLegacyFills(): Fill[] {
@@ -196,7 +196,7 @@ function DailyBars({ days }: { days: Analytics['days'] }) {
         {shown.map((day, i) => (
           <div key={day.date} className="relative flex-1" onMouseEnter={() => setHover(i)}>
             <div
-              className={cn('absolute inset-x-px rounded-[2px] transition-opacity', day.net >= 0 ? 'bottom-1/2 bg-accent' : 'top-1/2 bg-error', hover !== null && hover !== i && 'opacity-40')}
+              className={cn('absolute inset-x-px rounded-[2px] transition-opacity', day.net >= 0 ? 'bottom-1/2 bg-positive' : 'top-1/2 bg-error', hover !== null && hover !== i && 'opacity-40')}
               style={{ height: `${(Math.abs(day.net) / max) * 50}%`, minHeight: 2 }}
             />
           </div>
@@ -224,7 +224,7 @@ function BreakdownCard({ title, note, slices }: { title: string; note?: string; 
               <div className="relative mt-1 h-2">
                 <span className="absolute inset-y-0 left-1/2 w-px bg-border" aria-hidden />
                 <div
-                  className={cn('absolute inset-y-0 rounded-full', s.pnl >= 0 ? 'bg-accent' : 'bg-error')}
+                  className={cn('absolute inset-y-0 rounded-full', s.pnl >= 0 ? 'bg-positive' : 'bg-error')}
                   style={s.pnl >= 0 ? { left: '50%', width: `${(Math.abs(s.pnl) / max) * 50}%` } : { right: '50%', width: `${(Math.abs(s.pnl) / max) * 50}%` }}
                 />
               </div>
@@ -801,7 +801,7 @@ export function OptionsAnalytics() {
       )}
 
       {message && (
-        <p role="status" className={cn('rounded-lg border px-3 py-2 text-xs', message.tone === 'good' ? 'border-accent/30 bg-accent/10 text-accent' : 'border-error/30 bg-error/10 text-error')}>
+        <p role="status" className={cn('rounded-lg border px-3 py-2 text-xs', message.tone === 'good' ? 'border-positive/30 bg-positive/10 text-positive' : 'border-error/30 bg-error/10 text-error')}>
           {message.text}
         </p>
       )}
@@ -903,7 +903,7 @@ export function OptionsAnalytics() {
                   <ul className="space-y-2">
                     {insights.map((i) => (
                       <li key={i.text} className="flex gap-2.5 text-sm text-text-secondary">
-                        <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', i.tone === 'good' ? 'bg-accent' : i.tone === 'bad' ? 'bg-error' : 'bg-text-secondary/60')} aria-hidden />
+                        <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', i.tone === 'good' ? 'bg-positive' : i.tone === 'bad' ? 'bg-error' : 'bg-text-secondary/60')} aria-hidden />
                         <span>{i.text}</span>
                       </li>
                     ))}
@@ -1085,7 +1085,7 @@ export function OptionsAnalytics() {
                             <td className="py-2.5 pr-3 text-text-secondary">{fmtDate(o.date)} · {o.time.slice(0, 5)}</td>
                             {active === 'all' && !demo && <td className="py-2.5 pr-3 text-text-secondary">{brokerLabel(o.broker)}</td>}
                             <td className="py-2.5 pr-3 font-mono font-semibold text-text">{contractLabel(o.symbol)}</td>
-                            <td className={cn('py-2.5 pr-3 font-semibold', o.side === 'BUY' ? 'text-accent' : 'text-error')}>{o.side}</td>
+                            <td className={cn('py-2.5 pr-3 font-semibold', o.side === 'BUY' ? 'text-positive' : 'text-error')}>{o.side}</td>
                             <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{o.qty}</td>
                             <td className="py-2.5 pr-3 text-right font-mono text-text">{formatInr(o.value / o.qty, 2)}</td>
                             <td className="py-2.5 text-right font-mono text-text-secondary">{formatInr(o.value)}</td>

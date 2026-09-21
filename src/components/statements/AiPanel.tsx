@@ -7,7 +7,7 @@ import { AI_PERIOD_OPTIONS, periodLabel, type AiInsights, type AiPeriod, type Ai
 import { Reveal } from '@/components/viz/motion'
 
 const TONE = {
-  good: { icon: CheckCircle2, cls: 'text-accent border-accent/30 bg-accent/5' },
+  good: { icon: CheckCircle2, cls: 'text-positive border-positive/30 bg-positive/5' },
   warn: { icon: AlertTriangle, cls: 'text-amber-500 border-amber-500/30 bg-amber-500/5' },
   bad: { icon: XCircle, cls: 'text-error border-error/30 bg-error/5' },
   info: { icon: Info, cls: 'text-sky-500 border-sky-500/30 bg-sky-500/5' },
@@ -16,7 +16,7 @@ const TONE = {
 function ScoreRing({ value, label }: { value: number; label: string }) {
   const R = 44
   const C = 2 * Math.PI * R
-  const color = value >= 70 ? 'var(--color-accent)' : value >= 45 ? '#f59e0b' : 'var(--color-error)'
+  const color = value >= 70 ? 'var(--color-positive)' : value >= 45 ? '#f59e0b' : 'var(--color-error)'
   return (
     <div className="relative h-28 w-28 shrink-0">
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" role="img" aria-label={`Health score ${value} out of 100`}>
@@ -61,7 +61,7 @@ function Typed({ text }: { text: string }) {
 // The panel takes on the mood of the analysis: green when things look healthy, amber for mixed, red when they don't.
 function moodOf(score?: number) {
   if (score === undefined) return { surface: '', blob: 'bg-accent/10' }
-  if (score >= 70) return { surface: 'border-accent/30 bg-gradient-to-br from-accent/[0.09] to-transparent', blob: 'bg-accent/20' }
+  if (score >= 70) return { surface: 'border-positive/30 bg-gradient-to-br from-positive/[0.09] to-transparent', blob: 'bg-positive/20' }
   if (score >= 45) return { surface: 'border-amber-500/35 bg-gradient-to-br from-amber-500/[0.09] to-transparent', blob: 'bg-amber-500/20' }
   return { surface: 'border-error/35 bg-gradient-to-br from-error/[0.09] to-transparent', blob: 'bg-error/20' }
 }

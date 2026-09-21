@@ -10,7 +10,7 @@ function Fact({ label, value, sub, tone }: { label: string; value: string; sub?:
   return (
     <div className="min-w-0">
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
-      <p className={cn('mt-0.5 truncate font-mono text-sm font-semibold text-text', tone === 'warn' && 'text-amber-500', tone === 'bad' && 'text-error', tone === 'good' && 'text-accent')}>{value}</p>
+      <p className={cn('mt-0.5 truncate font-mono text-sm font-semibold text-text', tone === 'warn' && 'text-amber-500', tone === 'bad' && 'text-error', tone === 'good' && 'text-positive')}>{value}</p>
       {sub && <p className="text-[11px] text-text-secondary">{sub}</p>}
     </div>
   )
@@ -59,7 +59,7 @@ export function LoanDetailsCard({ loan, index }: { loan: Loan; index: number }) 
             <span className="font-mono text-text-secondary">{progressPct(loan).toFixed(1)}% of principal repaid</span>
           </div>
           <div className="relative h-3 overflow-hidden rounded-full bg-surface-10" role="progressbar" aria-label="EMIs paid" aria-valuenow={Math.round(paidPct)} aria-valuemin={0} aria-valuemax={100}>
-            <motion.div className="h-full rounded-full bg-gradient-to-r from-accent to-emerald-400" initial={{ width: 0 }} animate={{ width: `${paidPct}%` }} transition={{ duration: 1.1, ease: 'easeOut' }} />
+            <motion.div className="h-full rounded-full bg-gradient-to-r from-positive to-emerald-400" initial={{ width: 0 }} animate={{ width: `${paidPct}%` }} transition={{ duration: 1.1, ease: 'easeOut' }} />
           </div>
           <div className="mt-1 flex justify-between text-[11px] text-text-secondary">
             <span>{dayLabel(loan.sanctionDate)}</span>

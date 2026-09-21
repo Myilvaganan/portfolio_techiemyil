@@ -11,7 +11,7 @@ import type { LoanEvent } from '@/lib/loanTypes'
 type Filter = 'all' | 'payments' | 'issues'
 
 const META: Partial<Record<LoanEvent['type'], { icon: typeof Info; tone: string; title: (e: LoanEvent) => string; group: 'payments' | 'issues' | 'other' }>> = {
-  receipt: { icon: CheckCircle2, tone: 'text-accent bg-accent/10', title: () => 'Payment received', group: 'payments' },
+  receipt: { icon: CheckCircle2, tone: 'text-positive bg-positive/10', title: () => 'Payment received', group: 'payments' },
   disbursement: { icon: Landmark, tone: 'text-sky-500 bg-sky-500/10', title: () => 'Loan disbursed', group: 'other' },
   processing_fee: { icon: Info, tone: 'text-amber-500 bg-amber-500/10', title: () => 'Processing fee (incl. GST)', group: 'other' },
   bounce: { icon: XCircle, tone: 'text-error bg-error/10', title: () => 'EMI bounced — insufficient funds', group: 'issues' },
@@ -60,7 +60,7 @@ export function PaymentTimeline({ loan }: { loan: Loan }) {
                 <span className="block font-medium text-text">{m.title(e)}</span>
                 <span className="text-text-secondary">{dayLabel(e.date)}{e.note && e.type !== 'processing_fee' ? ` · ${e.note}` : ''}</span>
               </span>
-              <span className={cn('shrink-0 font-mono font-semibold', e.type === 'receipt' ? 'text-accent' : m.group === 'issues' ? 'text-error' : 'text-text')}>{loanInr(e.amount)}</span>
+              <span className={cn('shrink-0 font-mono font-semibold', e.type === 'receipt' ? 'text-positive' : m.group === 'issues' ? 'text-error' : 'text-text')}>{loanInr(e.amount)}</span>
             </motion.li>
           )
         })}

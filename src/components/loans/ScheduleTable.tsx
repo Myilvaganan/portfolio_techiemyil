@@ -11,7 +11,7 @@ import { loanInr, type Loan, type ScheduleLine } from '@/lib/loans'
 type Filter = 'all' | 'paid' | 'upcoming'
 
 const STATUS = {
-  paid: { label: 'Paid', cls: 'bg-accent/15 text-accent', row: 'bg-accent/[0.07] hover:bg-accent/[0.12]' },
+  paid: { label: 'Paid', cls: 'bg-positive/15 text-positive', row: 'bg-positive/[0.07] hover:bg-positive/[0.12]' },
   due: { label: 'Next due', cls: 'bg-amber-500/20 text-amber-500', row: 'bg-amber-500/[0.10] hover:bg-amber-500/[0.15]' },
   overdue: { label: 'Overdue', cls: 'bg-error/15 text-error', row: 'bg-error/[0.08] hover:bg-error/[0.12]' },
   upcoming: { label: 'Upcoming', cls: 'bg-surface-10 text-text-secondary', row: 'hover:bg-surface-3' },
@@ -77,7 +77,7 @@ export function ScheduleTable({ loan }: { loan: Loan }) {
       </div>
 
       <p className="mb-3 text-xs text-text-secondary">
-        <span className="font-semibold text-accent">{paid.length} paid</span> ({loanInr(paidTotal)}) · {loan.schedule.length - paid.length} to go ({loanInr(loan.remainingPayable)}). Green rows are EMIs already paid.
+        <span className="font-semibold text-positive">{paid.length} paid</span> ({loanInr(paidTotal)}) · {loan.schedule.length - paid.length} to go ({loanInr(loan.remainingPayable)}). Green rows are EMIs already paid.
         {loan.scheduleEstimated ? ' This schedule is estimated from the loan terms — upload the amortization schedule PDF for the bank’s exact figures.' : ''}
       </p>
 
@@ -99,7 +99,7 @@ export function ScheduleTable({ loan }: { loan: Loan }) {
             {visible.map((r, i) => (
               <motion.tr key={r.no} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(i * 0.015, 0.25) }} className={cn('border-b border-border/60 transition-colors', STATUS[r.status].row)} aria-label={`Instalment ${r.no} ${STATUS[r.status].label}`}>
                 <td className="py-2.5 pl-2 pr-3 font-mono text-text-secondary">{r.no}</td>
-                <td className={cn('whitespace-nowrap py-2.5 pr-3 font-medium', r.status === 'paid' ? 'text-accent' : 'text-text')}>{dayLabel(r.date)}</td>
+                <td className={cn('whitespace-nowrap py-2.5 pr-3 font-medium', r.status === 'paid' ? 'text-positive' : 'text-text')}>{dayLabel(r.date)}</td>
                 <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{loanInr(r.opening)}</td>
                 <td className="py-2.5 pr-3 text-right font-mono text-text">{loanInr(r.principal)}</td>
                 <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{loanInr(r.interest)}</td>

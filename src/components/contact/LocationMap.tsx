@@ -16,11 +16,11 @@ export function LocationMap() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_52%,rgba(34,197,94,0.18),transparent_60%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_52%,rgb(var(--accent-rgb)/0.18),transparent_60%)]" />
           <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-surface-5" />
           <div className="pointer-events-none absolute left-[68%] top-[52%]">
             <span className="absolute -left-4 -top-4 h-8 w-8 animate-ping rounded-full bg-accent/30" />
-            <span className="relative flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent shadow-[0_0_16px_4px_rgba(34,197,94,0.5)]" />
+            <span className="relative flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent shadow-[0_0_16px_4px_rgb(var(--accent-rgb)/0.5)]" />
           </div>
           <motion.div
             initial={{ opacity: 0, y: 8 }}

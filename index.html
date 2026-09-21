@@ -17,7 +17,7 @@
     (function () {
       try {
         var stored = localStorage.getItem('theme');
-        var theme = stored === 'dark' || stored === 'light'
+        var theme = stored === 'dark' || stored === 'light' || stored === 'royal'
           ? stored
           : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', theme);

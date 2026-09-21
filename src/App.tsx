@@ -11,6 +11,7 @@ import { ConnectFab } from '@/components/common/ConnectFab'
 import { MyvaChat } from '@/components/common/MyvaChat'
 import { LoadingScreen } from '@/components/common/LoadingScreen'
 import { CommandPalette } from '@/components/common/CommandPalette'
+import { RoyalSparkles } from '@/components/common/RoyalSparkles'
 import { useLenis } from '@/hooks/useLenis'
 import { useDisableContextMenu } from '@/hooks/useDisableContextMenu'
 import { useDisableCopy } from '@/hooks/useDisableCopy'
@@ -37,11 +38,14 @@ function AppShell() {
 
   if (isAdmin) {
     return (
-      <Suspense fallback={null}>
-        <Routes>
-          <Route path="/admin/*" element={<Admin />} />
-        </Routes>
-      </Suspense>
+      <>
+        <RoyalSparkles />
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/admin/*" element={<Admin />} />
+          </Routes>
+        </Suspense>
+      </>
     )
   }
 
@@ -49,6 +53,7 @@ function AppShell() {
     <div className="relative min-h-screen">
       <LoadingScreen />
       <LuxuryBackground />
+      <RoyalSparkles />
       <ScrollProgressBar />
       <CustomCursor />
       <CommandPalette />

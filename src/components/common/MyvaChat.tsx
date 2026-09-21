@@ -76,7 +76,7 @@ export function MyvaChat() {
           aria-expanded={open}
           data-cursor="hover"
           whileTap={{ scale: 0.92 }}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-hover text-[#05130a] shadow-[0_8px_28px_-6px_rgba(34,197,94,0.55)] transition-shadow hover:shadow-[0_10px_36px_-4px_rgba(34,197,94,0.7)]"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-hover text-[#05130a] shadow-[0_8px_28px_-6px_rgb(var(--accent-rgb)/0.55)] transition-shadow hover:shadow-[0_10px_36px_-4px_rgb(var(--accent-rgb)/0.7)]"
         >
           <motion.span
             animate={open ? { rotate: 90, scale: 1 } : { rotate: 0, scale: [1, 1.08, 1] }}

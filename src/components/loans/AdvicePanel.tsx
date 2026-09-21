@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import type { AdviceItem } from '@/lib/loans'
 
 const TONE = {
-  good: { icon: CheckCircle2, cls: 'text-accent border-accent/30 bg-accent/5' },
+  good: { icon: CheckCircle2, cls: 'text-positive border-positive/30 bg-positive/5' },
   warn: { icon: AlertTriangle, cls: 'text-amber-500 border-amber-500/30 bg-amber-500/5' },
   bad: { icon: XCircle, cls: 'text-error border-error/30 bg-error/5' },
   info: { icon: Info, cls: 'text-sky-500 border-sky-500/30 bg-sky-500/5' },

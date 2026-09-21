@@ -5,8 +5,8 @@ export function LuxuryBackground() {
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-bg" aria-hidden="true">
       <div className="bg-grid absolute inset-0 opacity-60 [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,black_20%,transparent_75%)]" />
 
-      <div className="absolute left-1/2 top-[-10%] h-[720px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.14),transparent_65%)] blur-2xl" />
-      <div className="absolute right-[-10%] top-[35%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.08),transparent_70%)] blur-3xl" />
+      <div className="absolute left-1/2 top-[-10%] h-[720px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgb(var(--accent-rgb)/0.14),transparent_65%)] blur-2xl" />
+      <div className="absolute right-[-10%] top-[35%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgb(var(--accent-rgb)/0.08),transparent_70%)] blur-3xl" />
       <div className="absolute bottom-[-15%] left-[-10%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,var(--color-surface-3),transparent_70%)] blur-3xl" />
 
       <motion.div
@@ -29,6 +29,9 @@ export function LuxuryBackground() {
         animate={{ y: [0, 26, 0], opacity: [0.15, 0.55, 0.15] }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
       />
+
+      <div className="royal-only absolute left-1/2 top-[-18%] h-[760px] w-[1200px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.26),transparent_65%)] blur-3xl" />
+      <div className="royal-only absolute bottom-[-20%] right-[-12%] h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle,rgba(91,33,182,0.28),transparent_70%)] blur-3xl" />
 
       <div className="noise-overlay absolute inset-0" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg" />

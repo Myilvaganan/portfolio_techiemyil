@@ -128,7 +128,7 @@ export function Header() {
             <Button
               size="sm"
               onClick={requestResume}
-              className="shadow-[0_0_20px_2px_rgba(34,197,94,0.3)]"
+              className="shadow-[0_0_20px_2px_rgb(var(--accent-rgb)/0.3)]"
             >
               <Download className="h-4 w-4" />
               Resume

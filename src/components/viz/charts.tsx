@@ -470,7 +470,7 @@ export function Gauge({ value, label, sub, size = 150, invert = false }: { value
   const v = Math.max(0, Math.min(100, value))
   // Utilisation is better when low; progress is better when high (invert).
   const score = invert ? 100 - v : v
-  const tone = score < 30 ? 'var(--color-accent)' : score < 60 ? '#f59e0b' : 'var(--color-error)'
+  const tone = score < 30 ? 'var(--color-positive)' : score < 60 ? '#f59e0b' : 'var(--color-error)'
   const R = 62
   const arc = Math.PI * R
   return (

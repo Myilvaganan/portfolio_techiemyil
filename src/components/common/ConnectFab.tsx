@@ -68,7 +68,7 @@ export function ConnectFab() {
             onClick={() => setOpen((prev) => !prev)}
             aria-label={open ? 'Close quick contact menu' : 'Open quick contact menu'}
             aria-expanded={open}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-[#05130a] shadow-[0_8px_28px_-6px_rgba(34,197,94,0.55)] transition-transform active:scale-95"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-[#05130a] shadow-[0_8px_28px_-6px_rgb(var(--accent-rgb)/0.55)] transition-transform active:scale-95"
           >
             <motion.span
               animate={{ rotate: open ? 90 : 0 }}

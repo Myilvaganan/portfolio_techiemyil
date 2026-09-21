@@ -193,7 +193,7 @@ export function MarginCalculator() {
         : 'Manual mode — edit the entry price below'
 
   const inr = (usd: number) => toInr(usd, usdInr.rate)
-  const riskPercentColor = risk.percent > 3 ? 'text-error' : risk.percent > 2 ? 'text-amber-500' : 'text-accent'
+  const riskPercentColor = risk.percent > 3 ? 'text-error' : risk.percent > 2 ? 'text-amber-500' : 'text-positive'
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
@@ -227,7 +227,7 @@ export function MarginCalculator() {
           <span
             className={cn(
               'h-2 w-2 rounded-full',
-              stillLoading ? 'animate-pulse bg-amber-500' : liveCount > 0 ? 'bg-accent' : 'bg-text-secondary/50',
+              stillLoading ? 'animate-pulse bg-amber-500' : liveCount > 0 ? 'bg-positive' : 'bg-text-secondary/50',
             )}
           />
           {badgeText}
@@ -449,7 +449,7 @@ export function MarginCalculator() {
                 : undefined
             }
             sub={`${fmt(Math.abs(pnl.tpPoints), 0)} pts`}
-            valueClassName={pnl.tpProfit >= 0 ? 'text-accent' : 'text-error'}
+            valueClassName={pnl.tpProfit >= 0 ? 'text-positive' : 'text-error'}
           />
           <Stat
             label="❌ SL loss"
@@ -462,7 +462,7 @@ export function MarginCalculator() {
             label="ROI on margin"
             value={`${pnl.roi >= 0 ? '+' : ''}${fmt(pnl.roi, 1)}%`}
             sub="profit ÷ margin"
-            valueClassName={pnl.roi >= 0 ? 'text-accent' : 'text-error'}
+            valueClassName={pnl.roi >= 0 ? 'text-positive' : 'text-error'}
           />
           <Stat
             label="Risk : reward"
@@ -478,7 +478,7 @@ export function MarginCalculator() {
         />
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-7">
           <div
-            className={cn('h-full rounded-full transition-all', pnl.roi >= 0 ? 'bg-accent' : 'bg-error')}
+            className={cn('h-full rounded-full transition-all', pnl.roi >= 0 ? 'bg-positive' : 'bg-error')}
             style={{ width: `${Math.min(Math.abs(pnl.roi), 100)}%` }}
           />
         </div>

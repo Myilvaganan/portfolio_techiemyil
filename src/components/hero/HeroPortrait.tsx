@@ -34,7 +34,7 @@ export function HeroPortrait() {
       />
 
       <div
-        className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.25),transparent_70%)] blur-2xl"
+        className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgb(var(--accent-rgb)/0.25),transparent_70%)] blur-2xl"
         style={{ transform: 'scale(1.05)' }}
       />
 

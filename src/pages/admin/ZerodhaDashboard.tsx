@@ -40,7 +40,7 @@ const seriesColor = (i: number, isOther: boolean) => (isOther ? 'var(--s-other)'
 
 type SortKey = 'value' | 'pnl' | 'day' | 'symbol'
 
-const tone = (n: number) => (n > 0 ? 'text-accent' : n < 0 ? 'text-error' : 'text-text-secondary')
+const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 'text-text-secondary')
 
 function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
@@ -219,7 +219,7 @@ function PnlBars({ rows }: { rows: HoldingRow[] }) {
                 <div className="relative h-2.5" title={`${r.symbol} · ${formatSignedInr(r.pnl)} (${formatSignedPct(r.pnlPct)})`}>
                   <span className="absolute inset-y-0 left-1/2 w-px bg-border" aria-hidden />
                   <div
-                    className={cn('absolute inset-y-0 rounded-full', r.pnl >= 0 ? 'bg-accent' : 'bg-error')}
+                    className={cn('absolute inset-y-0 rounded-full', r.pnl >= 0 ? 'bg-positive' : 'bg-error')}
                     style={
                       r.pnl >= 0
                         ? { left: '50%', width: `${width / 2}%` }
@@ -322,7 +322,7 @@ function OrderRow({ o }: { o: KiteOrder }) {
     <li className="flex items-center justify-between gap-3 border-b border-border/60 py-2.5 text-xs last:border-0">
       <div className="min-w-0">
         <p className="truncate font-mono font-semibold text-text">
-          <span className={o.transaction_type === 'BUY' ? 'text-accent' : 'text-error'}>{o.transaction_type}</span>{' '}
+          <span className={o.transaction_type === 'BUY' ? 'text-positive' : 'text-error'}>{o.transaction_type}</span>{' '}
           {o.tradingsymbol}
         </p>
         <p className="mt-0.5 text-text-secondary">
@@ -406,7 +406,7 @@ function Dashboard({ snapshot }: { snapshot: KiteSnapshot }) {
               className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-10"
             >
               <div
-                className={cn('h-full rounded-full', margin.usedPct > 80 ? 'bg-error' : margin.usedPct > 50 ? 'bg-amber-500' : 'bg-accent')}
+                className={cn('h-full rounded-full', margin.usedPct > 80 ? 'bg-error' : margin.usedPct > 50 ? 'bg-amber-500' : 'bg-positive')}
                 style={{ width: `${Math.min(margin.usedPct, 100)}%` }}
               />
             </div>

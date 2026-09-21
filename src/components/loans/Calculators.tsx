@@ -32,9 +32,9 @@ type Tab = 'prepay' | 'extra' | 'close' | 'target' | 'compare'
 
 function Stat({ label, value, sub, tone, big }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad' | 'warn'; big?: boolean }) {
   return (
-    <div className={cn('rounded-xl border p-3.5', tone === 'good' ? 'border-accent/35 bg-accent/[0.08]' : tone === 'bad' ? 'border-error/35 bg-error/[0.08]' : tone === 'warn' ? 'border-amber-500/35 bg-amber-500/[0.08]' : 'border-border bg-surface-2')}>
+    <div className={cn('rounded-xl border p-3.5', tone === 'good' ? 'border-positive/35 bg-positive/[0.08]' : tone === 'bad' ? 'border-error/35 bg-error/[0.08]' : tone === 'warn' ? 'border-amber-500/35 bg-amber-500/[0.08]' : 'border-border bg-surface-2')}>
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
-      <p className={cn('mt-1 font-mono font-semibold', big ? 'text-xl' : 'text-base', tone === 'good' && 'text-accent', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500', !tone && 'text-text')}>{value}</p>
+      <p className={cn('mt-1 font-mono font-semibold', big ? 'text-xl' : 'text-base', tone === 'good' && 'text-positive', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500', !tone && 'text-text')}>{value}</p>
       {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}
     </div>
   )
@@ -274,7 +274,7 @@ export function Calculators({ loans, fee, onFee }: { loans: Loan[]; fee: FeeAssu
                           <td className="py-2.5 pr-3 font-medium text-text">{c.loan.label}{i === 0 && <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">BEST</span>}</td>
                           <td className="py-2.5 pr-3 text-right font-mono text-text">{loanInr(c.impact.interestSaved)}</td>
                           <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{loanInr(c.impact.fee)}</td>
-                          <td className={cn('py-2.5 pr-3 text-right font-mono font-semibold', c.impact.netSaving > 0 ? 'text-accent' : 'text-error')}>{loanInr(c.impact.netSaving)}</td>
+                          <td className={cn('py-2.5 pr-3 text-right font-mono font-semibold', c.impact.netSaving > 0 ? 'text-positive' : 'text-error')}>{loanInr(c.impact.netSaving)}</td>
                           <td className="py-2.5 text-right font-mono text-text-secondary">{monthsSpan(c.impact.monthsSaved)}</td>
                         </tr>
                       ))}

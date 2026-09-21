@@ -186,7 +186,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
             <motion.li key={j.key} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="rounded-xl border border-border bg-surface-2 p-3">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card text-text-secondary">
-                  {j.status === 'done' ? <CheckCircle2 className="h-4.5 w-4.5 text-accent" /> : j.status === 'error' ? <AlertCircle className="h-4.5 w-4.5 text-error" /> : j.status === 'locked' ? <KeyRound className="h-4.5 w-4.5 text-amber-500" /> : j.status === 'working' ? <Loader2 className="h-4.5 w-4.5 animate-spin text-accent" /> : <FileText className="h-4.5 w-4.5" />}
+                  {j.status === 'done' ? <CheckCircle2 className="h-4.5 w-4.5 text-positive" /> : j.status === 'error' ? <AlertCircle className="h-4.5 w-4.5 text-error" /> : j.status === 'locked' ? <KeyRound className="h-4.5 w-4.5 text-amber-500" /> : j.status === 'working' ? <Loader2 className="h-4.5 w-4.5 animate-spin text-positive" /> : <FileText className="h-4.5 w-4.5" />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-text">{j.file.name}</p>
