@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Globe, Mail, MapPin, Phone } from 'lucide-react'
-import { FaTelegram, FaWhatsapp } from 'react-icons/fa'
+import { FaInstagram, FaTelegram, FaWhatsapp } from 'react-icons/fa'
+import { SiTradingview } from 'react-icons/si'
 import { Button } from '@/components/ui/Button'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -59,6 +60,24 @@ export function GlanceHero() {
           >
             <FaTelegram className="h-4 w-4 text-accent" />
             Telegram
+          </a>
+          <a
+            href={personal.links.instagram}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 transition-colors hover:text-accent"
+          >
+            <FaInstagram className="h-4 w-4 text-accent" />
+            Instagram
+          </a>
+          <a
+            href={personal.links.tradingview}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 transition-colors hover:text-accent"
+          >
+            <SiTradingview className="h-4 w-4 text-accent" />
+            TradingView
           </a>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-accent" />

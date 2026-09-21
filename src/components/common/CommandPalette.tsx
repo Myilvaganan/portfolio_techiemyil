@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, Mail, Download, ArrowRight } from 'lucide-react'
 import { FaGithub, FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
+import { SiTradingview } from 'react-icons/si'
 import { navLinks } from '@/data/nav'
 import { personal } from '@/data/personal'
 import { getLenis } from '@/hooks/useLenis'
@@ -114,6 +115,16 @@ export function CommandPalette() {
         action: () => {
           setOpen(false)
           window.open(personal.links.instagram, '_blank')
+        },
+      },
+      {
+        id: 'tradingview',
+        label: 'Open TradingView',
+        hint: 'External',
+        icon: SiTradingview,
+        action: () => {
+          setOpen(false)
+          window.open(personal.links.tradingview, '_blank')
         },
       },
       {

@@ -23,5 +23,6 @@ export const personal = {
     whatsapp: 'https://wa.me/916374517254',
     telegram: 'https://t.me/techiemyil',
     instagram: 'https://instagram.com/techiemyil',
+    tradingview: 'https://www.tradingview.com/u/techiemyil_trader/',
   },
 } as const
