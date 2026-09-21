@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Mail, MessageCircle, Phone, X } from 'lucide-react'
+import { Dumbbell, Mail, MessageCircle, Phone, X } from 'lucide-react'
 import { FaGithub, FaInstagram, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { SiTradingview } from 'react-icons/si'
 import { personal } from '@/data/personal'
@@ -11,6 +11,7 @@ const actions = [
   { label: 'Telegram', href: personal.links.telegram, icon: FaTelegram, external: true },
   { label: 'Instagram', href: personal.links.instagram, icon: FaInstagram, external: true },
   { label: 'TradingView', href: personal.links.tradingview, icon: SiTradingview, external: true },
+  { label: 'Cult.fit', href: personal.links.cultfit, icon: Dumbbell, external: true },
   { label: 'Email', href: `mailto:${personal.email}`, icon: Mail },
   { label: 'Call', href: `tel:${personal.phone}`, icon: Phone },
 ]

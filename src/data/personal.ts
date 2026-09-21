@@ -24,5 +24,6 @@ export const personal = {
     telegram: 'https://t.me/techiemyil',
     instagram: 'https://instagram.com/techiemyil',
     tradingview: 'https://www.tradingview.com/u/techiemyil_trader/',
+    cultfit: 'https://cure.app.link/xZGTlotGt6b',
   },
 } as const

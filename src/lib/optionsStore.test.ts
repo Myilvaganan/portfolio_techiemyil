@@ -22,7 +22,8 @@ describe('optionsStore', () => {
   })
 
   it('uploads in chunks of 5000 and totals the result', async () => {
-    const many = Array.from({ length: 12000 }, (_, i) => ({ ...demoFills()[0], id: `id${i}` }))
+    const fill = demoFills()[0]
+    const many = Array.from({ length: 12000 }, (_, i) => ({ ...fill, id: `id${i}` }))
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(json(200, { added: 5000, total: 5000 }))

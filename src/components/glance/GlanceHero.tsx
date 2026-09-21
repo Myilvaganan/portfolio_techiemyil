@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Globe, Mail, MapPin, Phone } from 'lucide-react'
+import { ArrowRight, Dumbbell, Globe, Mail, MapPin, Phone } from 'lucide-react'
 import { FaInstagram, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { SiTradingview } from 'react-icons/si'
 import { Button } from '@/components/ui/Button'
@@ -78,6 +78,15 @@ export function GlanceHero() {
           >
             <SiTradingview className="h-4 w-4 text-accent" />
             TradingView
+          </a>
+          <a
+            href={personal.links.cultfit}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 transition-colors hover:text-accent"
+          >
+            <Dumbbell className="h-4 w-4 text-accent" />
+            Cult.fit
           </a>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-accent" />

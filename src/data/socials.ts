@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react'
+import { Dumbbell, Mail } from 'lucide-react'
 import { FaGithub, FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { SiTradingview } from 'react-icons/si'
 import type { SocialLink } from '@/types'
@@ -11,5 +11,6 @@ export const socials: SocialLink[] = [
   { label: 'Telegram', href: personal.links.telegram, icon: FaTelegram },
   { label: 'Instagram', href: personal.links.instagram, icon: FaInstagram },
   { label: 'TradingView', href: personal.links.tradingview, icon: SiTradingview },
+  { label: 'Cult.fit', href: personal.links.cultfit, icon: Dumbbell },
   { label: 'Email', href: `mailto:${personal.email}`, icon: Mail },
 ]

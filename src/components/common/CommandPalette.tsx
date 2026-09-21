@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Mail, Download, ArrowRight } from 'lucide-react'
+import { Search, Mail, Download, ArrowRight, Dumbbell } from 'lucide-react'
 import { FaGithub, FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { SiTradingview } from 'react-icons/si'
 import { navLinks } from '@/data/nav'
@@ -125,6 +125,16 @@ export function CommandPalette() {
         action: () => {
           setOpen(false)
           window.open(personal.links.tradingview, '_blank')
+        },
+      },
+      {
+        id: 'cultfit',
+        label: 'Open Cult.fit',
+        hint: 'External',
+        icon: Dumbbell,
+        action: () => {
+          setOpen(false)
+          window.open(personal.links.cultfit, '_blank')
         },
       },
       {
