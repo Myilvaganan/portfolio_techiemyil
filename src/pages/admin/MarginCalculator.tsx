@@ -6,7 +6,7 @@ import { marginReport } from '@/lib/moduleReports'
 import { fetchLivePrices, fetchUsdInr } from '@/lib/livePrices'
 import { loadMarginInputs, saveMarginInputs } from '@/lib/marginInputs'
 import {
-  DEFAULT_LEVERAGE,
+  CALIBRATION_LOTS,
   FALLBACK_USD_INR,
   TAX_RATE,
   afterTaxProfit,
@@ -17,6 +17,7 @@ import {
   calcMargin,
   calcPnL,
   calcRisk,
+  impliedLeverage,
   type Direction,
   type InstrumentId,
 } from '@/lib/margin'
@@ -144,6 +145,9 @@ export function MarginCalculator() {
   const [stopLoss, setStopLoss] = useState(saved.stopLoss)
   const [balance, setBalance] = useState(saved.balance)
   const [slPoints, setSlPoints] = useState(saved.slPoints)
+  // Kept per instrument: the margin the user's own broker shows for a CALIBRATION_LOTS position, e.g. "$10.31" for
+  // 0.1 lot US30. When set, it stands in for the leverage dropdown so every figure on the page matches that broker.
+  const [calibration, setCalibration] = useState(saved.calibration)
 
   useEffect(() => {
     saveMarginInputs({
@@ -157,8 +161,9 @@ export function MarginCalculator() {
       stopLoss,
       balance,
       slPoints,
+      calibration,
     })
-  }, [current, direction, lots, leverage, priceOverride, pnlEntryOverride, exit, stopLoss, balance, slPoints])
+  }, [current, direction, lots, leverage, priceOverride, pnlEntryOverride, exit, stopLoss, balance, slPoints, calibration])
 
   useEffect(() => {
     let cancelled = false
@@ -188,12 +193,19 @@ export function MarginCalculator() {
   const liveCount = INSTRUMENT_IDS.filter((id) => prices[id].status === 'live').length
   const stillLoading = INSTRUMENT_IDS.some((id) => prices[id].status === 'loading')
 
-  const marginResult = calcMargin(instrument, lots, price, leverage)
+  // If the user has typed what their broker actually charges for CALIBRATION_LOTS, that overrides the leverage
+  // dropdown for this instrument — every figure below then matches that broker instead of a guessed leverage.
+  const calibrationText = calibration[current] ?? ''
+  const calibratedLeverage = impliedLeverage(instrument, price, parseFloat(calibrationText))
+  const isCalibrated = calibratedLeverage !== null
+  const effectiveLeverage = calibratedLeverage ?? leverage
+
+  const marginResult = calcMargin(instrument, lots, price, effectiveLeverage)
   const pnl = calcPnL({
     instrument,
     direction,
     lots,
-    leverage,
+    leverage: effectiveLeverage,
     entry,
     exit: parseFloat(exit),
     stopLoss: parseFloat(stopLoss),
@@ -202,13 +214,23 @@ export function MarginCalculator() {
 
   function selectInstrument(id: InstrumentId) {
     setCurrent(id)
-    setLeverage(DEFAULT_LEVERAGE)
+    setLeverage(INSTRUMENTS[id].defaultLeverage)
     // Prices differ wildly between instruments, so carrying over a typed
     // entry/TP/SL would produce nonsense numbers.
     setPriceOverride(null)
     setPnlEntryOverride(null)
     setExit('')
     setStopLoss('')
+  }
+
+  function setCalibrationForCurrent(value: string) {
+    setCalibration((prev) => {
+      if (value) return { ...prev, [current]: value }
+      if (!(current in prev)) return prev
+      const next = { ...prev }
+      delete next[current]
+      return next
+    })
   }
 
   function chooseLots(value: number) {
@@ -275,7 +297,7 @@ export function MarginCalculator() {
               unit: instrument.unit,
               direction,
               lots,
-              leverage,
+              leverage: effectiveLeverage,
               entry,
               exit: parseFloat(exit) || null,
               stopLoss: parseFloat(stopLoss) || null,
@@ -340,7 +362,12 @@ export function MarginCalculator() {
               />
             </Field>
             <Field label="Leverage">
-              <select className={inputClass} value={leverage} onChange={(e) => setLeverage(Number(e.target.value))}>
+              <select
+                className={cn(inputClass, isCalibrated && 'opacity-50')}
+                disabled={isCalibrated}
+                value={leverage}
+                onChange={(e) => setLeverage(Number(e.target.value))}
+              >
                 {LEVERAGE_OPTIONS.map((l) => (
                   <option key={l} value={l} className="bg-card">
                     1 : {l}
@@ -348,6 +375,39 @@ export function MarginCalculator() {
                 ))}
               </select>
             </Field>
+          </div>
+
+          <div className="mb-3">
+            <Field label={`Broker's margin for ${CALIBRATION_LOTS} lot (USD)`}>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="optional — e.g. 10.31"
+                  className={inputClass}
+                  value={calibrationText}
+                  onChange={(e) => setCalibrationForCurrent(e.target.value)}
+                />
+                {calibrationText && (
+                  <button
+                    type="button"
+                    data-cursor="hover"
+                    onClick={() => setCalibrationForCurrent('')}
+                    className="shrink-0 rounded-lg border border-border px-2.5 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </Field>
+            <p className="mt-1 text-[11px] leading-snug text-text-secondary">
+              {calibrationText && !isCalibrated
+                ? 'Enter a positive number to match every figure below to your broker.'
+                : isCalibrated
+                  ? `Matched to your broker — implies ≈1:${fmt(effectiveLeverage, effectiveLeverage >= 100 ? 0 : 1)} leverage, overriding the dropdown above.`
+                  : "If your broker's app shows a different margin, enter it here and every number below will match it."}
+            </p>
           </div>
 
           <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-lg border border-border text-sm font-bold">
@@ -426,7 +486,11 @@ export function MarginCalculator() {
               label="Margin required"
               value={`$${fmt(marginResult.margin)}`}
               inr={inr(marginResult.margin)}
-              sub={`at 1:${leverage} leverage`}
+              sub={
+                isCalibrated
+                  ? `at ≈1:${fmt(effectiveLeverage, effectiveLeverage >= 100 ? 0 : 1)} leverage (your broker)`
+                  : `at 1:${effectiveLeverage} leverage`
+              }
               valueClassName="text-[length:min(2rem,12cqw)] text-accent"
             />
             <Stat

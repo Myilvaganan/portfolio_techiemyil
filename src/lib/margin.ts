@@ -10,12 +10,15 @@ export interface Instrument {
   tick: number
   unit: string
   priceDecimals: number
+  /** Leverage selected when this instrument is chosen. Brokers commonly cap indices lower than forex/gold. */
+  defaultLeverage: number
 }
 
 export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
-  XAUUSD: { name: 'Gold / USD', contractSize: 100, fallbackPrice: 4378, tick: 0.01, unit: 'oz', priceDecimals: 2 },
-  BITCOIN: { name: 'Bitcoin / USD', contractSize: 1, fallbackPrice: 63000, tick: 1, unit: 'BTC', priceDecimals: 0 },
-  US30: { name: 'Dow Jones / USD', contractSize: 1, fallbackPrice: 41500, tick: 1, unit: 'idx', priceDecimals: 0 },
+  XAUUSD: { name: 'Gold / USD', contractSize: 100, fallbackPrice: 4300, tick: 0.01, unit: 'oz', priceDecimals: 2, defaultLeverage: 1000 },
+  BITCOIN: { name: 'Bitcoin / USD', contractSize: 1, fallbackPrice: 63000, tick: 1, unit: 'BTC', priceDecimals: 0, defaultLeverage: 1000 },
+  // Index CFDs are typically capped well below forex/gold leverage (e.g. 1:500 rather than 1:1000).
+  US30: { name: 'Dow Jones / USD', contractSize: 1, fallbackPrice: 50000, tick: 1, unit: 'idx', priceDecimals: 0, defaultLeverage: 500 },
 }
 
 export const LEVERAGE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000] as const
@@ -38,6 +41,23 @@ export function afterTaxProfit(profit: number): number {
 /** Money made or lost per 1-point move at the given lot size. */
 export function pointValue(instrument: Instrument, lots: number): number {
   return lots * instrument.contractSize * instrument.tick
+}
+
+/** The lot size a broker's app typically shows a margin figure for, e.g. "Required Margin $10.31" at 0.1 lot. */
+export const CALIBRATION_LOTS = 0.1
+
+const MIN_IMPLIED_LEVERAGE = 1
+const MAX_IMPLIED_LEVERAGE = 100_000
+
+/**
+ * Backs out the leverage a broker must be using from the margin it actually shows for `CALIBRATION_LOTS`, so every
+ * calculation on the page then matches that broker exactly instead of a guessed leverage. Returns null for an
+ * input that can't imply a sane leverage (zero/negative margin, or no price yet).
+ */
+export function impliedLeverage(instrument: Instrument, price: number, brokerMargin: number): number | null {
+  if (!(price > 0) || !(brokerMargin > 0)) return null
+  const leverage = (CALIBRATION_LOTS * instrument.contractSize * price) / brokerMargin
+  return leverage >= MIN_IMPLIED_LEVERAGE && leverage <= MAX_IMPLIED_LEVERAGE ? leverage : null
 }
 
 export function calcMargin(instrument: Instrument, lots: number, price: number, leverage: number) {

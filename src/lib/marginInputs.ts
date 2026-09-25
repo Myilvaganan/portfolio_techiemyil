@@ -21,6 +21,11 @@ export interface MarginInputs {
   stopLoss: string
   balance: string
   slPoints: string
+  /**
+   * Per instrument: the margin the user's own broker shows for CALIBRATION_LOTS. When set, it overrides the
+   * leverage dropdown for that instrument, so kept separately per instrument (unlike the single shared `leverage`).
+   */
+  calibration: Partial<Record<InstrumentId, string>>
 }
 
 export const DEFAULT_INPUTS: MarginInputs = {
@@ -34,6 +39,7 @@ export const DEFAULT_INPUTS: MarginInputs = {
   stopLoss: '',
   balance: '1000',
   slPoints: '20',
+  calibration: {},
 }
 
 function text(value: unknown, fallback: string): string {
@@ -42,6 +48,17 @@ function text(value: unknown, fallback: string): string {
 
 function optionalText(value: unknown): string | null {
   return typeof value === 'string' ? value.slice(0, MAX_TEXT_LENGTH) : null
+}
+
+// Keeps only entries for real instruments with a string value; anything else is dropped rather than defaulted,
+// since a partial map is still valid (an instrument simply falls back to the leverage dropdown).
+function sanitizeCalibration(value: unknown): Partial<Record<InstrumentId, string>> {
+  if (!value || typeof value !== 'object') return {}
+  const out: Partial<Record<InstrumentId, string>> = {}
+  for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+    if (key in INSTRUMENTS && typeof v === 'string') out[key as InstrumentId] = v.slice(0, MAX_TEXT_LENGTH)
+  }
+  return out
 }
 
 // Every field is checked on its own, so one stale or hand-edited value falls
@@ -61,6 +78,7 @@ function sanitize(raw: unknown): MarginInputs {
     stopLoss: text(r.stopLoss, d.stopLoss),
     balance: text(r.balance, d.balance),
     slPoints: text(r.slPoints, d.slPoints),
+    calibration: sanitizeCalibration(r.calibration),
   }
 }
 

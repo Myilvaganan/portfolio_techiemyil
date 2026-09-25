@@ -16,9 +16,10 @@ const SOURCES: Record<InstrumentId, () => Promise<number | null>> = {
     return d?.bitcoin?.usd ?? null
   },
   XAUUSD: async () => {
-    const d = await getJson('https://api.metals.live/v1/spot/gold')
-    const p = typeof d === 'number' ? d : (d?.price ?? d?.gold ?? null)
-    return p > 100 ? p : null
+    // metals.live is defunct (no response); gold-api.com is free, keyless and CORS-enabled.
+    const d = await getJson('https://api.gold-api.com/price/XAU')
+    const p = d?.price
+    return typeof p === 'number' && p > 100 ? p : null
   },
   US30: async () => {
     const d = await getJson('https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI')

@@ -28,4 +28,28 @@ describe('marginInputs', () => {
     )
     expect(loadMarginInputs()).toEqual({ ...DEFAULT_INPUTS, direction: 'SELL', balance: '5000' })
   })
+
+  describe('per-instrument calibration', () => {
+    it('round-trips a broker margin saved for one instrument', () => {
+      const inputs = { ...DEFAULT_INPUTS, calibration: { US30: '10.31' } }
+      saveMarginInputs(inputs)
+      expect(loadMarginInputs()).toEqual(inputs)
+    })
+
+    it('keeps a value per instrument independently', () => {
+      const inputs = { ...DEFAULT_INPUTS, calibration: { US30: '10.31', XAUUSD: '4.30' } }
+      saveMarginInputs(inputs)
+      expect(loadMarginInputs().calibration).toEqual({ US30: '10.31', XAUUSD: '4.30' })
+    })
+
+    it('drops an unknown instrument key and a non-string value, keeping the rest', () => {
+      localStorage.setItem(KEY, JSON.stringify({ ...DEFAULT_INPUTS, calibration: { DOGE: '5', US30: 10.31, XAUUSD: '4.30' } }))
+      expect(loadMarginInputs().calibration).toEqual({ XAUUSD: '4.30' })
+    })
+
+    it('defaults to an empty map when missing or malformed', () => {
+      localStorage.setItem(KEY, JSON.stringify({ ...DEFAULT_INPUTS, calibration: 'not an object' }))
+      expect(loadMarginInputs().calibration).toEqual({})
+    })
+  })
 })

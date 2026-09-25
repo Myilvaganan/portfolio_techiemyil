@@ -125,7 +125,7 @@ export function marginReport(i: MarginReportInput): ReportDoc {
   const tax = i.pnl.tpProfit > 0 ? i.pnl.tpProfit * TAX_RATE : 0
   return {
     title: `${i.instrumentName} trade plan`,
-    subtitle: `${i.direction} ${i.lots.toFixed(2)} lot · 1:${i.leverage} · 1 USD = ₹${i.usdInr.toFixed(2)}`,
+    subtitle: `${i.direction} ${i.lots.toFixed(2)} lot · 1:${Number.isInteger(i.leverage) ? i.leverage : i.leverage.toFixed(1)} · 1 USD = ₹${i.usdInr.toFixed(2)}`,
     sections: [
       { title: 'Margin', kpis: [{ label: 'Margin required', value: both(i.margin.margin) }, { label: 'Position value', value: both(i.margin.positionValue) }, { label: 'Point value', value: both(i.margin.pointValue) }, { label: 'Units', value: `${i.margin.units} ${i.unit}` }] },
       {
