@@ -11,6 +11,8 @@ import { buildPulse, type Notice, type Pulse } from '@/lib/pulse'
 import { fetchInbox, fetchStatements } from '@/lib/statementsApi'
 import { fetchFinance } from '@/lib/financeApi'
 import { fetchReminders } from '@/lib/investApi'
+import { fetchLending } from '@/lib/lendingApi'
+import { lendingNotices } from '@/lib/lending'
 import { applyRules } from '@/lib/rules'
 import { budgetNotices } from '@/lib/budget'
 import { spendAlerts } from '@/lib/anomalies'
@@ -24,12 +26,13 @@ const settle = <T,>(p: Promise<T>) => p.catch(() => null)
 
 /** Warnings from the money features. Any source that fails to load is skipped rather than blocking the rest. */
 async function moneyNotices(today: string): Promise<Notice[]> {
-  const [bank, card, settings, custom, inbox] = await Promise.all([
+  const [bank, card, settings, custom, inbox, lending] = await Promise.all([
     settle(fetchStatements('bank')),
     settle(fetchStatements('card')),
     settle(fetchFinance()),
     settle(fetchReminders()),
     settle(fetchInbox()),
+    settle(fetchLending()),
   ])
   const out: Notice[] = []
   const rules = settings?.rules ?? []
@@ -40,6 +43,8 @@ async function moneyNotices(today: string): Promise<Notice[]> {
   if (card) for (const n of cardDueNotices(buildCardDues(card.transactions, card.statements, today), today)) out.push({ ...n, tone: 'warn', to: '/admin/credit-cards' })
   for (const n of dueReminders(buildReminders(bankTxns, today, custom ?? []), today, 14)) out.push({ ...n, tone: 'info', to: '/admin/investments' })
   for (const n of spendAlerts(all, today).slice(0, 3)) out.push({ ...n, tone: 'info', to: '/admin/budgets' })
+  const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
+  for (const n of lendingNotices(lending ?? [], today, inr)) out.push({ ...n, tone: 'warn', to: '/admin/lending' })
   const waiting = (inbox?.items ?? []).filter((i) => ['new', 'ready', 'failed'].includes(i.status))
   if (waiting.length) {
     const to = { bank: '/admin/bank-statements', card: '/admin/credit-cards', loan: '/admin/loans' }[waiting[0].kind ?? waiting[0].guess] ?? '/admin/bank-statements'

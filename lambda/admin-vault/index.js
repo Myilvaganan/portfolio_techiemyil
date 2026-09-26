@@ -16,6 +16,7 @@ const { createFinanceApi } = require('./finance')
 const { createWealthApi } = require('./wealth')
 const { createInvestApi } = require('./invest')
 const { createInboxApi } = require('./inbox')
+const { createLendingApi } = require('./lending')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -53,6 +54,7 @@ const inboxApi = createInboxApi({
   readPdf: statementsReadPdf,
   detectBank: statementsDetectBank,
 })
+const lendingApi = createLendingApi({ s3, bucket: S3_BUCKET })
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
 const investApi = createInvestApi({ s3, bucket: S3_BUCKET })
@@ -641,7 +643,7 @@ exports.handler = async (event) => {
       if (result) return respond(result.statusCode, result.body)
     }
 
-    for (const [prefix, api] of [['/admin/finance', financeApi], ['/admin/wealth', wealthApi], ['/admin/invest', investApi]]) {
+    for (const [prefix, api] of [['/admin/finance', financeApi], ['/admin/wealth', wealthApi], ['/admin/invest', investApi], ['/admin/lending', lendingApi]]) {
       if (!path.startsWith(prefix)) continue
       const result = await api.route({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)

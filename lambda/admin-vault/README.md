@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -404,3 +404,15 @@ emails from the banks (`icici.bank.in`, `icicibank.com`, `axis.bank.in`, `axisba
 The Bank Statements, Credit Cards and Loans pages show what is waiting, with a "Read it" button and an optional
 "Read automatically when I open this page" switch. To rotate the ingest key, change `ADMIN_INGEST_KEY` on the function and the
 `INGEST_KEY` script property in Google.
+
+## Lending (`lending.js`)
+
+| Route | What it does |
+| --- | --- |
+| `GET /admin/lending` | Everyone who owes me |
+| `POST /admin/lending` `{ entry }` | Creates (no `id`) or replaces an entry: name, amount lent, date, optional due date and simple interest, recorded repayments, and optionally the loan I took to lend it (`passThrough`: amount, rate, months, first EMI date) |
+| `DELETE /admin/lending?id=` | Removes an entry |
+
+Stored in `_data/lending/entries.json` with conditional writes. The EMI-split calculation is done in the app (`src/lib/lending.ts`):
+the person pays the same share of every EMI as the share of the loan that went to them, so what they owe today is that share of the
+EMIs due so far, less what they have already paid.

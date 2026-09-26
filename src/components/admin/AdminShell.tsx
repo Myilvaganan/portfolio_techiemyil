@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Handshake, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -31,6 +31,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/net-worth': 'assets liabilities wealth',
   '/admin/budgets': 'budget limit category overspend rules family',
   '/admin/cash-flow': 'income savings runway burn projection',
+  '/admin/lending': 'lend loan owed friend borrowed money receivable emi split pass through',
   '/admin/goals': 'goal target house bike emergency fund savings',
   '/admin/investments': 'returns sip capital gains deductions 80c reminders itr',
   '/admin/security': '2fa two factor authenticator password login',
@@ -62,6 +63,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Budgets', to: '/admin/budgets', icon: PiggyBank },
       { label: 'Cash Flow', to: '/admin/cash-flow', icon: Waves },
       { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
+      { label: 'Lending', to: '/admin/lending', icon: Handshake },
       { label: 'Goals', to: '/admin/goals', icon: Target },
       { label: 'Investments', to: '/admin/investments', icon: LineChart },
     ],
