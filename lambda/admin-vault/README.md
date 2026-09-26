@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -352,3 +352,23 @@ and only assigns a category it is sure of; everything else stays "Other" so it c
 
 `node rebuildBank.js` re-reads every stored bank statement and rewrites `_data/statements/bank/data.json` (a dry run by default;
 `--write` first copies the previous file to `data.backup-<time>.json`). Other bank layouts still go through the model.
+
+## Two-step sign-in and login throttling (`security.js`)
+
+Turn it on from **Admin → Security**: scan the QR code (or type the key) into an authenticator app, confirm with a code, and save
+the eight one-time recovery codes. Sign-in then needs the password and a 6-digit code.
+
+| Route | What it does |
+| --- | --- |
+| `GET /admin/security` | Whether it is on, recovery codes left |
+| `POST /admin/security/2fa/start` | Creates a pending secret and returns it with the `otpauth://` link. Nothing changes yet |
+| `POST /admin/security/2fa/enable` `{ code }` | Confirms with a code and returns the recovery codes (shown once) |
+| `POST /admin/security/2fa/disable` `{ code }` | Turns it off; needs a current code or a recovery code |
+| `POST /admin/security/2fa/recovery` `{ code }` | Replaces the recovery codes |
+
+The secret is stored encrypted (AES-256-GCM) in `_data/security/2fa.json`; recovery codes are stored only as hashes. A code can't
+be used twice. Five wrong passwords or codes in a row lock that sender out for 15 minutes (`_data/security/attempts.json`).
+
+**Lost the authenticator and every recovery code?** Set the environment variable `ADMIN_2FA_DISABLED=1` on the function; sign-in
+then asks for the password only. Turn two-step verification off from the Security page, remove the variable, and set it up again.
+If you rotate `ADMIN_JWT_SECRET` (or `ADMIN_2FA_KEY`), the stored secret can no longer be read, so do the same.

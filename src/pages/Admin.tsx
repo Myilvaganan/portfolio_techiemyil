@@ -23,6 +23,7 @@ const HealthReport = page(() => import('@/pages/admin/HealthReport'), 'HealthRep
 const Household = page(() => import('@/pages/admin/Household'), 'Household')
 const TaxInformation = page(() => import('@/pages/admin/TaxInformation'), 'TaxInformation')
 const NetWorth = page(() => import('@/pages/admin/NetWorth'), 'NetWorth')
+const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
 
 function PageLoading() {
@@ -61,6 +62,7 @@ export function Admin() {
                 <Route path="household" element={<Household />} />
                 <Route path="tax" element={<TaxInformation />} />
                 <Route path="net-worth" element={<NetWorth />} />
+                <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />
               </Routes>

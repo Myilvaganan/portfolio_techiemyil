@@ -77,3 +77,18 @@ export async function downloadBackup() {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
   return backup
 }
+
+export interface SecurityStatus {
+  enabled: boolean
+  recoveryLeft: number
+  enabledAt: string | null
+  disabledByServer: boolean
+  maxFailures: number
+  lockMinutes: number
+}
+
+export const fetchSecurity = (): Promise<SecurityStatus> => call('/admin/security')
+export const startTwoFactor = (): Promise<{ secret: string; uri: string }> => call('/admin/security/2fa/start', 'POST', {})
+export const enableTwoFactor = (code: string): Promise<{ recoveryCodes: string[] }> => call('/admin/security/2fa/enable', 'POST', { code })
+export const disableTwoFactor = (code: string) => call('/admin/security/2fa/disable', 'POST', { code })
+export const newRecoveryCodes = (code: string): Promise<{ recoveryCodes: string[] }> => call('/admin/security/2fa/recovery', 'POST', { code })

@@ -29,14 +29,23 @@ async function adminFetch(path: string, init: RequestInit = {}) {
   return data
 }
 
-export async function loginAdmin(username: string, password: string) {
+/** Thrown when the password was right but a two-factor code is needed (or the one given was wrong). */
+export class TwoFactorRequired extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'TwoFactorRequired'
+  }
+}
+
+export async function loginAdmin(username: string, password: string, code?: string) {
   const res = await fetch(`${ADMIN_API_URL}/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, ...(code ? { code } : {}) }),
   })
   const data = await res.json().catch(() => null)
 
+  if (res.status === 401 && data?.twoFactor) throw new TwoFactorRequired(data.error || 'Enter the code from your authenticator app.')
   if (!res.ok || typeof data?.token !== 'string') {
     throw new Error(data?.error || 'Login failed. Please try again.')
   }

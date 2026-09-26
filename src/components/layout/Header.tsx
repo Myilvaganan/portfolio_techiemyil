@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Download, Menu, X, Command } from 'lucide-react'
+import { Download, Menu, X, Command, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
@@ -115,6 +115,16 @@ export function Header() {
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              to="/admin"
+              data-cursor="hover"
+              aria-label="Admin"
+              title="Admin (Ctrl/⌘ + Shift + A)"
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin
+            </Link>
             <ThemeToggle />
             <button
               data-cursor="hover"
@@ -190,6 +200,14 @@ export function Header() {
                   </span>
                 </Link>
               </motion.div>
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="mt-2 inline-flex items-center gap-2 text-lg text-text-secondary hover:text-text"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                Admin
+              </Link>
               <Button
                 onClick={() => {
                   setMobileOpen(false)

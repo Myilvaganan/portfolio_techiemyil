@@ -11,6 +11,7 @@ const { createJournalApi } = require('./journal')
 const { createHealthApi } = require('./health')
 const { createTaxApi } = require('./tax')
 const { createPlatformApi } = require('./platform')
+const { createSecurityApi } = require('./security')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -39,6 +40,7 @@ const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 const healthApi = createHealthApi({ s3, bucket: S3_BUCKET })
 const taxApi = createTaxApi({ s3, bucket: S3_BUCKET })
 const platformApi = createPlatformApi({ s3, bucket: S3_BUCKET })
+const securityApi = createSecurityApi({ s3, bucket: S3_BUCKET, secretKey: process.env.ADMIN_2FA_KEY || JWT_SECRET, disabled: process.env.ADMIN_2FA_DISABLED === '1' })
 
 // ---------- CORS / request helpers ----------
 
@@ -169,7 +171,7 @@ function isValidKey(key) {
 
 // ---------- Route handlers ----------
 
-async function handleLogin(payload) {
+async function handleLogin(payload, ip) {
   const username = typeof payload.username === 'string' ? payload.username : ''
   const password = typeof payload.password === 'string' ? payload.password : ''
 
@@ -178,9 +180,21 @@ async function handleLogin(payload) {
     return { statusCode: 500, body: { error: 'Admin login is not configured yet.' } }
   }
 
+  const locked = await securityApi.lockedFor(ip)
+  if (locked) return { statusCode: 429, body: { error: `Too many failed attempts. Try again in ${locked} minute${locked === 1 ? '' : 's'}.` } }
+
   if (!safeEqual(username, ADMIN_USERNAME) || !safeEqual(password, ADMIN_PASSWORD)) {
+    await securityApi.recordFailure(ip)
     return { statusCode: 401, body: { error: 'Invalid username or password.' } }
   }
+
+  // Password is right; if two-factor is on, a code is needed too. A wrong code counts as a failed attempt.
+  const second = await securityApi.secondFactor(payload.code)
+  if (second) {
+    if (second.statusCode === 401 && payload.code) await securityApi.recordFailure(ip)
+    return second
+  }
+  await securityApi.clearFailures(ip)
 
   const now = Date.now()
   const token = signToken({ sub: username, iat: now, exp: now + SESSION_TTL_MS })
@@ -555,7 +569,7 @@ exports.handler = async (event) => {
 
   try {
     if (method === 'POST' && path === '/admin/login') {
-      const result = await handleLogin(payload)
+      const result = await handleLogin(payload, event.requestContext?.http?.sourceIp)
       return respond(result.statusCode, result.body)
     }
 
@@ -598,6 +612,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/journal')) {
       const result = await journalApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path.startsWith('/admin/security')) {
+      const result = await securityApi.route({ method, path, payload, account: session.sub })
       if (result) return respond(result.statusCode, result.body)
     }
 

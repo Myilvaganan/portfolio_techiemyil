@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, Mail, Download, ArrowRight, Dumbbell } from 'lucide-react'
+import { Search, Mail, Download, ArrowRight, Dumbbell, ShieldCheck } from 'lucide-react'
 import { FaGithub, FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from 'react-icons/fa'
 import { SiTradingview } from 'react-icons/si'
 import { navLinks } from '@/data/nav'
@@ -31,11 +31,16 @@ export function CommandPalette() {
         e.preventDefault()
         setOpen((prev) => !prev)
       }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        setOpen(false)
+        navigate('/admin')
+      }
       if (e.key === 'Escape') setOpen(false)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [navigate])
 
   function goToSection(href: string) {
     setOpen(false)
@@ -57,6 +62,16 @@ export function CommandPalette() {
         icon: ArrowRight,
         action: () => goToSection(link.href),
       })),
+      {
+        id: 'admin',
+        label: 'Open Admin',
+        hint: 'Ctrl/⌘ + Shift + A',
+        icon: ShieldCheck,
+        action: () => {
+          setOpen(false)
+          navigate('/admin')
+        },
+      },
       {
         id: 'resume',
         label: 'Download Resume',

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Home, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Home, ShieldCheck, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/household': 'rent electricity bescom tangedco petrol bike zomato swiggy rapido ola instamart amazon appusamy visalakshi',
   '/admin/tax': 'itr income tax return tds advance tax refund 80c 80d hra form 16 26as ais capital gains regime',
   '/admin/net-worth': 'assets liabilities wealth',
+  '/admin/security': '2fa two factor authenticator password login',
   '/admin/site': 'messages contact analytics visitors',
   '/admin/credit-cards': 'card spend',
   '/admin/bank-statements': 'bank spend transactions',
@@ -39,6 +40,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
       { label: 'Website', to: '/admin/site', icon: Globe },
+      { label: 'Security', to: '/admin/security', icon: ShieldCheck },
     ],
   },
   {
