@@ -43,7 +43,7 @@ function Header({ switcher, actions, slim = false }: { switcher: ReactNode; acti
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <h1 className="font-display text-2xl font-semibold text-text">Trading Journal</h1>
+          <h1 className="page-title">Trading Journal</h1>
           {switcher}
         </div>
         {!slim && <p className="mt-0.5 text-sm text-text-secondary">Your MetaTrader 5 trades, day by day — separate from the options journal.</p>}
@@ -66,7 +66,7 @@ function EmptyForex({ switcher, onUpload }: { switcher: ReactNode; onUpload: () 
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 text-accent">
           <Globe className="h-7 w-7" />
         </span>
-        <h2 className="mt-4 font-display text-xl font-semibold text-text">Add your MetaTrader 5 history</h2>
+        <h2 className="mt-4 section-title">Add your MetaTrader 5 history</h2>
         <p className="mx-auto mt-2 max-w-lg text-sm text-text-secondary">
           Upload the Trade History Report from MetaTrader 5 and your Forex, gold, index and crypto trades appear here on their own calendar.
         </p>

@@ -36,7 +36,7 @@ function Ring({ pct, over, near }: { pct: number; over: boolean; near: boolean }
     <svg width="52" height="52" viewBox="0 0 52 52" className="shrink-0" role="img" aria-label={`${Math.round(pct)}% used`}>
       <circle cx="26" cy="26" r={r} fill="none" stroke="var(--color-border)" strokeWidth="5" />
       <circle cx="26" cy="26" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 100) / 100)} transform="rotate(-90 26 26)" className="transition-[stroke-dashoffset] duration-500" />
-      <text x="26" y="30" textAnchor="middle" className="fill-text font-mono text-[11px] font-semibold">
+      <text x="26" y="30" textAnchor="middle" className="fill-text font-mono text-2xs font-semibold">
         {Math.round(pct)}%
       </text>
     </svg>
@@ -64,11 +64,11 @@ function CategoryCard({ s, onSave }: { s: BudgetStatus; onSave: (category: strin
   return (
     <GlassCard hover={false} className={cn('p-3.5', s.over && 'border-error/40 bg-gradient-to-br from-error/[0.12] to-transparent', s.near && 'border-amber-500/40')}>
       <div className="flex items-center gap-3">
-        {has ? <Ring pct={s.pct} over={s.over} near={s.near} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-dashed border-border text-[10px] text-text-secondary">no limit</span>}
+        {has ? <Ring pct={s.pct} over={s.over} near={s.near} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-dashed border-border text-2xs text-text-secondary">no limit</span>}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-text">{s.category}</p>
           <p className="font-mono text-base font-semibold leading-tight text-text">{m.inr(s.spent)}</p>
-          {has && <p className={cn('text-[11px]', s.over ? 'text-error' : 'text-text-secondary')}>{s.over ? `${m.inr(-s.remaining)} over` : `${m.inr(s.remaining)} left`}</p>}
+          {has && <p className={cn('text-2xs', s.over ? 'text-error' : 'text-text-secondary')}>{s.over ? `${m.inr(-s.remaining)} over` : `${m.inr(s.remaining)} left`}</p>}
         </div>
       </div>
       {has && (
@@ -77,11 +77,11 @@ function CategoryCard({ s, onSave }: { s: BudgetStatus; onSave: (category: strin
         </div>
       )}
       {has && s.daysLeft > 0 && s.projected > 0 && (
-        <p className={cn('mt-1.5 text-[11px]', s.projectedOver ? 'text-amber-500' : 'text-text-secondary')}>
+        <p className={cn('mt-1.5 text-2xs', s.projectedOver ? 'text-amber-500' : 'text-text-secondary')}>
           On pace for {m.inr(s.projected)} · {s.daysLeft}d left
         </p>
       )}
-      <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
+      <div className="mt-2 flex items-center justify-between gap-2 text-2xs">
         {editing ? (
           <form
             className="flex w-full items-center gap-1.5"
@@ -121,7 +121,7 @@ function CategoryCard({ s, onSave }: { s: BudgetStatus; onSave: (category: strin
 
 function Select({ value, onChange, options, label, className }: { value: string; onChange: (v: string) => void; options: { id: string; label: string }[]; label: string; className?: string }) {
   return (
-    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className={cn('rounded-md border border-border bg-surface-2 px-1.5 py-1 text-[11px] text-text outline-none focus:border-accent', className)}>
+    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className={cn('rounded-md border border-border bg-surface-2 px-1.5 py-1 text-2xs text-text outline-none focus:border-accent', className)}>
       {options.map((o) => (
         <option key={o.id} value={o.id}>
           {o.label}
@@ -196,9 +196,9 @@ export function Budgets() {
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Money</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Budgets</h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="page-eyebrow">Money</p>
+          <h1 className="mt-1 page-title">Budgets</h1>
+          <p className="page-lede">
             Monthly limits per category from your bank and card spending{latest && <> · statements up to {latest}</>}. Transfers, card bill payments, family and ignored items are left out.
           </p>
         </div>
@@ -244,7 +244,7 @@ export function Budgets() {
               <GlassCard hover={false} className="p-3.5">
                 <p className="text-sm font-semibold text-text">Add a budget</p>
                 <Select label="Category" value="" onChange={(c) => c && void saveLimit(c, 1000).catch(() => {})} className="mt-2 w-full" options={[{ id: '', label: 'Pick a category…' }, ...PICK_CATEGORIES.filter((c) => !settings.budgets[c]).map((c) => ({ id: c, label: c }))]} />
-                <p className="mt-1.5 text-[11px] text-text-secondary">Starts at ₹1,000; use Edit to change it.</p>
+                <p className="mt-1.5 text-2xs text-text-secondary">Starts at ₹1,000; use Edit to change it.</p>
               </GlassCard>
             </div>
 
@@ -257,7 +257,7 @@ export function Budgets() {
                     {alerts.slice(0, 5).map((a) => (
                       <li key={a.id} className="text-sm">
                         <p className="font-medium text-text">{a.title}</p>
-                        <p className="text-[11px] text-text-secondary">{m.hidden ? a.detail.replace(/₹[\d,.]+/g, m.inr(0)) : a.detail}</p>
+                        <p className="text-2xs text-text-secondary">{m.hidden ? a.detail.replace(/₹[\d,.]+/g, m.inr(0)) : a.detail}</p>
                       </li>
                     ))}
                   </ul>
@@ -273,7 +273,7 @@ export function Budgets() {
                       <li key={t.id} className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate text-sm text-text">{t.merchant || t.description}</p>
-                          <p className="font-mono text-[11px] text-text-secondary">
+                          <p className="font-mono text-2xs text-text-secondary">
                             {t.date} · {m.inr(t.debit)}
                           </p>
                         </div>
@@ -284,20 +284,20 @@ export function Budgets() {
                 )}
               </Card>
 
-              <Card title="Family and ignored" aside={<span className="text-[11px] text-text-secondary">top merchants this month</span>}>
+              <Card title="Family and ignored" aside={<span className="text-2xs text-text-secondary">top merchants this month</span>}>
                 <ul className="space-y-1.5">
                   {merchants.map(({ sample, total }) => (
                     <li key={sample.merchant} className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm text-text">{sample.merchant}</p>
-                        <p className="font-mono text-[11px] text-text-secondary">{m.inr(total)}</p>
+                        <p className="font-mono text-2xs text-text-secondary">{m.inr(total)}</p>
                       </div>
                       <Select label={`Tag ${sample.merchant}`} value={settings.tags[tagKeyForMerchant(sample)] ?? txnTag(sample, settings.tags) ?? ''} onChange={(v) => void tagMerchant(sample, v)} className="w-24 shrink-0" options={TAG_OPTIONS} />
                     </li>
                   ))}
                   {merchants.length === 0 && <li className="text-sm text-text-secondary">No spending this month.</li>}
                 </ul>
-                <p className="mt-2 text-[11px] text-text-secondary">Family and Ignore keep a merchant out of spending; Household counts it even if it is a transfer.</p>
+                <p className="mt-2 text-2xs text-text-secondary">Family and Ignore keep a merchant out of spending; Household counts it even if it is a transfer.</p>
               </Card>
 
               <Card title="Category rules">
@@ -309,17 +309,17 @@ export function Budgets() {
                     void fileAs(ruleText.trim(), ruleCat).then(() => setRuleText(''))
                   }}
                 >
-                  <span className="text-[11px] text-text-secondary">Always file</span>
+                  <span className="text-2xs text-text-secondary">Always file</span>
                   <input value={ruleText} onChange={(e) => setRuleText(e.target.value)} placeholder="text or /regex/" aria-label="Text to match" className="min-w-0 flex-1 rounded-md border border-border bg-surface-2 px-2 py-1 text-xs text-text outline-none focus:border-accent" />
-                  <span className="text-[11px] text-text-secondary">as</span>
+                  <span className="text-2xs text-text-secondary">as</span>
                   <Select label="Category" value={ruleCat} onChange={setRuleCat} options={PICK_CATEGORIES.map((c) => ({ id: c, label: c }))} />
-                  <button type="submit" className="rounded-md bg-accent/15 px-2 py-1 text-[11px] font-semibold text-accent">
+                  <button type="submit" className="rounded-md bg-accent/15 px-2 py-1 text-2xs font-semibold text-accent">
                     Add
                   </button>
                 </form>
                 <ul className="mt-3 space-y-1">
                   {settings.rules.map((r) => (
-                    <li key={r.id} className="flex items-center justify-between gap-2 text-[12px]">
+                    <li key={r.id} className="flex items-center justify-between gap-2 text-xs">
                       <span className="min-w-0 truncate text-text">
                         {r.match} <span className="text-text-secondary">→</span> {r.category}
                       </span>
@@ -328,7 +328,7 @@ export function Budgets() {
                       </button>
                     </li>
                   ))}
-                  {settings.rules.length === 0 && <li className="text-[11px] text-text-secondary">No rules yet.</li>}
+                  {settings.rules.length === 0 && <li className="text-2xs text-text-secondary">No rules yet.</li>}
                 </ul>
               </Card>
             </div>

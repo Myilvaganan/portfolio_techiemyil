@@ -27,7 +27,7 @@ export function AllJournal({ switcher }: { switcher: ReactNode }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <h1 className="font-display text-2xl font-semibold text-text">Trading Journal</h1>
+            <h1 className="page-title">Trading Journal</h1>
             {switcher}
           </div>
           <p className="mt-0.5 text-sm text-text-secondary">Options and Forex together. Dollar trades are converted at ₹{usdInr.toFixed(2)} per $1. Add or edit trades in their own journal.</p>

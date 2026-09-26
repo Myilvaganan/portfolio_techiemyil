@@ -10,8 +10,12 @@
 @custom-variant light (&:where([data-theme='light'], [data-theme='light'] *, [data-theme='royal-light'], [data-theme='royal-light'] *));
 
 @theme {
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* No typewriter font anywhere: figures use Inter with equal-width digits so columns still line up. */
+  --font-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: #090909;
   --color-bg-secondary: #111111;
@@ -658,4 +662,77 @@ html.has-custom-cursor [data-native-cursor] label {
   .touch-app [role='button']:active {
     transform: scale(0.97);
   }
+}
+
+/* Admin type scale: one readable set of sizes for every module. Everything is rem, so the Display size setting scales it all. */
+.touch-app {
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.1rem;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.2rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.4rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6rem;
+}
+
+/* Admin typography: one hierarchy for every module. All rem, so the Display size setting scales it. */
+@utility page-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-accent);
+}
+@utility page-title {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  @media (min-width: 768px) {
+    font-size: 1.875rem;
+  }
+}
+@utility page-lede {
+  margin-top: 0.5rem;
+  max-width: 48rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+@utility section-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--color-text);
+}
+@utility card-title {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--color-text);
+}
+@utility label-caps {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+/* Admin cards stay clean: no gold hairline along the top edge. */
+:root[data-theme^='royal'] .touch-app .royal-card::before {
+  display: none;
+}
+
+/* Numbers: equal-width digits everywhere, so amounts and tables align without a monospace font. */
+.font-mono,
+table,
+input[type='number'] {
+  font-variant-numeric: tabular-nums;
 }

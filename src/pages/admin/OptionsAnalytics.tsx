@@ -88,7 +88,7 @@ function heldLabel(min: number, days: number) {
 function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{children}</h2>
+      <h2 className="label-caps">{children}</h2>
       {aside}
     </div>
   )
@@ -97,11 +97,11 @@ function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactN
 function Kpi({ label, value, fit, sub, valueClassName }: { label: string; value: ReactNode; fit: string; sub?: ReactNode; valueClassName?: string }) {
   return (
     <GlassCard hover={false} className="p-4">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <FitValue max={20} text={fit} className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', valueClassName)}>
         {value}
       </FitValue>
-      {sub && <p className="mt-1 text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-1 text-2xs text-text-secondary">{sub}</p>}
     </GlassCard>
   )
 }
@@ -162,7 +162,7 @@ function EquityCurve({ points, drawdown }: { points: Analytics['equity']; drawdo
           </>
         )}
       </svg>
-      <div className="mt-1 flex justify-between text-[11px] text-text-secondary">
+      <div className="mt-1 flex justify-between text-2xs text-text-secondary">
         <span>{fmtDate(points[0].date)}</span>
         <span>{fmtDate(points[points.length - 1].date)}</span>
       </div>
@@ -211,7 +211,7 @@ function BreakdownCard({ title, note, slices }: { title: string; note?: string; 
   const max = Math.max(1, ...slices.map((s) => Math.abs(s.pnl)))
   return (
     <GlassCard hover={false} className="p-5">
-      <SectionTitle aside={note && <span className="text-[11px] text-text-secondary">{note}</span>}>{title}</SectionTitle>
+      <SectionTitle aside={note && <span className="text-2xs text-text-secondary">{note}</span>}>{title}</SectionTitle>
       {slices.length === 0 ? (
         <p className="text-sm text-text-secondary">Nothing to show yet.</p>
       ) : (
@@ -229,7 +229,7 @@ function BreakdownCard({ title, note, slices }: { title: string; note?: string; 
                   style={s.pnl >= 0 ? { left: '50%', width: `${(Math.abs(s.pnl) / max) * 50}%` } : { right: '50%', width: `${(Math.abs(s.pnl) / max) * 50}%` }}
                 />
               </div>
-              <p className="mt-0.5 text-[11px] text-text-secondary">
+              <p className="mt-0.5 text-2xs text-text-secondary">
                 {s.trades} trade{s.trades === 1 ? '' : 's'} · {Math.round((s.wins / s.trades) * 100)}% wins
               </p>
             </li>
@@ -283,7 +283,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 function ChargeInput({ label, value, onChange, step = '0.001' }: { label: string; value: number; onChange: (n: number) => void; step?: string }) {
   return (
-    <label className="flex flex-col gap-1 text-[11px] text-text-secondary">
+    <label className="flex flex-col gap-1 text-2xs text-text-secondary">
       {label}
       <input
         type="number"
@@ -336,7 +336,7 @@ function MappingCard({ pending, onChange, onConfirm, onSkip }: { pending: Pendin
   return (
     <GlassCard hover={false} className="space-y-4 p-5">
       <div>
-        <h2 className="font-display text-lg font-semibold text-text">Match the columns in {pending.fileName}</h2>
+        <h2 className="section-title">Match the columns in {pending.fileName}</h2>
         <p className="mt-1 text-xs text-text-secondary">
           Couldn&apos;t recognise every column automatically. Pick which column holds each value; this mapping applies to this file only.
         </p>
@@ -353,7 +353,7 @@ function MappingCard({ pending, onChange, onConfirm, onSkip }: { pending: Pendin
       </label>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {FIELDS.map((f) => (
-          <label key={f.key} className="flex flex-col gap-1 text-[11px] text-text-secondary">
+          <label key={f.key} className="flex flex-col gap-1 text-2xs text-text-secondary">
             {f.label}
             <select
               value={pending.mapping[f.key] ?? ''}
@@ -372,13 +372,13 @@ function MappingCard({ pending, onChange, onConfirm, onSkip }: { pending: Pendin
                 </option>
               ))}
             </select>
-            {f.hint && <span className="text-[10px] text-text-secondary/70">{f.hint}</span>}
+            {f.hint && <span className="text-2xs text-text-secondary/70">{f.hint}</span>}
           </label>
         ))}
       </div>
       {preview.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-[11px]">
+          <table className="w-full text-2xs">
             <thead>
               <tr className="bg-surface-2 text-text-secondary">
                 {header.map((h, i) => (
@@ -716,9 +716,9 @@ export function OptionsAnalytics() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Options only</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Options trading analytics</h1>
-          <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+          <p className="page-eyebrow">Options only</p>
+          <h1 className="mt-1 page-title">Options trading analytics</h1>
+          <p className="page-lede">
             {demo
               ? 'Showing sample trades — not your account.'
               : 'Where you win, where you leak, and what it costs — kept separately for each broker, saved to your private vault.'}
@@ -799,7 +799,7 @@ export function OptionsAnalytics() {
           {brokerTabs.map((id) => (
             <Chip key={id} active={active === id} onClick={() => pickBroker(id)}>
               {brokerLabel(id)}
-              {data[id]?.length ? <span className="ml-1.5 font-mono text-[10px] opacity-70">{data[id].length}</span> : null}
+              {data[id]?.length ? <span className="ml-1.5 font-mono text-2xs opacity-70">{data[id].length}</span> : null}
             </Chip>
           ))}
           {addingBroker ? (
@@ -847,14 +847,14 @@ export function OptionsAnalytics() {
         <GlassCard hover={false} className="mx-auto max-w-2xl space-y-4 px-6 py-10">
           {active === 'all' ? (
             <>
-              <h2 className="font-display text-xl font-semibold text-text">Import your options trade history</h2>
+              <h2 className="section-title">Import your options trade history</h2>
               <p className="text-sm text-text-secondary">
                 Choose your broker above, then import its F&amp;O trade book as CSV, Excel or HTML. Each broker is stored and analysed separately; this tab combines them.
               </p>
             </>
           ) : (
             <>
-              <h2 className="font-display text-xl font-semibold text-text">Import your {activeLabel} options trades</h2>
+              <h2 className="section-title">Import your {activeLabel} options trades</h2>
               <p className="text-sm text-text-secondary">{brokerHint(active)}</p>
               <p className="text-sm text-text-secondary">
                 Drag in as many files as you like, or choose them. Files are read in your browser; only the option trades are saved to your private vault, so they&apos;re there on any device. Columns are detected
@@ -954,7 +954,7 @@ export function OptionsAnalytics() {
                       Best day{' '}
                       {a.bestDay && (
                         <>
-                          <Money value={a.bestDay.net} /> <span className="block text-[11px]">{fmtDate(a.bestDay.date)}</span>
+                          <Money value={a.bestDay.net} /> <span className="block text-2xs">{fmtDate(a.bestDay.date)}</span>
                         </>
                       )}
                     </p>
@@ -962,7 +962,7 @@ export function OptionsAnalytics() {
                       Worst day{' '}
                       {a.worstDay && (
                         <>
-                          <Money value={a.worstDay.net} /> <span className="block text-[11px]">{fmtDate(a.worstDay.date)}</span>
+                          <Money value={a.worstDay.net} /> <span className="block text-2xs">{fmtDate(a.worstDay.date)}</span>
                         </>
                       )}
                     </p>
@@ -973,7 +973,7 @@ export function OptionsAnalytics() {
               </div>
 
               <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Where you win and lose <span className="font-normal normal-case">· gross P&amp;L before charges</span></h2>
+                <h2 className="mb-3 label-caps">Where you win and lose <span className="font-normal normal-case">· gross P&amp;L before charges</span></h2>
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {active === 'all' && !demo && a.breakdowns.broker.length > 1 && <BreakdownCard title="By broker" slices={a.breakdowns.broker} />}
                   <BreakdownCard title="By index / stock" slices={a.breakdowns.underlying} />
@@ -1068,7 +1068,7 @@ export function OptionsAnalytics() {
                   {tab === 'trades' ? (
                     <table className="w-full min-w-[700px] text-left text-xs">
                       <thead>
-                        <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+                        <tr className="border-b border-border label-caps">
                           <th className="py-2 pr-3 font-medium">Closed</th>
                           {active === 'all' && !demo && <th className="py-2 pr-3 font-medium">Broker</th>}
                           <th className="py-2 pr-3 font-medium">Contract</th>
@@ -1099,7 +1099,7 @@ export function OptionsAnalytics() {
                   ) : (
                     <table className="w-full min-w-[560px] text-left text-xs">
                       <thead>
-                        <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+                        <tr className="border-b border-border label-caps">
                           <th className="py-2 pr-3 font-medium">Executed</th>
                           {active === 'all' && !demo && <th className="py-2 pr-3 font-medium">Broker</th>}
                           <th className="py-2 pr-3 font-medium">Contract</th>
@@ -1138,7 +1138,7 @@ export function OptionsAnalytics() {
                 )}
               </GlassCard>
 
-              <div className="space-y-1 text-center text-[11px] leading-relaxed text-text-secondary/70">
+              <div className="space-y-1 text-center text-2xs leading-relaxed text-text-secondary/70">
                 <p>
                   A trade runs from flat to flat on one contract (scaling in or out counts once) and is matched first-in-first-out. Options still open after expiry
                   are treated as expired at ₹0

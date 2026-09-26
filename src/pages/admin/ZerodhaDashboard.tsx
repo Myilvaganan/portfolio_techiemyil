@@ -45,7 +45,7 @@ const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 't
 function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{children}</h2>
+      <h2 className="label-caps">{children}</h2>
       {aside}
     </div>
   )
@@ -84,7 +84,7 @@ function PctNote({ value, pct, children }: { value: number; pct: number; childre
 function Kpi({ label, children, sub, className }: { label: string; children: ReactNode; sub?: ReactNode; className?: string }) {
   return (
     <GlassCard hover={false} className={cn('p-5', className)}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <div className="mt-2 font-display text-2xl font-semibold text-text">{children}</div>
       {sub && <div className="mt-1.5 text-xs text-text-secondary">{sub}</div>}
     </GlassCard>
@@ -108,7 +108,7 @@ function ConnectScreen({
         <PlugZap className="h-7 w-7" />
       </span>
       <div>
-        <h2 className="font-display text-xl font-semibold text-text">Connect your Zerodha account</h2>
+        <h2 className="section-title">Connect your Zerodha account</h2>
         <p className="mt-2 text-sm text-text-secondary">
           Sign in through Kite to see your holdings, positions, orders and margin here. Nothing is stored — the session
           lasts until Kite resets it (around 6 AM) or you close this tab.
@@ -265,7 +265,7 @@ function HoldingsTable({ rows }: { rows: HoldingRow[] }) {
 
   return (
     <GlassCard hover={false} className="p-5">
-      <SectionTitle aside={<span className="text-[11px] text-text-secondary">{rows.length} holdings · click a column to sort</span>}>
+      <SectionTitle aside={<span className="text-2xs text-text-secondary">{rows.length} holdings · click a column to sort</span>}>
         Holdings
       </SectionTitle>
       {rows.length === 0 ? (
@@ -274,7 +274,7 @@ function HoldingsTable({ rows }: { rows: HoldingRow[] }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] text-text-secondary">
+              <tr className="border-b border-border text-2xs text-text-secondary">
                 <Th k="symbol">Symbol</Th>
                 <th className="py-2 pr-3 text-right font-medium uppercase tracking-wide">Qty</th>
                 <th className="py-2 pr-3 text-right font-medium uppercase tracking-wide">Avg</th>
@@ -333,7 +333,7 @@ function OrderRow({ o }: { o: KiteOrder }) {
       </div>
       <span
         className={cn(
-          'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold',
+          'shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold',
           ORDER_STATUS_STYLE[o.status] ?? 'bg-surface-10 text-text-secondary',
         )}
       >
@@ -455,7 +455,7 @@ function Dashboard({ snapshot }: { snapshot: KiteSnapshot }) {
         </GlassCard>
 
         <GlassCard hover={false} className="p-5">
-          <SectionTitle aside={<span className="text-[11px] text-text-secondary">latest {orders.length}</span>}>
+          <SectionTitle aside={<span className="text-2xs text-text-secondary">latest {orders.length}</span>}>
             Today&apos;s orders
           </SectionTitle>
           {orders.length === 0 ? (
@@ -470,7 +470,7 @@ function Dashboard({ snapshot }: { snapshot: KiteSnapshot }) {
         </GlassCard>
       </div>
 
-      <p className="text-center text-[11px] text-text-secondary/70">
+      <p className="text-center text-2xs text-text-secondary/70">
         Equity holdings only — mutual funds held via Coin aren&apos;t included. Prices are as of the last refresh and may
         be delayed.
       </p>
@@ -572,11 +572,11 @@ export function ZerodhaDashboard() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Zerodha · Kite</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">
+          <p className="page-eyebrow">Zerodha · Kite</p>
+          <h1 className="mt-1 page-title">
             {userName ? `${userName}'s portfolio` : 'Trading dashboard'}
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="page-lede">
             {demo ? 'Showing sample data — not your account.' : 'Live holdings, positions, orders and margin from Kite Connect.'}
           </p>
         </div>

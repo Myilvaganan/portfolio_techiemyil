@@ -31,7 +31,7 @@ function Card({ title, aside, children }: { title: string; aside?: ReactNode; ch
   return (
     <GlassCard hover={false} className="p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{title}</h2>
+        <h2 className="label-caps">{title}</h2>
         {aside}
       </div>
       {children}
@@ -42,14 +42,14 @@ function Card({ title, aside, children }: { title: string; aside?: ReactNode; ch
 function Stat({ label, children, sub }: { label: string; children: ReactNode; sub?: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <p className="mt-0.5 truncate font-mono text-base font-semibold text-text">{children}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-text-secondary">{sub}</p>}
     </div>
   )
 }
 
-const Note = ({ children }: { children: ReactNode }) => <p className="mt-3 text-[11px] leading-relaxed text-text-secondary">{children}</p>
+const Note = ({ children }: { children: ReactNode }) => <p className="mt-3 text-2xs leading-relaxed text-text-secondary">{children}</p>
 
 // ---------- Portfolio returns ----------
 
@@ -61,7 +61,7 @@ function Returns({ rows, source, error }: { rows: ReturnRow[]; source: string; e
   const bench = compareBenchmark(t.gainPct, null)
   const pct = (n: number | null) => (n === null ? NA : m.hidden ? m.pct(n) : `${n > 0 ? '+' : ''}${n.toFixed(2)}%`)
   return (
-    <Card title="Portfolio returns" aside={<span className="rounded-full border border-border px-2.5 py-1 text-[10px] text-text-secondary">{isStatic ? `Static snapshot, ${SNAPSHOT.label}` : 'Live from Zerodha'}</span>}>
+    <Card title="Portfolio returns" aside={<span className="rounded-full border border-border px-2.5 py-1 text-2xs text-text-secondary">{isStatic ? `Static snapshot, ${SNAPSHOT.label}` : 'Live from Zerodha'}</span>}>
       {error && <p role="alert" className="mb-3 rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{error}</p>}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         <Stat label="Invested">{t.invested === null ? NA : m.inr(t.invested)}</Stat>
@@ -77,7 +77,7 @@ function Returns({ rows, source, error }: { rows: ReturnRow[]; source: string; e
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-left text-[10px] uppercase tracking-wide text-text-secondary">
+            <tr className="text-left label-caps">
               <th className="py-1.5 pr-3 font-medium">Holding</th>
               <th className="px-2 text-right font-medium">Invested</th>
               <th className="px-2 text-right font-medium">Value</th>
@@ -106,7 +106,7 @@ function Returns({ rows, source, error }: { rows: ReturnRow[]; source: string; e
           : 'Kite reports average buy price but not buy dates, so per-holding XIRR cannot be worked out; the realised XIRR under Capital gains uses the dated sales you import.'}
       </Note>
       <div className="mt-3 rounded-xl border border-border/60 bg-surface-2/40 px-3.5 py-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-text-secondary">Versus Nifty 50</p>
+        <p className="label-caps">Versus Nifty 50</p>
         <p className="mt-1 text-xs text-text-secondary">
           {bench.available ? '' : 'Unavailable. The app has no Nifty 50 price feed (live prices cover Bitcoin, gold, US30 and USD/INR only) and holdings have no buy dates, so a same-period comparison would be invented. It needs a dated Nifty series and dated purchases.'}
         </p>
@@ -130,18 +130,18 @@ function Sips({ txns }: { txns: Txn[] }) {
             <div key={s.name} className="rounded-xl border border-border/60 bg-surface-2/40 px-3.5 py-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm font-medium text-text">
-                  {s.name} <span className={cn('ml-1.5 rounded-full px-2 py-0.5 text-[10px]', s.active ? 'bg-positive/10 text-positive' : 'bg-error/10 text-error')}>{s.active ? 'Active' : 'Stopped'}</span>
+                  {s.name} <span className={cn('ml-1.5 rounded-full px-2 py-0.5 text-2xs', s.active ? 'bg-positive/10 text-positive' : 'bg-error/10 text-error')}>{s.active ? 'Active' : 'Stopped'}</span>
                 </p>
                 <p className="font-mono text-sm font-semibold text-text">{m.inr(s.total)}</p>
               </div>
-              <p className="mt-1 text-[11px] text-text-secondary">
+              <p className="mt-1 text-2xs text-text-secondary">
                 {s.monthsActive} months, about {m.inr(s.avgAmount)} a month, last {dateLabel(s.lastDate)}
                 {s.active && ` · next expected ${dateLabel(s.nextExpected)}`}
               </p>
-              {s.missedMonths.length > 0 && <p className="mt-1 text-[11px] text-warning">Missed: {s.missedMonths.slice(-8).map(monthLabel).join(', ')}</p>}
+              {s.missedMonths.length > 0 && <p className="mt-1 text-2xs text-warning">Missed: {s.missedMonths.slice(-8).map(monthLabel).join(', ')}</p>}
             </div>
           ))}
-          <p className="text-[11px] text-text-secondary">Total across SIPs: {m.inr(sips.reduce((s, x) => s + x.total, 0))}. Detected from bank narrations, so a SIP paid from another account or by card is not seen.</p>
+          <p className="text-2xs text-text-secondary">Total across SIPs: {m.inr(sips.reduce((s, x) => s + x.total, 0))}. Detected from bank narrations, so a SIP paid from another account or by card is not seen.</p>
         </div>
       )}
     </Card>
@@ -230,7 +230,7 @@ function CapitalGains() {
           {years.length > 1 && (
             <div className="mb-3 flex flex-wrap gap-1.5">
               {years.map((y) => (
-                <button key={y.fy} type="button" onClick={() => setFy(y.fy)} className={cn('rounded-full border px-2.5 py-1 text-[11px]', y.fy === current.fy ? 'border-accent/50 text-text' : 'border-border text-text-secondary')}>
+                <button key={y.fy} type="button" onClick={() => setFy(y.fy)} className={cn('rounded-full border px-2.5 py-1 text-2xs', y.fy === current.fy ? 'border-accent/50 text-text' : 'border-border text-text-secondary')}>
                   FY {y.fy}
                 </button>
               ))}
@@ -276,7 +276,7 @@ function Deductions({ txns, homeLoanByFy }: { txns: Txn[]; homeLoanByFy: (fy: st
                 <span className="font-mono text-text-secondary">{m.inr(s.counted)} of {m.inr(s.limit)}</span>
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-3"><div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (s.counted / s.limit) * 100)}%` }} /></div>
-              <p className="mt-1 text-[11px] text-text-secondary">
+              <p className="mt-1 text-2xs text-text-secondary">
                 {s.lines.length ? s.lines.map((l) => `${l.label} ${m.inr(l.amount)}`).join(' · ') : 'Nothing detected'} · headroom {m.inr(s.headroom)}
               </p>
             </div>
@@ -327,10 +327,10 @@ function ComingUp({ txns, ready }: { txns: Txn[]; ready: boolean }) {
           <li key={r.id} className="flex items-start justify-between gap-3 text-xs">
             <div className="min-w-0">
               <p className="font-medium text-text">{r.title}</p>
-              <p className="text-[11px] text-text-secondary">{r.detail}</p>
+              <p className="text-2xs text-text-secondary">{r.detail}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <span className="font-mono text-[11px] text-text-secondary">{dateLabel(r.date)}</span>
+              <span className="font-mono text-2xs text-text-secondary">{dateLabel(r.date)}</span>
               {r.kind === 'custom' && <button type="button" aria-label={`Remove ${r.title}`} onClick={() => remove(r.id)} className="text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>}
             </div>
           </li>
@@ -402,8 +402,8 @@ export function Investments() {
     <div className="mx-auto w-full max-w-[1200px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-text">Investments</h1>
-          <p className="mt-1 text-xs text-text-secondary">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/admin/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
+          <h1 className="page-title">Investments</h1>
+          <p className="page-lede">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/admin/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
         </div>
         <HideNumbersButton />
       </div>

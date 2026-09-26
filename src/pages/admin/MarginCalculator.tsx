@@ -53,7 +53,7 @@ function toInr(usd: number, rate: number) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex min-w-0 flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</span>
+      <span className="label-caps">{label}</span>
       {children}
     </label>
   )
@@ -83,7 +83,7 @@ function Stat({
     // (cqw), so a long value like $2,189,000 shrinks instead of overflowing when
     // the cards sit three across.
     <div className={cn('@container min-w-0 rounded-xl border border-border bg-surface-2 p-2.5 text-center', className)}>
-      <p className="text-[11px] uppercase leading-tight tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase leading-tight tracking-wide text-text-secondary">{label}</p>
       <p
         className={cn(
           'mt-1 whitespace-nowrap font-mono text-[length:min(1.5rem,13cqw)] font-bold leading-tight text-text',
@@ -95,13 +95,13 @@ function Stat({
       {inr && (
         <p className="mt-0.5 whitespace-nowrap font-mono text-[length:min(11px,10cqw)] text-text-secondary/60">{inr}</p>
       )}
-      {tax && <p className="mt-0.5 font-mono text-[11px] leading-snug text-amber-500/80">{tax}</p>}
+      {tax && <p className="mt-0.5 font-mono text-2xs leading-snug text-amber-500/80">{tax}</p>}
       {afterTax && (
-        <p className="mt-1 border-t border-border pt-1 font-mono text-[11px] font-semibold leading-snug text-positive">
+        <p className="mt-1 border-t border-border pt-1 font-mono text-2xs font-semibold leading-snug text-positive">
           {afterTax}
         </p>
       )}
-      {sub && <p className="mt-0.5 text-[11px] leading-tight text-text-secondary/70">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs leading-tight text-text-secondary/70">{sub}</p>}
     </div>
   )
 }
@@ -116,7 +116,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">{children}</h2>
+  return <h2 className="mb-3 label-caps">{children}</h2>
 }
 
 export function MarginCalculator() {
@@ -259,8 +259,8 @@ export function MarginCalculator() {
     <div className="w-full space-y-4">
       <div className="flex flex-wrap items-start gap-x-4 gap-y-3 lg:flex-nowrap">
         <div className="order-1 min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-semibold text-text">MT5 Margin Calculator</h1>
-          <p className="mt-0.5 text-sm text-text-secondary">XAUUSD · Bitcoin · US30 — margin, P&amp;L and risk.</p>
+          <h1 className="page-title">MT5 Margin Calculator</h1>
+          <p className="page-lede">XAUUSD · Bitcoin · US30 — margin, P&amp;L and risk.</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1 text-xs text-text-secondary">
               <span
@@ -333,7 +333,7 @@ export function MarginCalculator() {
                 <span className="block font-mono text-xs text-text">{fmt(p, INSTRUMENTS[id].priceDecimals)}</span>
                 <span
                   className={cn(
-                    'block text-[10px]',
+                    'block text-2xs',
                     status === 'live' ? 'text-accent' : status === 'est' ? 'text-amber-500' : 'text-text-secondary/60',
                   )}
                 >
@@ -401,7 +401,7 @@ export function MarginCalculator() {
                 )}
               </div>
             </Field>
-            <p className="mt-1 text-[11px] leading-snug text-text-secondary">
+            <p className="mt-1 text-2xs leading-snug text-text-secondary">
               {calibrationText && !isCalibrated
                 ? 'Enter a positive number to match every figure below to your broker.'
                 : isCalibrated
@@ -432,7 +432,7 @@ export function MarginCalculator() {
           </div>
 
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">Lot size</span>
+            <span className="label-caps">Lot size</span>
             <input
               aria-label="Lot size"
               inputMode="decimal"
@@ -452,7 +452,7 @@ export function MarginCalculator() {
             onChange={(e) => chooseLots(parseFloat(e.target.value))}
             className="w-full cursor-pointer accent-accent"
           />
-          <div className="mb-2 flex justify-between text-[10px] text-text-secondary/60">
+          <div className="mb-2 flex justify-between text-2xs text-text-secondary/60">
             <span>0.01</span>
             <span>0.5</span>
             <span>1.0</span>
@@ -615,7 +615,7 @@ export function MarginCalculator() {
                 value={balance}
                 onChange={(e) => setBalance(e.target.value)}
               />
-              <span className="font-mono text-[11px] text-text-secondary/60">{inr(parseFloat(balance) || 0)}</span>
+              <span className="font-mono text-2xs text-text-secondary/60">{inr(parseFloat(balance) || 0)}</span>
             </Field>
             <Field label="SL in points">
               <input
@@ -660,7 +660,7 @@ export function MarginCalculator() {
         </GlassCard>
       </div>
 
-      <p className="text-center text-[11px] leading-relaxed text-text-secondary/70">
+      <p className="text-center text-2xs leading-relaxed text-text-secondary/70">
         Margin = (Lots × Contract Size × Price) ÷ Leverage · P/L = (Exit − Entry) × Lots × Contract Size × Direction ·
         Prices come from public APIs and may be delayed. Always verify with your broker.
       </p>

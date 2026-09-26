@@ -28,9 +28,9 @@ export function CashFlow() {
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Money</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Cash flow</h1>
-          <p className="mt-1 text-sm text-text-secondary">Income against spending, how long your bank balance lasts, and the next three months.</p>
+          <p className="page-eyebrow">Money</p>
+          <h1 className="mt-1 page-title">Cash flow</h1>
+          <p className="page-lede">Income against spending, how long your bank balance lasts, and the next three months.</p>
         </div>
         <HideNumbersButton />
       </div>
@@ -64,12 +64,12 @@ export function CashFlow() {
             </Card>
           </div>
 
-          <Card title="Next three months" aside={<span className="text-[11px] text-text-secondary">{m.inr(cf.recurringMonthly)}/mo in recurring payments</span>}>
+          <Card title="Next three months" aside={<span className="text-2xs text-text-secondary">{m.inr(cf.recurringMonthly)}/mo in recurring payments</span>}>
             <div className="grid gap-3 sm:grid-cols-3">
               {cf.projection.map((p) => (
                 <div key={p.month} className="rounded-xl border border-border bg-surface-2/50 p-3">
                   <p className="text-xs font-semibold text-text">{monthLabel(p.month, true)}</p>
-                  <dl className="mt-2 space-y-1 text-[12px]">
+                  <dl className="mt-2 space-y-1 text-xs">
                     <div className="flex justify-between"><dt className="text-text-secondary">Income</dt><dd className="font-mono text-positive">{m.inr(p.income)}</dd></div>
                     <div className="flex justify-between"><dt className="text-text-secondary">Recurring</dt><dd className="font-mono text-text">{m.inr(p.fixed)}</dd></div>
                     <div className="flex justify-between"><dt className="text-text-secondary">Everyday</dt><dd className="font-mono text-text">{m.inr(p.variable)}</dd></div>
@@ -78,7 +78,7 @@ export function CashFlow() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[11px] text-text-secondary">Assumes income and spending stay near the recent average; recurring payments are detected from repeated monthly charges.</p>
+            <p className="mt-3 text-2xs text-text-secondary">Assumes income and spending stay near the recent average; recurring payments are detected from repeated monthly charges.</p>
           </Card>
         </>
       )}

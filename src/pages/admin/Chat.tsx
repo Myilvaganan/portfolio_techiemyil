@@ -114,9 +114,9 @@ export function Chat() {
       <div className="min-w-0 xl:col-span-2">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Ask your data</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text">Chat</h1>
-            <p className="mt-1 text-sm text-text-secondary">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
+            <p className="page-eyebrow">Ask your data</p>
+            <h1 className="mt-1 page-title">Chat</h1>
+            <p className="page-lede">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
           </div>
           <div className="flex items-center gap-2">
             {!empty && (
@@ -137,7 +137,7 @@ export function Chat() {
                 <Sparkles className="h-6 w-6" />
               </span>
               <div>
-                <h2 className="font-display text-lg font-semibold text-text">What would you like to know?</h2>
+                <h2 className="section-title">What would you like to know?</h2>
                 <p className="mt-1 text-sm text-text-secondary">Try one of these, or ask your own.</p>
               </div>
               <div className="flex max-w-xl flex-wrap justify-center gap-2">
@@ -167,7 +167,7 @@ export function Chat() {
                     <>
                       <Answer text={t.content} hidden={hidden} />
                       {t.reply && t.reply.sources.length > 0 && (
-                        <p className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2 text-[11px] text-text-secondary">
+                        <p className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2 text-2xs text-text-secondary">
                           <Database className="h-3 w-3" /> From
                           {t.reply.sources.map((s) => (
                             <span key={s} className="rounded-full border border-border px-2 py-0.5">
@@ -179,7 +179,7 @@ export function Chat() {
                       {t.reply && t.reply.followUps.length > 0 && i === turns.length - 1 && (
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {t.reply.followUps.map((f) => (
-                            <button key={f} type="button" disabled={busy} onClick={() => void send(f)} className="rounded-full border border-accent/30 px-2.5 py-1 text-[11px] text-accent hover:bg-accent/10 disabled:opacity-50">
+                            <button key={f} type="button" disabled={busy} onClick={() => void send(f)} className="rounded-full border border-accent/30 px-2.5 py-1 text-2xs text-accent hover:bg-accent/10 disabled:opacity-50">
                               {f}
                             </button>
                           ))}
@@ -227,7 +227,7 @@ export function Chat() {
       </GlassCard>
 
       <GlassCard hover={false} className="h-fit p-4">
-        <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        <h2 className="mb-3 flex items-center gap-2 label-caps">
           <Database className="h-3.5 w-3.5" /> What it can see
         </h2>
         {!coverage ? (
@@ -246,7 +246,7 @@ export function Chat() {
             ))}
           </ul>
         )}
-        <p className="mt-4 border-t border-border pt-3 text-[11px] leading-relaxed text-text-secondary">
+        <p className="mt-4 border-t border-border pt-3 text-2xs leading-relaxed text-text-secondary">
           Questions and the relevant records are sent to OpenAI to write each answer. If something is missing from an answer, upload it and ask again.
         </p>
       </GlassCard>

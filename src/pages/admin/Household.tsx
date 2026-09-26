@@ -68,7 +68,7 @@ function PaidStrip({ paid, months }: { paid: boolean[]; months: string[] }) {
         <span
           key={months[i]}
           title={`${monthShort(months[i])} ${months[i].slice(0, 4)}: ${p ? 'paid' : 'no payment found'}`}
-          className={cn('flex h-5 flex-1 items-center justify-center rounded text-[9px] font-semibold uppercase', p ? 'bg-positive/20 text-positive' : 'bg-error/10 text-error/70')}
+          className={cn('flex h-5 flex-1 items-center justify-center rounded text-2xs font-semibold uppercase', p ? 'bg-positive/20 text-positive' : 'bg-error/10 text-error/70')}
         >
           {monthShort(months[i]).slice(0, 1)}
         </span>
@@ -80,11 +80,11 @@ function PaidStrip({ paid, months }: { paid: boolean[]; months: string[] }) {
 function Delta({ now, before }: { now: number; before: number }) {
   const m = useMoney()
   if (!before && !now) return null
-  if (!before) return <span className="text-[10px] text-text-secondary">new this month</span>
+  if (!before) return <span className="text-2xs text-text-secondary">new this month</span>
   const pct = ((now - before) / before) * 100
   const up = pct > 0
   return (
-    <span className={cn('rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold', Math.abs(pct) < 1 ? 'bg-surface-3 text-text-secondary' : up ? 'bg-error/10 text-error' : 'bg-positive/10 text-positive')}>
+    <span className={cn('rounded-full px-1.5 py-0.5 font-mono text-2xs font-semibold', Math.abs(pct) < 1 ? 'bg-surface-3 text-text-secondary' : up ? 'bg-error/10 text-error' : 'bg-positive/10 text-positive')}>
       {m.hidden ? '•••' : `${up ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%`}
     </span>
   )
@@ -115,7 +115,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-text">{g.label}</p>
-              <p className="truncate text-[11px] text-text-secondary">{g.hint}</p>
+              <p className="truncate text-2xs text-text-secondary">{g.hint}</p>
             </div>
           </div>
           {!g.monthly && <Delta now={s.thisMonth} before={s.lastMonth} />}
@@ -141,13 +141,13 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
             <div className="mt-2.5 flex items-end justify-between gap-3">
               <div>
                 <p className="font-mono text-lg font-semibold leading-tight text-text">{m.inr(s.total)}</p>
-                <p className="text-[11px] text-text-secondary">
+                <p className="text-2xs text-text-secondary">
                   {s.count} payment{s.count === 1 ? '' : 's'}
                   {!single && <> · {m.inr(s.avgMonth)}/mo avg</>}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wide text-text-secondary">This month</p>
+                <p className="label-caps">This month</p>
                 <p className="font-mono text-sm font-semibold text-text">{m.inr(s.thisMonth)}</p>
               </div>
             </div>
@@ -155,7 +155,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
             <div className="mt-2.5">{g.monthly ? <PaidStrip paid={trend.paid} months={trendMonths} /> : <MiniBars values={trend.byMonth} months={trendMonths} color={g.color} format={(n) => m.inr(n)} />}</div>
 
             {g.monthly ? (
-              <p className="mt-2.5 text-[11px] text-text-secondary">
+              <p className="mt-2.5 text-2xs text-text-secondary">
                 Last paid <span className="text-text">{s.last ? `${dayLabel(s.last.date)} · ${m.inr(s.last.amount)}` : '—'}</span>
                 {due && (
                   <>
@@ -172,7 +172,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
                       <span key={b.brand} style={{ width: `${(b.total / brandTotal) * 100}%`, background: g.color, opacity: 1 - i * 0.22 }} />
                     ))}
                   </div>
-                  <p className="truncate text-[11px] text-text-secondary">
+                  <p className="truncate text-2xs text-text-secondary">
                     {s.brands.slice(0, 3).map((b, i) => (
                       <span key={b.brand}>
                         {i > 0 && ' · '}
@@ -194,9 +194,9 @@ function Kpi({ label, value, sub, accent }: { label: string; value: string; sub?
   return (
     <GlassCard hover={false} className="relative overflow-hidden px-4 py-2.5">
       {accent && <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />}
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <p className="mt-0.5 font-mono text-xl font-semibold text-text">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-text-secondary">{sub}</p>}
     </GlassCard>
   )
 }
@@ -209,7 +209,7 @@ function Details({ group, txns, months, onClose }: { group: HouseGroup; txns: Ho
   return (
     <GlassCard hover={false} className="p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-text">
+        <h3 className="card-title">
           {g.label} <span className="font-normal text-text-secondary">· {list.length} transactions</span>
         </h3>
         <button type="button" onClick={onClose} className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs text-text-secondary hover:text-text">
@@ -222,7 +222,7 @@ function Details({ group, txns, months, onClose }: { group: HouseGroup; txns: Ho
         <div className="max-h-72 overflow-y-auto pr-1">
           <table className="w-full text-left text-xs">
             <thead className="sticky top-0 bg-card">
-              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+              <tr className="border-b border-border label-caps">
                 <th scope="col" className="py-2 pr-3 font-medium">Date</th>
                 <th scope="col" className="py-2 pr-3 font-medium">Paid to</th>
                 <th scope="col" className="hidden py-2 pr-3 font-medium sm:table-cell">Details</th>
@@ -235,7 +235,7 @@ function Details({ group, txns, months, onClose }: { group: HouseGroup; txns: Ho
                 <tr key={t.id} className="border-b border-border/60">
                   <td className="whitespace-nowrap py-2 pr-3 font-mono text-text-secondary">{t.date}</td>
                   <td className="py-2 pr-3 text-text">{t.brand}</td>
-                  <td className="hidden max-w-[28rem] truncate py-2 pr-3 font-mono text-[11px] text-text-secondary sm:table-cell">{t.description}</td>
+                  <td className="hidden max-w-[28rem] truncate py-2 pr-3 font-mono text-2xs text-text-secondary sm:table-cell">{t.description}</td>
                   <td className="py-2 pr-3 capitalize text-text-secondary">{t.source}</td>
                   <td className={cn('py-2 text-right font-mono font-semibold', t.amount < 0 ? 'text-positive' : 'text-text')}>{t.amount < 0 ? `+${m.inr(-t.amount)}` : m.inr(t.amount)}</td>
                 </tr>
@@ -288,9 +288,9 @@ export function Household() {
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Home &amp; living</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Household</h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="page-eyebrow">Home &amp; living</p>
+          <h1 className="mt-1 page-title">Household</h1>
+          <p className="page-lede">
             Rent for both houses, electricity and gas, the bike, and every delivery and shopping app — read from your bank and card statements.
             {latest && <> Statements up to {dayLabel(latest)}.</>}
           </p>
@@ -358,7 +358,7 @@ export function Household() {
             </div>
 
             <GlassCard hover={false} className="h-fit p-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Where it goes</h2>
+              <h2 className="mb-3 label-caps">Where it goes</h2>
               {slices.length === 0 ? (
                 <p className="text-sm text-text-secondary">No household spending found in this period.</p>
               ) : (
@@ -383,7 +383,7 @@ export function Household() {
                   </ul>
                 </>
               )}
-              <p className="mt-4 border-t border-border pt-3 text-[11px] leading-relaxed text-text-secondary">
+              <p className="mt-4 border-t border-border pt-3 text-2xs leading-relaxed text-text-secondary">
                 Salem rent is anything paid to Appusamy; Bengaluru rent is anything paid to Visalakshi. Card bill payments, EMIs and surcharges are left out so nothing is counted twice.
               </p>
             </GlassCard>

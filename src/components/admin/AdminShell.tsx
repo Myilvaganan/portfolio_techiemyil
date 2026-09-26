@@ -110,7 +110,7 @@ interface ScaleProps {
 function SizePicker({ scale, onScale }: ScaleProps) {
   return (
     <div>
-      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-text-secondary/70">Display size</p>
+      <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">Display size</p>
       <div role="radiogroup" aria-label="Display size" className="grid grid-cols-4 gap-1.5">
         {UI_SCALES.map((s, i) => (
           <button
@@ -242,7 +242,7 @@ function NotificationBell() {
       >
         <Bell className="h-4 w-4" />
         {notices.length > 0 && (
-          <span className={cn('absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white', urgent ? 'bg-error' : 'bg-accent')}>
+          <span className={cn('absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-2xs font-bold text-white', urgent ? 'bg-error' : 'bg-accent')}>
             {notices.length}
           </span>
         )}
@@ -308,7 +308,7 @@ function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & S
 
   const inFinance = FINANCE_SECTION.items.some((i) => pathname.startsWith(i.to))
   const tab = (active: boolean) =>
-    cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
+    cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
   const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
     <NavLink to={to} end={end} onClick={tap} className={({ isActive }) => tab(isActive && !sheet)}>
       <Icon className="h-5 w-5" />
@@ -340,7 +340,7 @@ function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & S
               <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-15" />
               {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="mb-4">
-                  {section.label && sheet === 'more' && <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
+                  {section.label && sheet === 'more' && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
                   <div className="grid grid-cols-3 gap-2.5">
                     {section.items.map((item) => (
                       <NavLink
@@ -425,7 +425,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           {NAV_SECTIONS.map((section, idx) => (
             <div key={section.label ?? `section-${idx}`}>
               {section.label && (
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-text-secondary/70">
+                <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">
                   {section.label}
                 </p>
               )}

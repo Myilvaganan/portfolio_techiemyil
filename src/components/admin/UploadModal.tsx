@@ -169,7 +169,7 @@ export function UploadModal({
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-secondary">Tag</label>
+              <label className="mb-2 block label-caps">Tag</label>
               <select
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
@@ -200,7 +200,7 @@ export function UploadModal({
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-secondary">File</label>
+              <label className="mb-2 block label-caps">File</label>
               <div
                 onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}

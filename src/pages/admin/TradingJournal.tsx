@@ -144,7 +144,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <h1 className="font-display text-2xl font-semibold text-text">Trading Journal</h1>
+            <h1 className="page-title">Trading Journal</h1>
             {switcher}
           </div>
           <p className="mt-0.5 text-sm text-text-secondary">Log every trade, review every day, and see what you really keep after tax.</p>
@@ -164,7 +164,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
           >
             <DatabaseZap className="h-3.5 w-3.5" /> Import from Options
             {backfill.newCount > 0 && (
-              <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-[#05130a]" aria-label={`${backfill.newCount} new trades`}>
+              <span className="rounded-full bg-accent px-1.5 py-0.5 text-2xs font-bold leading-none text-[#05130a]" aria-label={`${backfill.newCount} new trades`}>
                 {backfill.newCount} new
               </span>
             )}

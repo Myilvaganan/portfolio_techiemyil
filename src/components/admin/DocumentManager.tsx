@@ -77,7 +77,7 @@ function FileIcon({ filename, small }: { filename: string; small?: boolean }) {
   const ext = getExtension(filename)
   const colorClass = EXTENSION_COLORS[ext] || 'bg-surface-3 text-text-secondary'
   return (
-    <span className={cn('flex shrink-0 items-center justify-center rounded-lg font-bold uppercase', small ? 'h-7 w-7 text-[9px]' : 'h-9 w-9 text-[10px]', colorClass)}>
+    <span className={cn('flex shrink-0 items-center justify-center rounded-lg font-bold uppercase', small ? 'h-7 w-7 text-2xs' : 'h-9 w-9 text-2xs', colorClass)}>
       {ext ? ext.slice(0, 3) : <FileWarning className="h-4 w-4" />}
     </span>
   )
@@ -88,7 +88,7 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: string; 
     <GlassCard className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+          <p className="label-caps">{label}</p>
           <p className="mt-2 font-display text-2xl font-semibold text-text">{value}</p>
         </div>
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -327,8 +327,8 @@ export function DocumentManager() {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-text">Document Manager</h1>
-          <p className="mt-1 text-sm text-text-secondary">Upload, organize and manage all your documents securely.</p>
+          <h1 className="page-title">Document Manager</h1>
+          <p className="page-lede">Upload, organize and manage all your documents securely.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" magnetic={false} onClick={handleNewFolder}>
@@ -444,8 +444,8 @@ export function DocumentManager() {
                 <button type="button" onClick={() => setPreviewDoc(doc)} aria-label={`Preview ${doc.filename}`} className="flex min-w-0 flex-1 items-center gap-2.5 py-1 text-left">
                   <FileIcon filename={doc.filename} small />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-medium leading-tight text-text">{doc.filename}</span>
-                    <span className="block truncate text-[11px] leading-tight text-text-secondary">
+                    <span className="block truncate text-xs font-medium leading-tight text-text">{doc.filename}</span>
+                    <span className="block truncate text-2xs leading-tight text-text-secondary">
                       {tagLabel(doc.tag)} · {formatBytes(doc.size)} · {formatDateTime(doc.lastModified)}
                     </span>
                   </span>
@@ -457,7 +457,7 @@ export function DocumentManager() {
           <div className="hidden overflow-x-auto sm:block">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-border text-xs uppercase tracking-wide text-text-secondary">
+                <tr className="border-b border-border label-caps">
                   <th className="px-5 py-3 font-medium">Name</th>
                   <th className="px-5 py-3 font-medium">Category</th>
                   <th className="px-5 py-3 font-medium">Type</th>

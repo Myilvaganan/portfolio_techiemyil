@@ -129,7 +129,7 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
                       <span className="block truncate text-sm text-text">{h.title}</span>
                       <span className="block truncate text-xs text-text-secondary">{h.detail}</span>
                     </span>
-                    <span className="shrink-0 text-[10px] uppercase tracking-wide text-text-secondary/70">{KIND[h.kind]}</span>
+                    <span className="shrink-0 label-caps/70">{KIND[h.kind]}</span>
                   </button>
                 </li>
               )

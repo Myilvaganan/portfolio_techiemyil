@@ -23,7 +23,7 @@ const AUTO_KEY = 'networth-snapshot-month'
 
 function Hint({ to, children }: { to: string; children: string }) {
   return (
-    <Link to={to} data-cursor="hover" className="mt-1 inline-block text-[11px] text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent">
+    <Link to={to} data-cursor="hover" className="mt-1 inline-block text-2xs text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent">
       {children}
     </Link>
   )
@@ -98,9 +98,9 @@ export function NetWorth() {
       <div className="w-full space-y-6 xl:space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Complete picture</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Net Worth</h1>
-          <p className="mt-1 max-w-2xl text-sm text-text-secondary">Portfolio, bank balances, loans and card dues combined — pulled from what you&apos;ve already uploaded across the other modules.</p>
+          <p className="page-eyebrow">Complete picture</p>
+          <h1 className="mt-1 page-title">Net Worth</h1>
+          <p className="page-lede">Portfolio, bank balances, loans and card dues combined — pulled from what you&apos;ve already uploaded across the other modules.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <button type="button" data-cursor="hover" onClick={toggle} aria-pressed={hidden} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
@@ -138,7 +138,7 @@ export function NetWorth() {
             <Kpi label="Total liabilities" value={summary.totalLiabilities} format={money.inr} tone={summary.totalLiabilities > 0 ? 'warn' : undefined} sub={`${liabilityItems.length} source${liabilityItems.length === 1 ? '' : 's'}`} delay={0.1} />
           </div>
 
-          <Card title="Net worth over time" aside={<span className="text-[11px] text-text-secondary">{snaps.length} monthly snapshot{snaps.length === 1 ? '' : 's'}</span>}>
+          <Card title="Net worth over time" aside={<span className="text-2xs text-text-secondary">{snaps.length} monthly snapshot{snaps.length === 1 ? '' : 's'}</span>}>
             <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
               {snaps.length > 1 ? (
                 <AreaChart labels={snaps.map((h) => monthLabel(h.month))} series={[{ key: 'net', label: 'Net worth', color: 'var(--viz-1)', values: snaps.map((h) => h.net) }]} format={money.inr} height={160} />
@@ -152,9 +152,9 @@ export function NetWorth() {
                   { label: 'Worst month', v: worst ? money.signed(worst.change) : '—', tone: 'text-error', sub: worst ? monthLabel(worst.month) : '' },
                 ].map((c) => (
                   <div key={c.label} className="rounded-xl border border-border bg-surface-2 px-3 py-2">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">{c.label}</p>
+                    <p className="label-caps">{c.label}</p>
                     <p className={`mt-0.5 font-mono text-sm font-semibold ${c.tone}`}>{c.v}</p>
-                    {c.sub && <p className="text-[10px] text-text-secondary">{c.sub}</p>}
+                    {c.sub && <p className="text-2xs text-text-secondary">{c.sub}</p>}
                   </div>
                 ))}
               </div>

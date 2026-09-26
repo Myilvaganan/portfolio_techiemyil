@@ -68,7 +68,7 @@ function CodeForm({ submitLabel, onSubmit, danger }: { submitLabel: string; onSu
 
   return (
     <form onSubmit={(e) => void submit(e)} className="space-y-3">
-      <label htmlFor="sec-code" className="block text-xs font-medium uppercase tracking-wide text-text-secondary">
+      <label htmlFor="sec-code" className="block label-caps">
         Code from your authenticator app
       </label>
       <input id="sec-code" autoFocus inputMode="numeric" autoComplete="one-time-code" placeholder="123 456" value={code} onChange={(e) => setCode(e.target.value)} className={input} />
@@ -121,9 +121,9 @@ export function Security() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Account</p>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-text">Security</h1>
-        <p className="mt-1 text-sm text-text-secondary">Add a second step to signing in, so a stolen password alone can&apos;t open your admin.</p>
+        <p className="page-eyebrow">Account</p>
+        <h1 className="mt-1 page-title">Security</h1>
+        <p className="page-lede">Add a second step to signing in, so a stolen password alone can&apos;t open your admin.</p>
       </div>
 
       {error && (
@@ -145,7 +145,7 @@ export function Security() {
               {status.enabled ? <ShieldCheck className="h-5 w-5" /> : <ShieldOff className="h-5 w-5" />}
             </span>
             <div>
-              <h2 className="text-base font-semibold text-text">Two-step verification is {status.enabled ? 'on' : 'off'}</h2>
+              <h2 className="card-title">Two-step verification is {status.enabled ? 'on' : 'off'}</h2>
               <p className="text-sm text-text-secondary">
                 {status.enabled
                   ? `Signing in needs your password and a 6-digit code.${status.enabledAt ? ` Turned on ${new Date(status.enabledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}.` : ''} ${status.recoveryLeft} recovery code${status.recoveryLeft === 1 ? '' : 's'} left.`
@@ -174,7 +174,7 @@ export function Security() {
               <div className="flex flex-wrap items-center gap-5">
                 <img src={setup.qr} alt="QR code for your authenticator app" width={200} height={200} className="rounded-xl border border-border bg-white p-1" />
                 <div className="min-w-0 space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-text-secondary">Key for manual entry</p>
+                  <p className="label-caps">Key for manual entry</p>
                   <p className="break-all font-mono text-sm text-text">{setup.secret.match(/.{1,4}/g)?.join(' ')}</p>
                   <CopyButton text={setup.secret} label="Copy key" />
                 </div>

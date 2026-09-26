@@ -16,7 +16,7 @@ function Bars({ data }: { data: { date: string; views: number }[] }) {
       {data.map((d) => (
         <div key={d.date} className="group relative flex h-full flex-1 flex-col justify-end">
           <div className="rounded-t bg-accent/70 transition-colors group-hover:bg-accent" style={{ height: `${Math.max(2, (d.views / max) * 100)}%` }} />
-          <span className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-card px-1.5 py-0.5 text-[10px] text-text shadow group-hover:block">
+          <span className="pointer-events-none absolute -top-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-card px-1.5 py-0.5 text-2xs text-text shadow group-hover:block">
             {d.date.slice(8)}: {d.views}
           </span>
         </div>
@@ -72,9 +72,9 @@ export function SiteInsights() {
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">techiemyil.com</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Website</h1>
-          <p className="mt-1 text-sm text-text-secondary">Messages from the contact form and how many people read each page. Page-view analytics collect no cookies or IPs. Contact messages contain the details the sender provides.</p>
+          <p className="page-eyebrow">techiemyil.com</p>
+          <h1 className="mt-1 page-title">Website</h1>
+          <p className="page-lede">Messages from the contact form and how many people read each page. Page-view analytics collect no cookies or IPs. Contact messages contain the details the sender provides.</p>
         </div>
         <Button size="sm" variant="secondary" magnetic={false} onClick={() => void load()}>
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -115,7 +115,7 @@ export function SiteInsights() {
               <Bars data={stats.byDay} />
               <div className="grid gap-5 sm:grid-cols-2">
                 <section>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">Top pages</h3>
+                  <h3 className="mb-2 label-caps">Top pages</h3>
                   <ul className="space-y-1 text-sm">
                     {stats.pages.slice(0, 8).map((p) => (
                       <li key={p.path} className="flex justify-between gap-3 border-b border-border/60 py-1">
@@ -126,7 +126,7 @@ export function SiteInsights() {
                   </ul>
                 </section>
                 <section>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">Where visitors came from</h3>
+                  <h3 className="mb-2 label-caps">Where visitors came from</h3>
                   {stats.referrers.length === 0 ? (
                     <p className="text-sm text-text-secondary">Direct visits only.</p>
                   ) : (

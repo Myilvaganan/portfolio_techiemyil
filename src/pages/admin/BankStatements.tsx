@@ -90,9 +90,9 @@ export function BankStatements() {
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">ICICI · Axis</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Bank statements</h1>
-            <p className="mt-1 max-w-2xl text-sm text-text-secondary">Upload statements once — get cash flow, spending patterns, recurring charges and AI insights, saved to your private vault.</p>
+            <p className="page-eyebrow">ICICI · Axis</p>
+            <h1 className="mt-1 page-title">Bank statements</h1>
+            <p className="page-lede">Upload statements once — get cash flow, spending patterns, recurring charges and AI insights, saved to your private vault.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">
@@ -133,7 +133,7 @@ export function BankStatements() {
               <motion.span animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <Landmark className="h-7 w-7" />
               </motion.span>
-              <h2 className="font-display text-xl font-semibold text-text">Your dashboard appears here</h2>
+              <h2 className="section-title">Your dashboard appears here</h2>
               <p className="max-w-md text-sm text-text-secondary">Drop one or many ICICI or Axis account statements above. Every chart, insight and report is built from them.</p>
             </GlassCard>
           </Reveal>
@@ -225,7 +225,7 @@ export function BankStatements() {
               </Card>
               <Card title="Which days you spend" delay={0.05}>
                 <BarChart labels={weekdays.map((w) => w.label)} bars={[{ key: 'w', label: 'Spend', color: 'var(--viz-1)', values: weekdays.map((w) => w.value) }]} height={200} format={inr} />
-                <p className="mt-3 text-[11px] text-text-secondary">Total out by day of the week.</p>
+                <p className="mt-3 text-2xs text-text-secondary">Total out by day of the week.</p>
               </Card>
             </div>
 

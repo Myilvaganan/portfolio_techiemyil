@@ -260,9 +260,9 @@ export function HealthReport() {
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">InBody</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Health Report</h1>
-            <p className="mt-1 max-w-2xl text-sm text-text-secondary">Snap your body-composition sheet. The numbers are read for you, and you can see where each one sits against its normal range and how it changes over time.</p>
+            <p className="page-eyebrow">InBody</p>
+            <h1 className="mt-1 page-title">Health Report</h1>
+            <p className="page-lede">Snap your body-composition sheet. The numbers are read for you, and you can see where each one sits against its normal range and how it changes over time.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" aria-label="Report photo" onChange={(e) => void onPhotos(e.target.files)} />
@@ -325,7 +325,7 @@ export function HealthReport() {
               <motion.span animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 3 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <HeartPulse className="h-7 w-7" />
               </motion.span>
-              <h2 className="font-display text-xl font-semibold text-text">Add your first body-composition report</h2>
+              <h2 className="section-title">Add your first body-composition report</h2>
               <p className="max-w-md text-sm text-text-secondary">
                 Take a straight-on photo of your InBody result sheet and choose <strong className="text-text">Scan report photo</strong>. You check the numbers before anything is saved. The photo itself isn&apos;t kept.
               </p>
@@ -370,7 +370,7 @@ export function HealthReport() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-[11px] text-text-secondary">Based on the ranges printed on your sheet. This is a summary, not medical advice.</p>
+                <p className="mt-3 text-2xs text-text-secondary">Based on the ranges printed on your sheet. This is a summary, not medical advice.</p>
               </Card>
             )}
 
@@ -392,14 +392,14 @@ export function HealthReport() {
             <div className="grid gap-5 lg:grid-cols-2">
               <Card title="Segmental analysis" aside={<Chips label="Segment view" value={side} onChange={setSide} options={[{ id: 'fat', label: 'Fat' }, { id: 'lean', label: 'Lean' }]} />}>
                 <BodyMap report={report} side={side} />
-                <p className="mt-3 text-center text-[11px] text-text-secondary">Left and right as printed on the sheet.</p>
+                <p className="mt-3 text-center text-2xs text-text-secondary">Left and right as printed on the sheet.</p>
               </Card>
 
               <Card title="Weight control">
                 <dl className="grid grid-cols-2 gap-3">
                   {CONTROL.map(({ key, label }) => (
                     <div key={key} className="rounded-xl border border-border bg-surface-2 px-3 py-2.5">
-                      <dt className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</dt>
+                      <dt className="label-caps">{label}</dt>
                       <dd className="mt-0.5 font-mono text-sm font-semibold text-text">{fmtMetric(key, v![key])}</dd>
                     </div>
                   ))}

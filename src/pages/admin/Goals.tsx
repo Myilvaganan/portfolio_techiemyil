@@ -136,9 +136,9 @@ export function Goals() {
       <div className="w-full space-y-5 xl:space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Plan ahead</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Goals</h1>
-            <p className="mt-1 max-w-2xl text-sm text-text-secondary">House, bike, emergency fund — what to save each month and whether you are on track.</p>
+            <p className="page-eyebrow">Plan ahead</p>
+            <h1 className="mt-1 page-title">Goals</h1>
+            <p className="page-lede">House, bike, emergency fund — what to save each month and whether you are on track.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={emergencyPreset} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
@@ -190,12 +190,12 @@ export function Goals() {
                         <p className={cn('mt-1 text-xs font-semibold', st.cls)}>{st.label}</p>
                       </div>
                     </div>
-                    <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+                    <dl className="mt-3 grid grid-cols-3 gap-2 text-2xs">
                       <div><dt className="text-text-secondary">Target date</dt><dd className="font-mono text-text">{g.targetDate}</dd></div>
                       <div><dt className="text-text-secondary">Need / month</dt><dd className="font-mono text-text">{money.inr(plan.required)}</dd></div>
                       <div><dt className="text-text-secondary">Projected</dt><dd className="font-mono text-text">{plan.finish ?? '—'}</dd></div>
                     </dl>
-                    {plan.status === 'behind' && <p className="mt-2 text-[11px] text-text-secondary">Save {money.inr(plan.shortfall)} more each month to hit the date.</p>}
+                    {plan.status === 'behind' && <p className="mt-2 text-2xs text-text-secondary">Save {money.inr(plan.shortfall)} more each month to hit the date.</p>}
                   </GlassCard>
                 </Reveal>
               )
@@ -207,7 +207,7 @@ export function Goals() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label={draft.id ? 'Edit goal' : 'New goal'}>
             <GlassCard hover={false} className="w-full max-w-md p-5">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-display text-lg font-semibold text-text">{draft.id ? 'Edit goal' : 'New goal'}</h2>
+                <h2 className="section-title">{draft.id ? 'Edit goal' : 'New goal'}</h2>
                 <button type="button" aria-label="Close" onClick={() => setDraft(null)} className="text-text-secondary hover:text-text"><X className="h-4 w-4" /></button>
               </div>
               <div className="space-y-3 text-xs text-text-secondary">

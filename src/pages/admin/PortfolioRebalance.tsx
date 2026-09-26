@@ -29,15 +29,15 @@ const ACTION_STYLE: Record<HoldingAction, { label: string; className: string }> 
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-secondary">{children}</h2>
+  return <h2 className="mb-1 label-caps">{children}</h2>
 }
 
 function Kpi({ label, value, sub, valueClassName }: { label: string; value: string; sub?: string; valueClassName?: string }) {
   return (
     <div className="rounded-xl border border-border bg-surface-2 p-3 xl:px-3 xl:py-1.5">
-      <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <p className={cn('mt-1 font-mono text-xl font-bold text-text xl:mt-0 xl:text-lg', valueClassName)}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary/70 xl:mt-0">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-text-secondary/70 xl:mt-0">{sub}</p>}
     </div>
   )
 }
@@ -68,7 +68,7 @@ function Donut({ title, segments, center }: { title: string; segments: { pct: nu
     })
   return (
     <div className="text-center">
-      <p className="mb-2 text-[11px] uppercase tracking-wide text-text-secondary xl:mb-1">{title}</p>
+      <p className="mb-2 label-caps xl:mb-1">{title}</p>
       <div
         role="img"
         aria-label={title}
@@ -110,9 +110,9 @@ export function PortfolioRebalance() {
     <div className="w-full space-y-4 xl:space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-4 xl:items-end">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Portfolio intelligence</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Portfolio Rebalance Blueprint</h1>
-          <p className="mt-1 max-w-2xl text-sm text-text-secondary xl:hidden">
+          <p className="page-eyebrow">Portfolio intelligence</p>
+          <h1 className="mt-1 page-title">Portfolio Rebalance Blueprint</h1>
+          <p className="page-lede xl:hidden">
             A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
             goal is long-term wealth building, not a guaranteed daily return.
           </p>
@@ -163,7 +163,7 @@ export function PortfolioRebalance() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+              <tr className="border-b border-border label-caps">
                 <th className="py-2 pr-3 font-medium">Holding</th>
                 <th className="py-2 pr-3 text-right font-medium">Value</th>
                 <th className="py-2 pr-3 text-right font-medium">Weight</th>
@@ -182,7 +182,7 @@ export function PortfolioRebalance() {
                   <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text-secondary">{pct(pctOf(h.value, total))}</td>
                   <td className="py-2.5 xl:py-1.5 pr-3 text-text-secondary">{h.role}</td>
                   <td className="py-2.5 xl:py-1.5">
-                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold', ACTION_STYLE[h.action].className)}>
+                    <span className={cn('rounded-full px-2 py-0.5 text-2xs font-bold', ACTION_STYLE[h.action].className)}>
                       {ACTION_STYLE[h.action].label}
                     </span>
                   </td>
@@ -216,7 +216,7 @@ export function PortfolioRebalance() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+              <tr className="border-b border-border label-caps">
                 <th className="py-2 pr-3 font-medium">Bucket</th>
                 <th className="py-2 pr-3 text-right font-medium">Now</th>
                 <th className="py-2 pr-3 text-right font-medium">Target %</th>
@@ -303,12 +303,12 @@ export function PortfolioRebalance() {
           ].map((s, i) => (
             <div key={s.title} className="rounded-xl border border-border bg-surface-2 p-4 xl:p-2.5">
               <div className="flex items-center gap-2 xl:mb-1">
-              <div className="mb-2 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent xl:mb-0 xl:h-5 xl:w-5 xl:text-[10px]">
+              <div className="mb-2 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent xl:mb-0 xl:h-5 xl:w-5 xl:text-2xs">
                 {i + 1}
               </div>
               <h3 className="text-sm font-semibold text-text xl:text-xs">{s.title}</h3>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-text-secondary xl:mt-0 xl:text-[11px] xl:leading-snug">{s.body}</p>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary xl:mt-0 xl:text-2xs xl:leading-snug">{s.body}</p>
             </div>
           ))}
         </div>
@@ -327,7 +327,7 @@ export function PortfolioRebalance() {
         </p>
       </GlassCard>
 
-      <p className="text-center text-[11px] text-text-secondary/70 xl:hidden">
+      <p className="text-center text-2xs text-text-secondary/70 xl:hidden">
         Values are approximate snapshot figures and change with market prices.
       </p>
     </div>

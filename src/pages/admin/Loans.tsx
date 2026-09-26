@@ -73,9 +73,9 @@ export function Loans() {
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">ICICI Bank</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Loans</h1>
-            <p className="mt-1 max-w-2xl text-sm text-text-secondary">Upload each loan&apos;s account statement and amortization schedule — see every EMI, what you&apos;ve paid, and exactly how to close early.</p>
+            <p className="page-eyebrow">ICICI Bank</p>
+            <h1 className="mt-1 page-title">Loans</h1>
+            <p className="page-lede">Upload each loan&apos;s account statement and amortization schedule — see every EMI, what you&apos;ve paid, and exactly how to close early.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">
@@ -111,7 +111,7 @@ export function Loans() {
               <motion.span animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 3 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <HandCoins className="h-7 w-7" />
               </motion.span>
-              <h2 className="font-display text-xl font-semibold text-text">Add your loan documents</h2>
+              <h2 className="section-title">Add your loan documents</h2>
               <p className="max-w-md text-sm text-text-secondary">Drop the ICICI <strong className="text-text">Loan Account Statement</strong> and the <strong className="text-text">Amortization Schedule</strong> PDFs for each loan — all together. Type the password once if they are locked. Nothing personal (PAN, phone, address) is kept: only loan numbers and dates.</p>
             </GlassCard>
           </Reveal>
@@ -146,7 +146,7 @@ export function Loans() {
             {loans.length > 1 && (
               <Card title="All loans — outstanding balance over time">
                 <CombinedBalanceChart loans={loans} />
-                <p className="mt-2 text-[11px] text-text-secondary">Where your combined debt stands month by month if every EMI is paid on schedule.</p>
+                <p className="mt-2 text-2xs text-text-secondary">Where your combined debt stands month by month if every EMI is paid on schedule.</p>
               </Card>
             )}
 

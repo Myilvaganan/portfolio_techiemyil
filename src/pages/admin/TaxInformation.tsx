@@ -45,9 +45,9 @@ function Kpi({ label, value, sub, accent }: { label: string; value: string; sub?
   return (
     <GlassCard hover={false} className="relative overflow-hidden px-4 py-2.5">
       <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <p className="mt-0.5 font-mono text-xl font-semibold text-text">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-text-secondary">{sub}</p>}
     </GlassCard>
   )
 }
@@ -64,9 +64,9 @@ function Row({ label, value, strong, muted, negative }: { label: ReactNode; valu
 function Section({ title, children, note }: { title: string; children: ReactNode; note?: ReactNode }) {
   return (
     <GlassCard hover={false} className="p-4">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">{title}</h3>
+      <h3 className="mb-2 label-caps">{title}</h3>
       {children}
-      {note && <p className="mt-3 border-t border-border pt-2.5 text-[11px] leading-relaxed text-text-secondary">{note}</p>}
+      {note && <p className="mt-3 border-t border-border pt-2.5 text-2xs leading-relaxed text-text-secondary">{note}</p>}
     </GlassCard>
   )
 }
@@ -98,7 +98,7 @@ function Overview({ returns, onOpen, txns, bank }: { returns: TaxReturn[]; onOpe
 
       <GlassCard hover={false} className="p-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Tax paid each year</h2>
+          <h2 className="label-caps">Tax paid each year</h2>
           <Legend items={[{ label: 'TDS', color: 'var(--viz-1)' }, { label: 'Advance / self-assessment', color: 'var(--viz-2)' }, { label: 'Tax cost (liability + interest)', color: 'var(--viz-4)' }]} />
         </div>
         <BarChart
@@ -115,10 +115,10 @@ function Overview({ returns, onOpen, txns, bank }: { returns: TaxReturn[]; onOpe
       </GlassCard>
 
       <GlassCard hover={false} className="overflow-x-auto p-4">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">Every return</h2>
+        <h2 className="mb-2 label-caps">Every return</h2>
         <table className="w-full min-w-[820px] text-left text-xs">
           <thead>
-            <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+            <tr className="border-b border-border label-caps">
               <th scope="col" className="py-2 pr-3 font-medium">Year</th>
               <th scope="col" className="py-2 pr-3 font-medium">Form · regime</th>
               <th scope="col" className="py-2 pr-3 text-right font-medium">Gross income</th>
@@ -137,7 +137,7 @@ function Overview({ returns, onOpen, txns, bank }: { returns: TaxReturn[]; onOpe
                   <button type="button" onClick={() => onOpen(r.ay)} className="text-left font-semibold text-accent hover:underline">
                     {fyLabel(fyOfAy(r.ay))}
                   </button>
-                  <p className="text-[10px] text-text-secondary">{ayLabel(r.ay)} · filed {r.filedOn ? dayLabel(r.filedOn) : '—'}</p>
+                  <p className="text-2xs text-text-secondary">{ayLabel(r.ay)} · filed {r.filedOn ? dayLabel(r.filedOn) : '—'}</p>
                 </td>
                 <td className="py-2 pr-3 text-text-secondary">
                   {r.form} · {REGIME[r.regime]}
@@ -160,7 +160,7 @@ function Overview({ returns, onOpen, txns, bank }: { returns: TaxReturn[]; onOpe
           <Row label="Income tax paid so far (bank statements)" value={m.inr(advance)} />
           <div className="mt-2 flex flex-wrap gap-2">
             {ADVANCE_TAX_DUE.map((d) => (
-              <span key={d.by} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-text-secondary">
+              <span key={d.by} className="rounded-full border border-border px-2.5 py-1 text-2xs text-text-secondary">
                 {d.by} · {d.share}% of the year’s tax
               </span>
             ))}
@@ -267,7 +267,7 @@ function Detail({ r, txns, onDelete }: { r: TaxReturn; txns: TaxTxn[]; onDelete:
                 <li key={`${e.tan}-${e.kind}`} className="flex items-start justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block truncate text-text">{e.name || e.tan}</span>
-                    <span className="text-[11px] text-text-secondary">
+                    <span className="text-2xs text-text-secondary">
                       {e.kind} · {e.tan} · income {m.inr(e.income)}
                     </span>
                   </span>
@@ -287,10 +287,10 @@ function Detail({ r, txns, onDelete }: { r: TaxReturn; txns: TaxTxn[]; onDelete:
                 <li key={`${challan.bsr}-${challan.serial}`} className="flex items-start justify-between gap-3">
                   <span>
                     <span className="block text-text">{dayLabel(challan.date)}</span>
-                    <span className="text-[11px] text-text-secondary">
+                    <span className="text-2xs text-text-secondary">
                       BSR {challan.bsr} · #{challan.serial}
                     </span>
-                    <span className={cn('mt-0.5 flex items-center gap-1 text-[11px]', match ? 'text-positive' : 'text-text-secondary')}>
+                    <span className={cn('mt-0.5 flex items-center gap-1 text-2xs', match ? 'text-positive' : 'text-text-secondary')}>
                       {match ? (
                         <>
                           <CheckCircle2 className="h-3 w-3" /> Found in bank on {dayLabel(match.date)}
@@ -328,7 +328,7 @@ function Detail({ r, txns, onDelete }: { r: TaxReturn; txns: TaxTxn[]; onDelete:
             {r.trading && <Row label="Trading profit / loss" value={m.signed(r.trading.profitLoss)} />}
             {r.lossCarriedForward > 0 && <Row label="Loss carried forward" value={m.inr(r.lossCarriedForward)} />}
             {r.foreignAssets && <Row label="Foreign assets (Schedule FA)" value="Reported" />}
-            {r.lossCarriedForward > 0 && <p className="mt-2 text-[11px] text-text-secondary">A carried-forward business loss can be set off against business income for 8 years, only if the return was filed on time.</p>}
+            {r.lossCarriedForward > 0 && <p className="mt-2 text-2xs text-text-secondary">A carried-forward business loss can be set off against business income for 8 years, only if the return was filed on time.</p>}
           </Section>
         )}
       </div>
@@ -384,9 +384,9 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
             className={cn('relative overflow-hidden rounded-[20px] border bg-card/70 px-4 py-2.5 text-left transition-colors', kinds.has(k.id) ? 'border-accent/60' : 'border-border hover:border-accent/30')}
           >
             <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: k.color }} />
-            <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{k.label}</p>
+            <p className="label-caps">{k.label}</p>
             <p className="mt-0.5 font-mono text-lg font-semibold text-text">{m.inr(total)}</p>
-            <p className="text-[11px] text-text-secondary">
+            <p className="text-2xs text-text-secondary">
               {count} transaction{count === 1 ? '' : 's'} · {k.role}
             </p>
           </button>
@@ -407,7 +407,7 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <GlassCard hover={false} className="p-4">
-          <h3 className="mb-2 text-sm font-semibold text-text">
+          <h3 className="mb-2 card-title">
             Transactions considered <span className="font-normal text-text-secondary">· {shown.length}</span>
           </h3>
           {shown.length === 0 ? (
@@ -416,7 +416,7 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
             <div className="max-h-[36rem] overflow-y-auto pr-1">
               <table className="w-full text-left text-xs">
                 <thead className="sticky top-0 bg-card">
-                  <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+                  <tr className="border-b border-border label-caps">
                     <th scope="col" className="py-2 pr-3 font-medium">Date</th>
                     <th scope="col" className="py-2 pr-3 font-medium">Counted as</th>
                     <th scope="col" className="hidden py-2 pr-3 font-medium md:table-cell">Details</th>
@@ -431,11 +431,11 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
                         <span className="inline-flex items-center gap-1.5 text-text">
                           <span className="h-2 w-2 rounded-full" style={{ background: KIND[t.kind].color }} /> {KIND[t.kind].label}
                         </span>
-                        <span className="block text-[10px] uppercase text-text-secondary">
+                        <span className="block text-2xs uppercase text-text-secondary">
                           {KIND[t.kind].role} · {t.source} · {fyLabel(t.fy)}
                         </span>
                       </td>
-                      <td className="hidden max-w-[26rem] truncate py-2 pr-3 font-mono text-[11px] text-text-secondary md:table-cell" title={t.description}>
+                      <td className="hidden max-w-[26rem] truncate py-2 pr-3 font-mono text-2xs text-text-secondary md:table-cell" title={t.description}>
                         {t.description}
                       </td>
                       <td className={cn('whitespace-nowrap py-2 text-right font-mono font-semibold', t.credit ? 'text-positive' : 'text-text')}>
@@ -451,8 +451,8 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
         </GlassCard>
 
         <GlassCard hover={false} className="h-fit p-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">What counts for tax</h3>
-          <ul className="space-y-3 text-[11px] leading-relaxed text-text-secondary">
+          <h3 className="mb-3 label-caps">What counts for tax</h3>
+          <ul className="space-y-3 text-2xs leading-relaxed text-text-secondary">
             {KINDS.map((k) => (
               <li key={k.id}>
                 <p className="flex items-center gap-1.5 text-xs font-semibold text-text">
@@ -462,7 +462,7 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
               </li>
             ))}
           </ul>
-          <p className="mt-3 border-t border-border pt-3 text-[11px] leading-relaxed text-text-secondary">
+          <p className="mt-3 border-t border-border pt-3 text-2xs leading-relaxed text-text-secondary">
             Card bill payments and transfers between your own accounts are left out. Deduction rows are only candidates: the return, not the bank, decides what was claimed.
           </p>
         </GlassCard>
@@ -547,9 +547,9 @@ export function TaxInformation() {
       }} onDragLeave={() => setDrag(false)} onDrop={onDrop}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Finance</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Tax Information</h1>
-          <p className="mt-1 max-w-3xl text-sm text-text-secondary">
+          <p className="page-eyebrow">Finance</p>
+          <h1 className="mt-1 page-title">Tax Information</h1>
+          <p className="page-lede">
             What you paid in income tax each year, how it was worked out, and which transactions in your bank and card statements matter for tax. Add the JSON file from each filed return.
           </p>
         </div>

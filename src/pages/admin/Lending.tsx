@@ -14,7 +14,7 @@ import { deleteLending, fetchLending, saveLending } from '@/lib/lendingApi'
 const dayLabel = (d: string) => (d ? new Date(`${d}T00:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—')
 const field = 'w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-text outline-none transition-colors focus:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/30'
 const compact = 'h-9 w-full rounded-lg border border-border bg-surface-2 px-2.5 text-sm text-text outline-none transition-colors focus:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/30'
-const label = 'mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-text-secondary'
+const label = 'mb-1.5 block label-caps'
 
 function Field({ id, title, hint, children }: { id: string; title: string; hint?: string; children: ReactNode }) {
   return (
@@ -23,7 +23,7 @@ function Field({ id, title, hint, children }: { id: string; title: string; hint?
         {title}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-text-secondary">{hint}</p>}
+      {hint && <p className="mt-1 text-2xs text-text-secondary">{hint}</p>}
     </div>
   )
 }
@@ -197,7 +197,7 @@ function PersonCard({ e, today, onEdit, onDelete, onSave, onSplit }: { e: Lendin
       <span aria-hidden className={cn('pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl', o.status === 'overdue' ? 'bg-error' : o.status === 'settled' ? 'bg-positive' : 'bg-accent')} />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-semibold text-text">{e.name}</h3>
+          <h3 className="truncate card-title">{e.name}</h3>
           <p className="truncate text-xs text-text-secondary">
             Lent {dayLabel(e.date)}
             {e.note ? ` · ${e.note}` : ''}
@@ -215,17 +215,17 @@ function PersonCard({ e, today, onEdit, onDelete, onSave, onSplit }: { e: Lendin
 
       <div className="mt-3 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-text-secondary">{o.status === 'settled' ? 'Settled' : 'Still owes you'}</p>
+          <p className="label-caps">{o.status === 'settled' ? 'Settled' : 'Still owes you'}</p>
           <p className={cn('font-mono text-2xl font-semibold leading-tight', tone)}>{m.inr(o.outstanding)}</p>
         </div>
-        {o.status === 'overdue' && <span className="rounded-full bg-error/10 px-2 py-0.5 text-[11px] font-semibold text-error">{o.overdueDays} days late</span>}
-        {o.status === 'open' && e.dueDate && <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[11px] text-text-secondary">due {dayLabel(e.dueDate)}</span>}
+        {o.status === 'overdue' && <span className="rounded-full bg-error/10 px-2 py-0.5 text-2xs font-semibold text-error">{o.overdueDays} days late</span>}
+        {o.status === 'open' && e.dueDate && <span className="rounded-full bg-surface-3 px-2 py-0.5 text-2xs text-text-secondary">due {dayLabel(e.dueDate)}</span>}
       </div>
 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3" role="img" aria-label={`${Math.round(pct)}% received`}>
         <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5 }} className="h-full rounded-full bg-positive" />
       </div>
-      <p className="mt-1.5 text-[11px] text-text-secondary">
+      <p className="mt-1.5 text-2xs text-text-secondary">
         {m.inr(o.received)} received of {m.inr(total)}
         {o.interest > 0 && <> · includes {m.inr(o.interest)} interest</>}
         {o.lastRepayment && <> · last paid {dayLabel(o.lastRepayment.date)}</>}
@@ -253,13 +253,13 @@ function PersonCard({ e, today, onEdit, onDelete, onSave, onSplit }: { e: Lendin
           <form onSubmit={(ev) => void addPayment(ev)} className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label htmlFor={`pd-${e.id}`} className="mb-1 block text-[10px] uppercase tracking-wide text-text-secondary">
+                <label htmlFor={`pd-${e.id}`} className="mb-1 block label-caps">
                   Date
                 </label>
                 <input id={`pd-${e.id}`} aria-label="Payment date" type="date" value={payDate} onChange={(ev) => setPayDate(ev.target.value)} className={compact} />
               </div>
               <div>
-                <label htmlFor={`pa-${e.id}`} className="mb-1 block text-[10px] uppercase tracking-wide text-text-secondary">
+                <label htmlFor={`pa-${e.id}`} className="mb-1 block label-caps">
                   Amount (₹)
                 </label>
                 <input id={`pa-${e.id}`} aria-label="Payment amount" inputMode="decimal" placeholder="0" value={payAmount} onChange={(ev) => setPayAmount(ev.target.value)} className={cn(compact, 'font-mono')} />
@@ -337,7 +337,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
   return (
     <div className="grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
       <GlassCard hover={false} className="h-fit space-y-3 p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Your loan and what you passed on</h2>
+        <h2 className="label-caps">Your loan and what you passed on</h2>
         <Field id="c-who" title="For">
           <select id="c-who" value={selectedId} onChange={(ev) => onSelect(ev.target.value)} className={field}>
             <option value="">Custom (not saved)</option>
@@ -380,7 +380,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
           </Button>
         )}
         {saved && <p role="status" className="text-xs text-positive">{saved}</p>}
-        <p className="text-[11px] leading-relaxed text-text-secondary">
+        <p className="text-2xs leading-relaxed text-text-secondary">
           They pay the same share of every EMI as the share of your loan you passed on. Interest is on the reducing balance, like the bank&apos;s schedule.
         </p>
       </GlassCard>
@@ -408,7 +408,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
 
             <GlassCard hover={false} className="p-4">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Their share, month by month</h2>
+                <h2 className="label-caps">Their share, month by month</h2>
                 <button type="button" onClick={() => setShowAll((v) => !v)} className="text-xs text-accent hover:underline">
                   {showAll ? 'Show fewer' : `Show all ${r.rows.length}`}
                 </button>
@@ -416,7 +416,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
               <div className={cn('overflow-y-auto pr-1', showAll ? 'max-h-[28rem]' : 'max-h-64')}>
                 <table className="w-full text-left text-xs">
                   <thead className="sticky top-0 bg-card">
-                    <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+                    <tr className="border-b border-border label-caps">
                       <th scope="col" className="py-2 pr-3 font-medium">#</th>
                       <th scope="col" className="py-2 pr-3 font-medium">Date</th>
                       <th scope="col" className="py-2 pr-3 text-right font-medium">Their EMI</th>
@@ -439,7 +439,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
                   </tbody>
                 </table>
               </div>
-              <p className="mt-2 text-[11px] text-text-secondary">Rows up to today are shaded normally; the highlighted row is the next EMI.</p>
+              <p className="mt-2 text-2xs text-text-secondary">Rows up to today are shaded normally; the highlighted row is the next EMI.</p>
             </GlassCard>
           </>
         )}
@@ -452,9 +452,9 @@ function Kpi({ label, value, sub, tone, big }: { label: string; value: string; s
   return (
     <GlassCard hover={false} className="relative overflow-hidden px-4 py-3">
       {tone && <span aria-hidden className={cn('absolute inset-y-0 left-0 w-1', tone === 'bad' ? 'bg-error' : 'bg-positive')} />}
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="label-caps">{label}</p>
       <p className={cn('mt-0.5 font-mono font-semibold text-text', big ? 'text-2xl' : 'text-xl', tone === 'bad' && 'text-error', tone === 'good' && 'text-positive')}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-text-secondary">{sub}</p>}
     </GlassCard>
   )
 }
@@ -500,9 +500,9 @@ export function Lending() {
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Money owed to me</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-text">Lending</h1>
-          <p className="mt-1 text-sm text-text-secondary">Who owes you, what they have paid back, and what a friend owes on a loan you took for them.</p>
+          <p className="page-eyebrow">Money owed to me</p>
+          <h1 className="mt-1 page-title">Lending</h1>
+          <p className="page-lede">Who owes you, what they have paid back, and what a friend owes on a loan you took for them.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div role="tablist" aria-label="Lending" className="inline-flex rounded-full border border-border bg-surface-2 p-0.5 text-sm">
@@ -547,7 +547,7 @@ export function Lending() {
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 text-accent">
                 <HandCoins className="h-6 w-6" />
               </span>
-              <h2 className="mt-4 font-display text-lg font-semibold text-text">No one owes you yet</h2>
+              <h2 className="mt-4 section-title">No one owes you yet</h2>
               <p className="mt-1 text-sm text-text-secondary">Add a person and the amount. Record each payment as it comes back, and the balance updates by itself.</p>
               <Button className="mt-5" size="sm" magnetic={false} onClick={() => setDialog({ open: true, entry: blankEntry(today) })}>
                 <Plus className="h-4 w-4" /> Add the first one

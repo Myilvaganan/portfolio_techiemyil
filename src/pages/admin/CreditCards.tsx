@@ -85,9 +85,9 @@ export function CreditCards() {
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">ICICI Bank</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-text md:text-3xl">Credit cards</h1>
-            <p className="mt-1 max-w-2xl text-sm text-text-secondary">All your ICICI cards in one place — spend, dues, utilisation, fees and interest, with AI recommendations.</p>
+            <p className="page-eyebrow">ICICI Bank</p>
+            <h1 className="mt-1 page-title">Credit cards</h1>
+            <p className="page-lede">All your ICICI cards in one place — spend, dues, utilisation, fees and interest, with AI recommendations.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">
@@ -128,7 +128,7 @@ export function CreditCards() {
               <motion.span animate={{ rotate: [-4, 4, -4] }} transition={{ repeat: Infinity, duration: 4 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <CreditCard className="h-7 w-7" />
               </motion.span>
-              <h2 className="font-display text-xl font-semibold text-text">Add your card statements</h2>
+              <h2 className="section-title">Add your card statements</h2>
               <p className="max-w-md text-sm text-text-secondary">Drop the ICICI credit card statement PDFs for all your cards together. Type the PDF password once and every card is unlocked, read and analysed.</p>
             </GlassCard>
           </Reveal>
@@ -144,7 +144,7 @@ export function CreditCards() {
                   <CreditCardTile key={c.key} card={c} index={cardOrder.indexOf(c.key)} active={selected === c.key} onClick={() => setSelected(selected === c.key ? 'all' : c.key)} />
                 ))}
               </div>
-              <p className="mt-2 text-[11px] text-text-secondary">Tap a card to focus the dashboard on it; tap again to see all cards.</p>
+              <p className="mt-2 text-2xs text-text-secondary">Tap a card to focus the dashboard on it; tap again to see all cards.</p>
             </Reveal>
 
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -178,7 +178,7 @@ export function CreditCards() {
                   ))}
                 </div>
                 {shownCards.every((c) => c.utilisation === null) && <p className="py-10 text-center text-sm text-text-secondary">Credit limits weren’t found in these statements.</p>}
-                <p className="mt-3 text-[11px] text-text-secondary">Keeping each card under 30% of its limit helps your credit score.</p>
+                <p className="mt-3 text-2xs text-text-secondary">Keeping each card under 30% of its limit helps your credit score.</p>
               </Card>
             </div>
 
@@ -221,7 +221,7 @@ export function CreditCards() {
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[520px] text-left text-xs">
                     <thead>
-                      <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-secondary">
+                      <tr className="border-b border-border label-caps">
                         <th className="py-2 pr-3 font-medium">Card</th>
                         <th className="py-2 pr-3 text-right font-medium">Spend</th>
                         <th className="py-2 pr-3 text-right font-medium">Fees</th>
@@ -249,7 +249,7 @@ export function CreditCards() {
                 <RecurringCard txns={txns} limit={6} />
                 {odd.length > 0 && (
                   <>
-                    <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Unusual charges</p>
+                    <p className="mb-1 mt-4 label-caps">Unusual charges</p>
                     <ul className="divide-y divide-border/60">
                       {odd.slice(0, 3).map((t) => (
                         <li key={t.id} className="flex items-center justify-between gap-3 py-2 text-xs">

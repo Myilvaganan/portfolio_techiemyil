@@ -35,7 +35,7 @@ function StatCard({
     <GlassCard className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+          <p className="label-caps">{label}</p>
           <p className="mt-2 font-display text-2xl font-semibold text-text">{value}</p>
         </div>
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -72,7 +72,7 @@ function PulseCard({ label, value, sub, icon: Icon, valueClass, onClick }: { lab
       <GlassCard className="h-full p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+            <p className="label-caps">{label}</p>
             <p className={cn('mt-1.5 truncate font-mono text-xl font-semibold text-text', valueClass)}>{value}</p>
             {sub && <p className="mt-0.5 truncate text-xs text-text-secondary">{sub}</p>}
           </div>
@@ -138,8 +138,8 @@ export function DashboardHome() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-text">Dashboard</h1>
-          <p className="mt-1 text-sm text-text-secondary">Welcome back! Here&apos;s today across your trading, money, health and website.</p>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-lede">Welcome back! Here&apos;s today across your trading, money, health and website.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" magnetic={false} onClick={() => void backup()} disabled={backingUp}>
@@ -233,7 +233,7 @@ export function DashboardHome() {
       </div>
 
       <div>
-        <h2 className="mb-4 font-display text-lg font-semibold text-text">Quick Actions</h2>
+        <h2 className="mb-4 section-title">Quick Actions</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {QUICK_ACTIONS.map((action) => (
             <button
