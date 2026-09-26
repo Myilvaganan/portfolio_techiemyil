@@ -4,6 +4,7 @@ import { Camera, HeartPulse, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lu
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Card, Chips, Kpi } from '@/components/statements/parts'
 import { BodyMap, RangeBar } from '@/components/health/parts'
+import { ReportCalendar } from '@/components/health/ReportCalendar'
 import { ReportDialog } from '@/components/health/ReportDialog'
 import { AreaChart, Legend, vizColor } from '@/components/viz/charts'
 import { Reveal, ScrollProgress } from '@/components/viz/motion'
@@ -302,6 +303,10 @@ export function HealthReport() {
                 <AreaChart labels={trend.labels} series={trend.series} format={(n) => `${n.toFixed(1)} kg`} axisFormat={(n) => n.toFixed(0)} />
               </Card>
             )}
+
+            <Card title="Calendar">
+              <ReportCalendar reports={sorted} selectedId={report.id} onSelect={setSelected} />
+            </Card>
 
             <Card title={`All reports (${listed.length})`}>
               <ul className="divide-y divide-border/60">
