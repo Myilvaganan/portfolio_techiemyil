@@ -263,6 +263,13 @@ html.has-custom-cursor [data-native-cursor] label {
   cursor: pointer !important;
 }
 
+/* Full-screen blend layers can blank the page on phone GPUs. */
+@media (max-width: 768px) {
+  .noise-overlay::before {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   html.has-custom-cursor,
   html.has-custom-cursor * {
