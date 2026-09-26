@@ -11,7 +11,7 @@ import {
   formatExperienceDuration,
   getExperienceDuration,
 } from "@/lib/experience";
-import { useTheme } from "@/hooks/useTheme";
+import { isRoyal, useTheme } from "@/hooks/useTheme";
 import profileImgDark from "@/assets/images/profile.jpg";
 import profileImgLight from "@/assets/images/profile_light.png";
 import profileImgGold from "@/assets/images/profile_gold.jpg";
@@ -21,7 +21,7 @@ export function GlanceHero() {
   const profileImg =
     theme === "light"
       ? profileImgLight
-      : theme === "royal"
+      : isRoyal(theme)
         ? profileImgGold
         : profileImgDark;
 

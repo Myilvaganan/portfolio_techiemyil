@@ -37,6 +37,11 @@ export interface Trade {
   notes: string
   /** Where the trade came from, e.g. "options-analytics:zerodha"; empty when typed in by hand. */
   source: string
+  /**
+   * Which journal this trade belongs to: '' for the main (options) journal, or a MetaTrader 5 account number for that
+   * account's own Forex calendar. Keeps the two calendars separate while sharing one store.
+   */
+  account: string
   createdAt: string
   updatedAt: string
 }
@@ -49,6 +54,8 @@ export interface DayNote {
   lessons: string
   mood: number // 0 = unset, 1–5
   discipline: number // 0 = unset, 1–5
+  /** '' (or absent) = the main journal; otherwise the MT5 account this note belongs to. */
+  account?: string
 }
 
 /** A tax rate and method for one instrument, overriding the journal-wide default. */
@@ -141,6 +148,9 @@ export function grossFromPrices(t: Pick<Trade, 'direction' | 'entry' | 'exit' | 
   const dir = t.direction === 'BUY' ? 1 : -1
   return round2((t.exit - t.entry) * t.qty * t.contractSize * dir)
 }
+
+/** Pass as the `account` when loading to get every trade from every journal (options and all MT5 accounts). */
+export const ALL_ACCOUNTS = '*'
 
 export const fxOf = (t: Pick<Trade, 'currency' | 'fxRate'>) => (t.currency === 'USD' ? t.fxRate : 1)
 export const grossInr = (t: Trade) => t.grossPnl * fxOf(t)
@@ -364,7 +374,7 @@ export function newTradeId(): string {
     : `t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`
 }
 
-export function blankTrade(date: string): Trade {
+export function blankTrade(date: string, account = ''): Trade {
   return {
     id: newTradeId(),
     date,
@@ -390,6 +400,7 @@ export function blankTrade(date: string): Trade {
     rating: 0,
     notes: '',
     source: '',
+    account,
     createdAt: '',
     updatedAt: '',
   }

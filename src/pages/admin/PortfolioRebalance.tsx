@@ -34,10 +34,10 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 function Kpi({ label, value, sub, valueClassName }: { label: string; value: string; sub?: string; valueClassName?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface-2 p-3">
+    <div className="rounded-xl border border-border bg-surface-2 p-3 xl:px-3 xl:py-1.5">
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
-      <p className={cn('mt-1 font-mono text-xl font-bold text-text', valueClassName)}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-text-secondary/70">{sub}</p>}
+      <p className={cn('mt-1 font-mono text-xl font-bold text-text xl:mt-0 xl:text-lg', valueClassName)}>{value}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-text-secondary/70 xl:mt-0">{sub}</p>}
     </div>
   )
 }
@@ -68,14 +68,14 @@ function Donut({ title, segments, center }: { title: string; segments: { pct: nu
     })
   return (
     <div className="text-center">
-      <p className="mb-2 text-[11px] uppercase tracking-wide text-text-secondary">{title}</p>
+      <p className="mb-2 text-[11px] uppercase tracking-wide text-text-secondary xl:mb-1">{title}</p>
       <div
         role="img"
         aria-label={title}
-        className="relative mx-auto h-32 w-32 rounded-full"
+        className="relative mx-auto h-32 w-32 rounded-full xl:h-24 xl:w-24"
         style={{ background: `conic-gradient(${stops.join(', ') || 'transparent 0 100%'})` }}
       >
-        <div className="absolute inset-4 grid place-items-center rounded-full bg-card font-mono text-sm font-bold text-text">
+        <div className="absolute inset-4 grid place-items-center rounded-full bg-card font-mono text-sm font-bold text-text xl:inset-3 xl:text-xs">
           {center}
         </div>
       </div>
@@ -107,12 +107,12 @@ export function PortfolioRebalance() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="w-full space-y-4 xl:space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-4 xl:items-end">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Portfolio intelligence</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-text">Portfolio Rebalance Blueprint</h1>
-          <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+          <p className="mt-1 max-w-2xl text-sm text-text-secondary xl:hidden">
             A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
             goal is long-term wealth building, not a guaranteed daily return.
           </p>
@@ -137,9 +137,10 @@ export function PortfolioRebalance() {
         />
       </div>
 
-      <GlassCard hover={false} className="p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1.25fr)] xl:gap-3">
+      <GlassCard hover={false} className="p-5 xl:col-start-1 xl:row-start-1 xl:p-4">
         <SectionTitle>01 — Portfolio diagnosis</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary">
+        <p className="mb-4 text-xs text-text-secondary xl:hidden">
           The main structural issue is concentration, not the number of green positions today.
         </p>
         <div className="space-y-3">
@@ -154,9 +155,9 @@ export function PortfolioRebalance() {
         </p>
       </GlassCard>
 
-      <GlassCard hover={false} className="p-5">
+      <GlassCard hover={false} className="p-5 xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:p-4">
         <SectionTitle>02 — Current holdings review</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary">
+        <p className="mb-4 text-xs text-text-secondary xl:hidden">
           A “review” tag means fundamentals and valuation need checking before adding or exiting.
         </p>
         <div className="overflow-x-auto">
@@ -173,14 +174,14 @@ export function PortfolioRebalance() {
             <tbody>
               {holdingsSorted.map((h) => (
                 <tr key={h.symbol} className="border-b border-border/60">
-                  <td className="py-2.5 pr-3 font-mono font-semibold text-text">
+                  <td className="py-2.5 xl:py-1.5 pr-3 font-mono font-semibold text-text">
                     {h.symbol}
                     {h.count ? <span className="ml-1 font-sans font-normal text-text-secondary">({h.count})</span> : null}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-mono text-text">{inr(h.value)}</td>
-                  <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{pct(pctOf(h.value, total))}</td>
-                  <td className="py-2.5 pr-3 text-text-secondary">{h.role}</td>
-                  <td className="py-2.5">
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text">{inr(h.value)}</td>
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text-secondary">{pct(pctOf(h.value, total))}</td>
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-text-secondary">{h.role}</td>
+                  <td className="py-2.5 xl:py-1.5">
                     <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold', ACTION_STYLE[h.action].className)}>
                       {ACTION_STYLE[h.action].label}
                     </span>
@@ -192,14 +193,14 @@ export function PortfolioRebalance() {
         </div>
       </GlassCard>
 
-      <GlassCard hover={false} className="p-5">
+      <GlassCard hover={false} className="p-5 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:p-4">
         <SectionTitle>03 — Destination portfolio</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary">
+        <p className="mb-4 text-xs text-text-secondary xl:hidden">
           Edit the target % per bucket; buy/sell amounts update for {inr(total)}. ETF choice should weigh expense
           ratio, tracking difference, liquidity and taxation.
         </p>
 
-        <div className="mb-5 grid grid-cols-2 gap-4">
+        <div className="mb-5 grid grid-cols-2 gap-4 xl:mb-2">
           <Donut
             title="Current"
             center={inr(total)}
@@ -226,14 +227,14 @@ export function PortfolioRebalance() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-border/60">
-                  <td className="py-2.5 pr-3 text-text">
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-text">
                     <span className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: BUCKETS[r.id].color }} />
                     {BUCKETS[r.id].label}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text-secondary">
                     {inr(r.current)} · {pct(r.currentPct)}
                   </td>
-                  <td className="py-2.5 pr-3 text-right">
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-right">
                     <input
                       type="number"
                       min="0"
@@ -244,10 +245,10 @@ export function PortfolioRebalance() {
                       className="w-16 rounded-md border border-border bg-surface-2 px-2 py-1 text-right font-mono text-xs text-text outline-none focus:border-accent/50"
                     />
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-mono text-text">{inr(r.target)}</td>
+                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text">{inr(r.target)}</td>
                   <td
                     className={cn(
-                      'py-2.5 text-right font-mono font-semibold',
+                      'py-2.5 xl:py-1.5 text-right font-mono font-semibold',
                       r.delta >= 0 ? 'text-positive' : 'text-error',
                     )}
                   >
@@ -280,12 +281,12 @@ export function PortfolioRebalance() {
         )}
       </GlassCard>
 
-      <GlassCard hover={false} className="p-5">
+      <GlassCard hover={false} className="p-5 xl:col-start-1 xl:row-start-2 xl:p-4">
         <SectionTitle>04 — Rebalancing roadmap</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary">
+        <p className="mb-4 text-xs text-text-secondary xl:hidden">
           A staged transition avoids making the whole portfolio depend on one trading day.
         </p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1 xl:gap-2">
           {[
             {
               title: 'Reduce concentration',
@@ -300,18 +301,22 @@ export function PortfolioRebalance() {
               body: 'Keep individual stocks as a smaller satellite allocation. Review earnings, debt, valuation and sector concentration before adding.',
             },
           ].map((s, i) => (
-            <div key={s.title} className="rounded-xl border border-border bg-surface-2 p-4">
-              <div className="mb-2 grid h-7 w-7 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+            <div key={s.title} className="rounded-xl border border-border bg-surface-2 p-4 xl:p-2.5">
+              <div className="flex items-center gap-2 xl:mb-1">
+              <div className="mb-2 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent xl:mb-0 xl:h-5 xl:w-5 xl:text-[10px]">
                 {i + 1}
               </div>
-              <h3 className="text-sm font-semibold text-text">{s.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-text-secondary">{s.body}</p>
+              <h3 className="text-sm font-semibold text-text xl:text-xs">{s.title}</h3>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary xl:mt-0 xl:text-[11px] xl:leading-snug">{s.body}</p>
             </div>
           ))}
         </div>
       </GlassCard>
 
-      <GlassCard hover={false} className="p-5">
+      </div>
+
+      <GlassCard hover={false} className="p-5 xl:px-4 xl:py-2.5 xl:py-1.5">
         <SectionTitle>Risk note</SectionTitle>
         <p className="text-xs leading-relaxed text-text-secondary">
           This is an educational portfolio framework based on the supplied snapshot, not a guarantee of returns or
@@ -322,7 +327,7 @@ export function PortfolioRebalance() {
         </p>
       </GlassCard>
 
-      <p className="text-center text-[11px] text-text-secondary/70">
+      <p className="text-center text-[11px] text-text-secondary/70 xl:hidden">
         Values are approximate snapshot figures and change with market prices.
       </p>
     </div>

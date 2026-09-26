@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from 'react'
+import { createContext, useContext, useMemo, useSyncExternalStore } from 'react'
 import { formatInr, formatSignedInr } from './kite'
 
 // "Hidden mode": every amount is drawn as stars so the journal can be opened in public. The choice is remembered
@@ -43,7 +43,11 @@ export function usePrivacy() {
 
 export interface Money {
   hidden: boolean
-  /** ₹1,234 — unsigned. */
+  /** The currency amounts are shown in: 'INR' for the options journal, the account currency for a Forex account. */
+  currency: string
+  /** ₹ / $ / € … */
+  symbol: string
+  /** ₹1,234 — unsigned, in this book's currency (the name is historical; it is not always rupees). */
   inr: (n: number, decimals?: number) => string
   /** +₹1,234 / -₹1,234. */
   signed: (n: number, decimals?: number) => string
@@ -55,7 +59,12 @@ export interface Money {
   compact: (n: number) => string
 }
 
-const compactAxis = (n: number) => {
+const SYMBOLS: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥', AUD: 'A$', CAD: 'C$', NZD: 'NZ$', SGD: 'S$', HKD: 'HK$', CHF: 'CHF ' }
+
+export const symbolFor = (currency: string) => SYMBOLS[currency] ?? `${currency} `
+
+// Rupee amounts are whole numbers in lakhs/crores; dollar-sized amounts are small and need their cents.
+const compactInr = (n: number) => {
   const a = Math.abs(n)
   const sign = n < 0 ? '-' : ''
   if (a >= 1e7) return `${sign}${(a / 1e7).toFixed(1)}Cr`
@@ -64,18 +73,53 @@ const compactAxis = (n: number) => {
   return `${sign}${Math.round(a)}`
 }
 
-export function makeMoney(isHidden: boolean): Money {
+const compactForeign = (n: number) => {
+  const a = Math.abs(n)
+  const sign = n < 0 ? '-' : ''
+  if (a === 0) return '0'
+  if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(1)}M`
+  if (a >= 1e4) return `${sign}${Math.round(a / 1e3)}k`
+  if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(1)}k`
+  if (a >= 100) return `${sign}${Math.round(a)}`
+  if (a >= 10) return `${sign}${a.toFixed(1)}`
+  return `${sign}${a.toFixed(2)}`
+}
+
+export function makeMoney(isHidden: boolean, currency = 'INR'): Money {
+  if (currency === 'INR') {
+    return {
+      hidden: isHidden,
+      currency,
+      symbol: '₹',
+      inr: (n, d = 0) => (isHidden ? `₹${MASK}` : formatInr(n, d)),
+      signed: (n, d = 0) => (isHidden ? `${n < 0 ? '-' : n > 0 ? '+' : ''}₹${MASK}` : formatSignedInr(n, d)),
+      pct: (n, d = 1) => (isHidden ? `${MASK}%` : `${n.toFixed(d)}%`),
+      axis: (n) => (isHidden ? '*' : compactInr(n)),
+      compact: (n) => (isHidden ? MASK : `${n > 0 ? '+' : ''}${compactInr(n)}`),
+    }
+  }
+
+  const symbol = symbolFor(currency)
+  const plain = (n: number, d: number) => `${symbol}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`
   return {
     hidden: isHidden,
-    inr: (n, d = 0) => (isHidden ? `₹${MASK}` : formatInr(n, d)),
-    signed: (n, d = 0) => (isHidden ? `${n < 0 ? '-' : n > 0 ? '+' : ''}₹${MASK}` : formatSignedInr(n, d)),
+    currency,
+    symbol,
+    inr: (n, d = 2) => (isHidden ? `${symbol}${MASK}` : plain(n, d)),
+    signed: (n, d = 2) => (isHidden ? `${n < 0 ? '-' : n > 0 ? '+' : ''}${symbol}${MASK}` : `${n < 0 ? '-' : n > 0 ? '+' : ''}${plain(n, d)}`),
     pct: (n, d = 1) => (isHidden ? `${MASK}%` : `${n.toFixed(d)}%`),
-    axis: (n) => (isHidden ? '*' : compactAxis(n)),
-    compact: (n) => (isHidden ? MASK : `${n > 0 ? '+' : ''}${compactAxis(n)}`),
+    axis: (n) => (isHidden ? '*' : compactForeign(n)),
+    compact: (n) => (isHidden ? MASK : `${n > 0 ? '+' : ''}${compactForeign(n)}`),
   }
 }
 
+// One journal at a time is on screen, so the currency is set once around it instead of threaded through every component.
+const CurrencyContext = createContext('INR')
+export const CurrencyProvider = CurrencyContext.Provider
+export const useCurrency = () => useContext(CurrencyContext)
+
 export function useMoney(): Money {
   const { hidden: isHidden } = usePrivacy()
-  return useMemo(() => makeMoney(isHidden), [isHidden])
+  const currency = useContext(CurrencyContext)
+  return useMemo(() => makeMoney(isHidden, currency), [isHidden, currency])
 }

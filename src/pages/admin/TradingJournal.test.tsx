@@ -55,6 +55,7 @@ describe('TradingJournal', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 8, 15, 12, 0, 0))
     localStorage.clear()
+    localStorage.setItem('journal_book', 'options')
     setHidden(false)
     mockViewport(true)
     // Flat 30% on everything: the fixtures below were worked out that way, and one test covers the real defaults.
@@ -78,7 +79,7 @@ describe('TradingJournal', () => {
     render(<MemoryRouter><TradingJournal /></MemoryRouter>)
 
     expect(await screen.findByRole('button', { name: /Tuesday, Sep 15, 2026: 2 trades, net \+₹2,360/ })).toBeInTheDocument()
-    expect(fetchJournal).toHaveBeenCalledWith('2026-09', '2026-09')
+    expect(fetchJournal).toHaveBeenCalledWith('2026-09', '2026-09', '')
 
     // Summary strip: before tax, 30% tax, after tax.
     expect(screen.getAllByText('+₹2,360').length).toBeGreaterThan(0)
@@ -219,7 +220,7 @@ describe('TradingJournal', () => {
 
     await user.click(screen.getByRole('button', { name: /previous month/i }))
 
-    await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08'))
+    await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08', ''))
     expect(await screen.findByText('August 2026')).toBeInTheDocument()
   })
 
@@ -231,7 +232,7 @@ describe('TradingJournal', () => {
     await user.click(screen.getByRole('tab', { name: /dashboard/i }))
 
     expect(await screen.findByText('Net P&L · before tax')).toBeInTheDocument()
-    expect(fetchJournal).toHaveBeenLastCalledWith(undefined, undefined)
+    expect(fetchJournal).toHaveBeenLastCalledWith(undefined, undefined, '')
     expect(screen.getByText('Net P&L · after tax')).toBeInTheDocument()
     expect(screen.getAllByText('+₹1,652').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /reports/i })).toBeInTheDocument()
@@ -439,7 +440,7 @@ describe('TradingJournal', () => {
 
       await waitFor(() => expect(importTrades).toHaveBeenCalledTimes(1))
       expect(await screen.findByText('Added 1 trade to your journal')).toBeInTheDocument()
-      await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08'))
+      await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08', ''))
       expect(await screen.findByText('August 2026')).toBeInTheDocument()
     })
 
@@ -593,7 +594,7 @@ describe('TradingJournal', () => {
 
       await user.click(screen.getByRole('button', { name: /sync zerodha/i }))
 
-      await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08'))
+      await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08', ''))
       expect(await screen.findByText('August 2026')).toBeInTheDocument()
     })
 

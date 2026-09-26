@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme'
 
 export function CustomCursor() {
   const { theme } = useTheme()
-  const tint = theme === 'royal' ? '224,184,74' : '34,197,94'
+  const tint = theme === 'royal' ? '224,184,74' : theme === 'royal-light' ? '168,116,26' : '34,197,94'
   const isCoarse = useMediaQuery('(pointer: coarse)')
   const [isHovering, setIsHovering] = useState(false)
   const [isVisible, setIsVisible] = useState(false)

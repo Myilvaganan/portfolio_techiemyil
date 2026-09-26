@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { AreaChart } from '@/components/viz/charts'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { cn } from '@/lib/utils'
-import { RANGES, monthLabel, rangeFor, taxCaption, taxHeading, type JournalSettings, type Range, type Trade } from '@/lib/journal'
+import { ALL_ACCOUNTS, RANGES, monthLabel, rangeFor, taxCaption, taxHeading, type JournalSettings, type Range, type Trade } from '@/lib/journal'
 import { analyze, buildInsights } from '@/lib/journalAnalytics'
 import { journalReport, journalTradesCsv } from '@/lib/journalReport'
 import { fetchJournal } from '@/lib/journalStore'
@@ -32,9 +32,13 @@ interface Props {
   refreshKey: number
   /** The page's Calendar/Dashboard switcher, drawn at the start of the toolbar so it costs no extra row. */
   lead?: ReactNode
+  /** Which journal: '' (default) is the main options journal, otherwise an MT5 account number. */
+  account?: string
+  /** INR per USD. With ALL_ACCOUNTS, MT5 (dollar) trades are converted at this rate so everything adds up in rupees. */
+  usdInr?: number
 }
 
-export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lead }: Props) {
+export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lead, account = '', usdInr = 1 }: Props) {
   const m = useMoney()
   const wide = useMediaQuery('(min-width: 1280px)')
   const [range, setRange] = useState<Range>('all')
@@ -48,9 +52,9 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     const { from, to } = rangeFor(range, viewedMonth, today)
     setLoading(true)
     setError(null)
-    fetchJournal(from, to)
+    fetchJournal(from, to, account)
       .then((data) => {
-        if (!cancelled) setTrades(data.trades)
+        if (!cancelled) setTrades(account === ALL_ACCOUNTS ? data.trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : data.trades)
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load the journal.')
@@ -61,7 +65,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     return () => {
       cancelled = true
     }
-  }, [range, viewedMonth, today, refreshKey, attempt])
+  }, [range, viewedMonth, today, refreshKey, attempt, account, usdInr])
 
   const a = useMemo(() => analyze(trades, settings), [trades, settings])
   const money = (n: number) => `${n < 0 ? '-' : ''}${m.inr(Math.abs(n))}`
@@ -86,8 +90,8 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
           className="ml-auto"
           filename="trading-journal-report"
           disabled={!hasData}
-          report={() => journalReport(a, settings, rangeLabel, insights)}
-          csv={() => journalTradesCsv(trades, settings)}
+          report={() => journalReport(a, settings, rangeLabel, insights, m.currency)}
+          csv={() => journalTradesCsv(trades, settings, m.currency)}
         />
       </div>
 
@@ -230,7 +234,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
             ].map((c) => (
               <GlassCard key={c.title} hover={false} className="p-3 sm:p-4 xl:p-3">
                 <SectionTitle>{c.title}</SectionTitle>
-                <div className="xl:max-h-[150px] xl:overflow-y-auto xl:pr-1">
+                <div className="xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
                   <PnlBars items={c.items} />
                 </div>
               </GlassCard>
@@ -241,7 +245,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
               {a.discipline.followed.trades + a.discipline.broke.trades === 0 ? (
                 <Empty>Mark “Did you follow your plan?” on trades to see what discipline is worth.</Empty>
               ) : (
-                <div className="space-y-2 xl:max-h-[150px] xl:overflow-y-auto xl:pr-1">
+                <div className="space-y-2 xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
                   <PnlBars items={[a.discipline.followed, a.discipline.broke].filter((s) => s.trades > 0)} />
                   <p className="text-[11px] leading-snug text-text-secondary">
                     Per trade: <span className="text-positive">{m.inr(a.discipline.followed.avgNet)}</span> on plan, <span className="text-error">{m.inr(a.discipline.broke.avgNet)}</span> off plan.
@@ -255,7 +259,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
               {a.mistakes.length === 0 ? (
                 <Empty>Tag mistakes on trades to see what they cost.</Empty>
               ) : (
-                <ul className="space-y-1.5 xl:max-h-[150px] xl:overflow-y-auto xl:pr-1">
+                <ul className="space-y-1.5 xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
                   {a.mistakes.map((x) => (
                     <li key={x.label} className="flex items-baseline justify-between gap-2 border-b border-border pb-1 text-xs">
                       <span className="min-w-0 truncate text-text">

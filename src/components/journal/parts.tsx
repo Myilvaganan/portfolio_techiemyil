@@ -61,7 +61,8 @@ export function Kpi({
 }
 
 /** A rupee amount, coloured by sign and starred out in hidden mode. */
-export function Amount({ value, signed = true, decimals = 0, className }: { value: number; signed?: boolean; decimals?: number; className?: string }) {
+// `decimals` is left undefined by default so each currency picks its own: whole rupees, but dollars with cents.
+export function Amount({ value, signed = true, decimals, className }: { value: number; signed?: boolean; decimals?: number; className?: string }) {
   const m = useMoney()
   return <span className={cn('whitespace-nowrap font-mono', signed && tone(value), className)}>{signed ? m.signed(value, decimals) : m.inr(value, decimals)}</span>
 }

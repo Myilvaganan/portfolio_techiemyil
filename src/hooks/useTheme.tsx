@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 
-export type Theme = 'dark' | 'light' | 'royal'
+export type Theme = 'dark' | 'light' | 'royal-light' | 'royal'
 
-const THEMES: Theme[] = ['dark', 'light', 'royal']
+const THEMES: Theme[] = ['dark', 'light', 'royal-light', 'royal']
 
 // Royal is the default. The key was bumped so earlier automatic dark/light values don't hide it; only a choice made from now on is kept.
 const STORAGE_KEY = 'theme_v2'
@@ -10,12 +10,13 @@ const STORAGE_KEY = 'theme_v2'
 const THEME_COLOR = {
   dark: '#090909',
   light: '#f7f8fa',
+  'royal-light': '#fbf7ee',
   royal: '#0a0612',
 } as const
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'dark' || stored === 'light' || stored === 'royal') return stored
+  if (THEMES.includes(stored as Theme)) return stored as Theme
   return 'royal'
 }
 
@@ -23,7 +24,7 @@ interface ThemeContextValue {
   theme: Theme
   toggleTheme: () => void
   setTheme: (theme: Theme) => void
-  // dark → light → royal → dark
+  // dark → light → royal-light → royal → dark
   cycleTheme: () => void
 }
 
@@ -53,4 +54,9 @@ export function useTheme() {
   const ctx = useContext(ThemeContext)
   if (!ctx) throw new Error('useTheme must be used within a ThemeProvider')
   return ctx
+}
+
+// Both royal variants (dark amethyst and light ivory) share the gold flourishes.
+export function isRoyal(theme: Theme) {
+  return theme === 'royal' || theme === 'royal-light'
 }

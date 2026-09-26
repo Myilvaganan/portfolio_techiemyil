@@ -256,7 +256,7 @@ export function MarginCalculator() {
   const riskPercentColor = risk.percent > 3 ? 'text-error' : risk.percent > 2 ? 'text-amber-500' : 'text-positive'
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex flex-wrap items-start gap-x-4 gap-y-3 lg:flex-nowrap">
         <div className="order-1 min-w-0 flex-1">
           <h1 className="font-display text-2xl font-semibold text-text">MT5 Margin Calculator</h1>

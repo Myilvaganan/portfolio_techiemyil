@@ -34,7 +34,7 @@ const AUTO_REFRESH_MS = 30_000
 // Palette order validated for adjacent-pair colour-blind separation (light and dark).
 const SERIES_CSS = `
 .kite-viz{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s-other:#6b7280}
-:root[data-theme='light'] .kite-viz{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s-other:#9ca3af}
+:root:is([data-theme='light'],[data-theme='royal-light']) .kite-viz{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s-other:#9ca3af}
 `
 const seriesColor = (i: number, isOther: boolean) => (isOther ? 'var(--s-other)' : `var(--s${i + 1})`)
 
@@ -567,7 +567,7 @@ export function ZerodhaDashboard() {
   const updated = data ? new Date(data.fetchedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : null
 
   return (
-    <div className="kite-viz mx-auto max-w-6xl space-y-5">
+    <div className="kite-viz w-full space-y-5">
       <style>{SERIES_CSS}</style>
 
       <div className="flex flex-wrap items-end justify-between gap-4">

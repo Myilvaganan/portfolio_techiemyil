@@ -14,6 +14,7 @@ import { OptionsAnalytics } from '@/pages/admin/OptionsAnalytics'
 import { BankStatements } from '@/pages/admin/BankStatements'
 import { CreditCards } from '@/pages/admin/CreditCards'
 import { Loans } from '@/pages/admin/Loans'
+import { HealthReport } from '@/pages/admin/HealthReport'
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
@@ -38,6 +39,7 @@ export function Admin() {
               <Route path="bank-statements" element={<BankStatements />} />
               <Route path="credit-cards" element={<CreditCards />} />
               <Route path="loans" element={<Loans />} />
+              <Route path="health-report" element={<HealthReport />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </AdminShell>

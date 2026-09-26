@@ -262,4 +262,180 @@ describe('journal API', () => {
       expect((await importCall(many)).statusCode).toBe(413)
     })
   })
+
+  describe('MT5 accounts: separate calendars per account', () => {
+    it('keeps the account on a trade, stripping characters that could break a storage key', async () => {
+      expect(sanitizeTrade(trade({ account: '62280161' })).account).toBe('62280161')
+      expect(sanitizeTrade(trade({ account: '622 80#161/../x' })).account).toBe('62280161..x')
+      expect(sanitizeTrade(trade()).account).toBe('')
+    })
+
+    it('stores day notes per account, so the same date can carry a note in each book', async () => {
+      await call('POST', '/admin/journal/day', { payload: { day: { date: '2026-09-22', plan: 'Options plan' } } })
+      await call('POST', '/admin/journal/day', { payload: { day: { date: '2026-09-22', account: '62280161', plan: 'Forex plan' } } })
+
+      const { body } = await call('GET', '/admin/journal/data', { query: {} })
+      expect(body.days['2026-09-22']).toMatchObject({ plan: 'Options plan', account: '' })
+      expect(body.days['2026-09-22#62280161']).toMatchObject({ plan: 'Forex plan', account: '62280161' })
+    })
+
+    it('clearing one book’s note leaves the other book’s note alone', async () => {
+      await call('POST', '/admin/journal/day', { payload: { day: { date: '2026-09-22', plan: 'Options plan' } } })
+      await call('POST', '/admin/journal/day', { payload: { day: { date: '2026-09-22', account: '62280161', plan: 'Forex plan' } } })
+
+      await call('POST', '/admin/journal/day', { payload: { day: { date: '2026-09-22', account: '62280161' } } })
+
+      const { body } = await call('GET', '/admin/journal/data', { query: {} })
+      expect(body.days['2026-09-22#62280161']).toBeUndefined()
+      expect(body.days['2026-09-22']).toMatchObject({ plan: 'Options plan' })
+    })
+
+    it('imports MT5 trades with their account, without touching the main journal’s trades', async () => {
+      await call('POST', '/admin/journal/trade', { payload: { trade: trade({ id: 'opt-trade-1' }) } })
+      const res = await call('POST', '/admin/journal/trades/import', {
+        payload: { trades: [trade({ id: 'mt5-62280161-2155367444', account: '62280161', source: 'mt5:62280161', instrument: 'Bitcoin', currency: 'USD', fxRate: 1 })] },
+      })
+      expect(res.body).toMatchObject({ added: 1 })
+
+      const { body } = await call('GET', '/admin/journal/data', { query: {} })
+      expect(body.trades.map((t) => [t.id, t.account])).toEqual([
+        ['mt5-62280161-2155367444', '62280161'],
+        ['opt-trade-1', ''],
+      ].sort((a, b) => a[0].localeCompare(b[0])))
+    })
+  })
+
+  describe('MT5 account details', () => {
+    const account = (over = {}) => ({
+      account: '62280161',
+      name: 'Test Trader',
+      currency: 'USD',
+      server: 'OctaFX-Real',
+      accountType: 'real',
+      marginMode: 'Hedge',
+      company: 'Octa Markets Incorporated',
+      balance: 141.57,
+      equity: 141.57,
+      floating: 0,
+      credit: 0,
+      margin: 0,
+      freeMargin: 141.57,
+      marginLevel: 0,
+      balanceOps: [{ time: '2026-09-21 19:34:40', type: 'balance', amount: 150.44, comment: 'D/D39066315/INR15000', balance: 150.44 }],
+      summary: { 'Total Net Profit': '-179.75', 'Profit Factor': '0.57' },
+      report: { time: '2026-09-26 08:12:00', from: '2026-09-22', to: '2026-09-25', trades: 45 },
+      ...over,
+    })
+    const save = (a, html) => call('POST', '/admin/journal/accounts', { payload: { account: a, html } })
+
+    it('saves and lists an account with all its details', async () => {
+      const res = await save(account())
+      expect(res.statusCode).toBe(200)
+
+      const { body } = await call('GET', '/admin/journal/accounts')
+      expect(body.accounts).toHaveLength(1)
+      expect(body.accounts[0]).toMatchObject({
+        account: '62280161',
+        name: 'Test Trader',
+        currency: 'USD',
+        server: 'OctaFX-Real',
+        marginMode: 'Hedge',
+        company: 'Octa Markets Incorporated',
+        balance: 141.57,
+        equity: 141.57,
+        summary: { 'Total Net Profit': '-179.75' },
+        report: { time: '2026-09-26 08:12:00', from: '2026-09-22', to: '2026-09-25', trades: 45 },
+      })
+    })
+
+    it('lists nothing before any upload', async () => {
+      expect((await call('GET', '/admin/journal/accounts')).body.accounts).toEqual([])
+    })
+
+    it('keeps the original report file alongside the account', async () => {
+      const res = await save(account(), '<html>the report</html>')
+      expect(res.body.savedReport).toBe(true)
+      expect(s3.objects.get('_data/journal/mt5-reports/62280161/20260926081200.html')).toBe('<html>the report</html>')
+    })
+
+    it('does not treat the stored report files as journal months', async () => {
+      await save(account(), '<html>x</html>')
+      const { body } = await call('GET', '/admin/journal/data', { query: {} })
+      expect(body.months).toEqual([])
+    })
+
+    it('merges deposits from a later report instead of replacing them', async () => {
+      await save(account())
+      await save(
+        account({
+          balanceOps: [
+            { time: '2026-09-21 19:34:40', type: 'balance', amount: 150.44, comment: 'D/D39066315/INR15000', balance: 150.44 },
+            { time: '2026-09-23 12:19:51', type: 'balance', amount: 150.82, comment: 'D/D39076390/INR15000', balance: 197.77 },
+          ],
+          report: { time: '2026-09-30 09:00:00', from: '2026-09-26', to: '2026-09-29', trades: 5 },
+        }),
+      )
+
+      const [acc] = (await call('GET', '/admin/journal/accounts')).body.accounts
+      expect(acc.balanceOps.map((o) => o.amount)).toEqual([150.44, 150.82])
+    })
+
+    it('takes the balance and summary from the newest report', async () => {
+      await save(account())
+      await save(account({ balance: 300, equity: 310, summary: { 'Total Net Profit': '12.00' }, report: { time: '2026-10-01 09:00:00', from: '2026-09-29', to: '2026-10-01', trades: 3 } }))
+
+      const [acc] = (await call('GET', '/admin/journal/accounts')).body.accounts
+      expect(acc).toMatchObject({ balance: 300, equity: 310, summary: { 'Total Net Profit': '12.00' } })
+    })
+
+    it('does not let an older report overwrite a newer one’s balance, but still merges its deposits', async () => {
+      await save(account({ balance: 300, report: { time: '2026-10-01 09:00:00', from: '2026-09-29', to: '2026-10-01', trades: 3 } }))
+      await save(
+        account({
+          balance: 50,
+          balanceOps: [{ time: '2026-08-01 10:00:00', type: 'balance', amount: 100, comment: 'first deposit', balance: 100 }],
+          report: { time: '2026-08-05 09:00:00', from: '2026-08-01', to: '2026-08-05', trades: 2 },
+        }),
+      )
+
+      const [acc] = (await call('GET', '/admin/journal/accounts')).body.accounts
+      expect(acc.balance).toBe(300)
+      expect(acc.report.time).toBe('2026-10-01 09:00:00')
+      expect(acc.balanceOps.some((o) => o.comment === 'first deposit')).toBe(true)
+    })
+
+    it('keeps several accounts separate', async () => {
+      await save(account())
+      await save(account({ account: '70000001', name: 'Second' }))
+      const { body } = await call('GET', '/admin/journal/accounts')
+      expect(body.accounts.map((a) => a.account)).toEqual(['62280161', '70000001'])
+    })
+
+    it('stores a missing figure as null, never as zero', async () => {
+      await save(account({ equity: null, freeMargin: undefined, marginLevel: 'n/a' }))
+      const [acc] = (await call('GET', '/admin/journal/accounts')).body.accounts
+      expect(acc.equity).toBeNull()
+      expect(acc.freeMargin).toBeNull()
+      expect(acc.marginLevel).toBeNull()
+    })
+
+    it('drops malformed deposits and clips oversized text', async () => {
+      await save(account({ name: 'x'.repeat(500), balanceOps: [{ time: 'yesterday', type: 'balance', amount: 5 }, null, { time: '2026-09-21 19:34:40', type: 'balance', amount: 'abc', comment: 'ok' }] }))
+      const [acc] = (await call('GET', '/admin/journal/accounts')).body.accounts
+      expect(acc.name).toHaveLength(80)
+      expect(acc.balanceOps).toEqual([{ time: '2026-09-21 19:34:40', type: 'balance', amount: 0, comment: 'ok', balance: null }])
+    })
+
+    it('rejects a request with no account number', async () => {
+      expect((await save({ ...account(), account: '' })).statusCode).toBe(400)
+      expect((await save(null)).statusCode).toBe(400)
+    })
+
+    it('rejects an oversized report file without saving anything', async () => {
+      const res = await save(account(), 'x'.repeat(3_000_001))
+      expect(res.statusCode).toBe(413)
+      expect((await call('GET', '/admin/journal/accounts')).body.accounts).toEqual([])
+    })
+  })
 })
+

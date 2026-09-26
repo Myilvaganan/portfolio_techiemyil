@@ -30,7 +30,7 @@ const PAGE = 25
 
 const VIZ_CSS = `
 .opt-viz{--s1:#3987e5;--s-ink:#c3c2b7}
-:root[data-theme='light'] .opt-viz{--s1:#2a78d6}
+:root:is([data-theme='light'],[data-theme='royal-light']) .opt-viz{--s1:#2a78d6}
 `
 
 type Range = 'all' | 'month' | '3m' | '6m' | '1y'
@@ -679,7 +679,7 @@ export function OptionsAnalytics() {
 
   return (
     <div
-      className="opt-viz relative mx-auto max-w-6xl space-y-5"
+      className="opt-viz relative w-full space-y-5"
       onDragOver={(e) => {
         if (!canDrop || !e.dataTransfer.types.includes('Files')) return
         e.preventDefault()

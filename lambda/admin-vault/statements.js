@@ -754,6 +754,10 @@ score.value is a 0-100 loan-health score (payment discipline incl. bounced EMIs,
 
 module.exports = {
   createStatementsApi,
+  // shared with health.js
+  callOpenAI,
+  fail,
+  EXTRACT_MODEL,
   // exported for tests
   pageRows,
   chunkLines,

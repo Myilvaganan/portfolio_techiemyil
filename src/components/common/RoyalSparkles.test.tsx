@@ -19,7 +19,7 @@ describe('royal theme', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })
   })
 
-  it('only shows the sparkles in the royal theme, reached by cycling the toggle', () => {
+  it('only shows the sparkles in the royal themes, reached by cycling the toggle', () => {
     localStorage.setItem('theme_v2', 'dark')
     setup()
     expect(screen.queryByTestId('royal-sparkles')).toBeNull()
@@ -27,7 +27,11 @@ describe('royal theme', () => {
     fireEvent.click(screen.getByRole('button', { name: /switch to light theme/i }))
     expect(screen.queryByTestId('royal-sparkles')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /switch to royal theme/i }))
+    fireEvent.click(screen.getByRole('button', { name: /switch to royal light theme/i }))
+    expect(screen.getByTestId('royal-sparkles')).toBeInTheDocument()
+    expect(document.documentElement.getAttribute('data-theme')).toBe('royal-light')
+
+    fireEvent.click(screen.getByRole('button', { name: /switch to royal dark theme/i }))
     expect(screen.getByTestId('royal-sparkles')).toBeInTheDocument()
     expect(document.documentElement.getAttribute('data-theme')).toBe('royal')
 

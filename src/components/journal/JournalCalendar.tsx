@@ -15,7 +15,7 @@ interface Props {
   breachDates: Set<string>
   onSelect: (date: string) => void
   /** Add a trade on this date (the hover “+”, or double-clicking the date). */
-  onAdd: (date: string) => void
+  onAdd?: (date: string) => void
 }
 
 // A colour wash whose strength follows the day's result relative to the month's biggest move.
@@ -67,10 +67,10 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                       disabled={!cell.inMonth}
                       aria-label={`${dateLabel(cell.date)}: ${d ? `${d.trades} trade${d.trades === 1 ? '' : 's'}, net ${m.signed(d.net)}` : 'no trades'}`}
                       onClick={() => onSelect(cell.date)}
-                      onDoubleClick={() => cell.inMonth && onAdd(cell.date)}
+                      onDoubleClick={() => cell.inMonth && onAdd?.(cell.date)}
                       style={{ background: d ? wash(d.net, maxAbs) : undefined }}
                       className={cn(
-                        'relative flex h-full min-h-[58px] w-full flex-col rounded-lg border p-1 text-left transition-colors sm:min-h-[72px] sm:p-1.5 2xl:min-h-[78px]',
+                        'relative flex h-full min-h-[58px] w-full flex-col rounded-lg border p-1 text-left transition-colors sm:min-h-[72px] sm:p-1.5 2xl:min-h-[72px]',
                         !cell.inMonth && 'cursor-default border-transparent opacity-25',
                         cell.inMonth && !isSelected && 'border-border bg-surface-2 hover:border-accent/50',
                         isSelected && 'border-accent ring-1 ring-accent/60',
@@ -96,7 +96,7 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                         </>
                       )}
                     </button>
-                    {cell.inMonth && (
+                    {cell.inMonth && onAdd && (
                       // A sibling of the date button (not inside it — buttons can't nest). Appears on hover or keyboard focus.
                       <button
                         type="button"
@@ -113,7 +113,7 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                 )
               })}
 
-              <div role="gridcell" className="flex min-h-[58px] flex-col items-center justify-center rounded-lg border border-dashed border-border p-1 text-center sm:min-h-[72px] 2xl:min-h-[78px]">
+              <div role="gridcell" className="flex min-h-[58px] flex-col items-center justify-center rounded-lg border border-dashed border-border p-1 text-center sm:min-h-[72px] 2xl:min-h-[72px]">
                 {weekTrades > 0 ? (
                   <>
                     <span className={cn('font-mono text-[11px] font-semibold sm:text-sm', tone(weekNet))}>{m.compact(weekNet)}</span>

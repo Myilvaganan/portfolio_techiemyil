@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -260,6 +260,7 @@ Environment variables (in addition to the ones above):
 |---|---|---|
 | `OPENAI_API_KEY` | — | required |
 | `OPENAI_MODEL_EXTRACT` | `gpt-5.4-mini` | reads transactions (60-row test: exact amounts, 60/60 categories, ~13 s) |
+| `OPENAI_MODEL_VISION` | `OPENAI_MODEL_EXTRACT` | reads InBody report photos for the Health Report page (must accept image input) |
 | `OPENAI_MODEL_INSIGHTS` | `gpt-5.4-mini` | insights and Q&A (~5 s). Set to `gpt-6-astra` for deeper analysis (~20 s, several times the cost) |
 | `OPENAI_MODEL_FAST` | `gpt-5.4-mini` | fallback when the insights model times out |
 
@@ -292,6 +293,8 @@ query parameters) because the entry-point router only parses POST bodies.
 | `POST /admin/journal/trade` `{ trade, previousDate? }` | Create or update a trade; pass `previousDate` when the date moved to another month |
 | `DELETE /admin/journal/trade?date=&id=` | Remove a trade |
 | `POST /admin/journal/trades/import` `{ trades }` | Backfill (up to 2000 per request). **Never overwrites**: a trade whose id already exists is skipped, so re-running is safe and edits are kept |
+| `GET /admin/journal/accounts` | MetaTrader 5 accounts (number, broker, balance, equity, deposits, broker summary) for the Forex journal |
+| `POST /admin/journal/accounts` `{ account, html? }` | Save or merge an account from an uploaded MT5 `ReportHistory` file; the raw report is kept under `_data/journal/mt5-reports/<account>/`. Deposits are merged and an older report never overwrites a newer balance. Trades and day notes carry an `account` field (day notes are keyed `date#account`), which keeps the Forex calendar separate from Options |
 | `POST /admin/journal/day` `{ day }` | Save a day's notes; an empty note deletes the entry |
 | `GET` / `POST /admin/journal/settings` | Tax rate and method (with per-instrument overrides), starting capital, daily loss limit, max trades a day |
 
@@ -301,3 +304,18 @@ route needs no gateway change — only a redeploy of the function (see above). T
 The backfill button reads the closed round trips Options Analytics builds from your stored broker fills and sends them
 here with stable ids (`oa-<broker>-<hash>`), so the same history is recognised on every run.
 
+## Health report (`/admin/health-report`)
+
+Implemented in [`health.js`](health.js). InBody body-composition reports are stored as one JSON file,
+`_data/health/reports.json` (`{ reports[], updatedAt }`, hidden from the document list, at most 500 reports).
+
+| Route | What it does |
+| --- | --- |
+| `GET /admin/health/reports` | Every report, oldest first |
+| `POST /admin/health/reports {report}` or `{reports: []}` | Create (no id) or update (existing id). Returns every report |
+| `DELETE /admin/health/reports?id=` | Removes one report |
+| `POST /admin/health/scan {image}` | Reads a photo of the sheet (a `data:image/jpeg|png|webp;base64,…` URL, which the browser downscales to 2000 px) with `OPENAI_MODEL_VISION`. Returns the unsaved `report` and any earlier tests from the sheet's history table as `history[]`. The photo is not stored, and the request uses `store: false` |
+
+Each report keeps the normal ranges printed on its sheet, because InBody works them out from height and sex. The
+browser falls back to standard ranges for BMI, body-fat %, waist-hip ratio, visceral fat and obesity degree.
+These are new routes on the existing `$default` gateway route, so only a redeploy of the function is needed.

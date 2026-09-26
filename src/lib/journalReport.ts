@@ -1,13 +1,24 @@
 import type { ReportDoc, ReportSection } from './report'
 import { formatInr, formatSignedInr } from './kite'
+import { symbolFor } from './privacy'
 import { fxOf, netInr, taxCaption, taxOn, usesNetTax, type JournalSettings, type Trade } from './journal'
 import type { Analytics, Insight, Slice } from './journalAnalytics'
 
-const inr = (n: number) => formatInr(n)
-const signedInr = (n: number) => formatSignedInr(n)
+interface Fmt {
+  inr: (n: number) => string
+  signed: (n: number) => string
+}
+
+// Rupees for the options journal; the account's own currency (dollars, …) for a Forex account.
+function makeFmt(currency: string): Fmt {
+  if (currency === 'INR') return { inr: (n) => formatInr(n), signed: (n) => formatSignedInr(n) }
+  const symbol = symbolFor(currency)
+  const plain = (n: number) => `${symbol}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return { inr: plain, signed: (n) => `${n < 0 ? '-' : n > 0 ? '+' : ''}${plain(n)}` }
+}
 const pf = (n: number | null) => (n === null ? '—' : n.toFixed(2))
 
-function sliceTable(title: string, slices: Slice[]): ReportSection {
+function sliceTable(title: string, slices: Slice[], { signed: signedInr }: Fmt): ReportSection {
   return {
     title,
     table: {
@@ -19,7 +30,9 @@ function sliceTable(title: string, slices: Slice[]): ReportSection {
 }
 
 /** The standalone report behind the dashboard's Reports menu: before-tax, tax and after-tax first, then the detail. */
-export function journalReport(a: Analytics, settings: JournalSettings, rangeLabel: string, insights: Insight[]): ReportDoc {
+export function journalReport(a: Analytics, settings: JournalSettings, rangeLabel: string, insights: Insight[], currency = 'INR'): ReportDoc {
+  const fmt = makeFmt(currency)
+  const { inr, signed: signedInr } = fmt
   const t = a.totals
   const sections: ReportSection[] = [
     {
@@ -63,9 +76,9 @@ export function journalReport(a: Analytics, settings: JournalSettings, rangeLabe
 
   if (insights.length) sections.push({ title: 'Coach insights', bullets: insights.map((i) => ({ text: i.text, tone: i.tone })) })
 
-  sections.push(sliceTable('By instrument', a.byInstrument), sliceTable('By strategy', a.byStrategy))
-  if (a.byWeekday.length) sections.push(sliceTable('By weekday', a.byWeekday))
-  if (a.byEmotion.some((s) => s.label !== 'Unspecified')) sections.push(sliceTable('By emotion', a.byEmotion))
+  sections.push(sliceTable('By instrument', a.byInstrument, fmt), sliceTable('By strategy', a.byStrategy, fmt))
+  if (a.byWeekday.length) sections.push(sliceTable('By weekday', a.byWeekday, fmt))
+  if (a.byEmotion.some((s) => s.label !== 'Unspecified')) sections.push(sliceTable('By emotion', a.byEmotion, fmt))
 
   if (a.mistakes.length) {
     sections.push({
@@ -111,17 +124,20 @@ export function journalReport(a: Analytics, settings: JournalSettings, rangeLabe
 
   return {
     title: 'Trading journal report',
-    subtitle: `${rangeLabel} · ${t.trades} trades · amounts in ₹ (USD trades converted at the rate saved with each trade)`,
+    subtitle:
+      currency === 'INR'
+        ? `${rangeLabel} · ${t.trades} trades · amounts in ₹ (USD trades converted at the rate saved with each trade)`
+        : `${rangeLabel} · ${t.trades} trades · amounts in ${currency} (the account currency)`,
     sections,
   }
 }
 
-export function journalTradesCsv(trades: Trade[], settings: JournalSettings) {
+export function journalTradesCsv(trades: Trade[], settings: JournalSettings, currency = 'INR') {
   return {
     filename: 'trading-journal',
     columns: [
       'Date', 'Time', 'Instrument', 'Symbol', 'Direction', 'Currency', 'FX rate', 'Quantity', 'Entry', 'Exit', 'Stop loss',
-      'Gross P&L', 'Fees', 'Net P&L (INR)', 'Tax (INR)', 'After tax (INR)', 'Strategy', 'Emotion', 'Followed plan', 'Rating', 'Mistakes', 'Notes',
+      'Gross P&L', 'Fees', `Net P&L (${currency})`, `Tax (${currency})`, `After tax (${currency})`, 'Strategy', 'Emotion', 'Followed plan', 'Rating', 'Mistakes', 'Notes',
     ],
     rows: trades.map((t) => {
       const net = netInr(t)

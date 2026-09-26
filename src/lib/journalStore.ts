@@ -1,5 +1,6 @@
 import { clearStoredToken, getStoredToken } from './adminAuth'
-import { DEFAULT_SETTINGS, type DayNote, type JournalSettings, type Trade } from './journal'
+import { ALL_ACCOUNTS, DEFAULT_SETTINGS, type DayNote, type JournalSettings, type Trade } from './journal'
+import type { Mt5AccountMeta } from './mt5'
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
 
@@ -27,15 +28,30 @@ export interface JournalData {
   months: string[]
 }
 
-/** Trades and day notes for the months from..to (YYYY-MM, inclusive); omit both for everything. */
-export async function fetchJournal(from?: string, to?: string): Promise<JournalData> {
+/**
+ * Trades and day notes for the months from..to (YYYY-MM, inclusive); omit both for everything. `account` picks which
+ * journal: '' is the main (options) journal, an MT5 account number is that account's own Forex calendar. The two never
+ * mix — each is returned on its own, with day notes keyed by plain date.
+ */
+export async function fetchJournal(from?: string, to?: string, account = ''): Promise<JournalData> {
   const params = new URLSearchParams()
   if (from) params.set('from', from)
   if (to) params.set('to', to)
   const qs = params.toString()
   const data = await call(`/admin/journal/data${qs ? `?${qs}` : ''}`)
+
   // Trades saved before a field existed come back without it; fill the gaps so the UI can rely on the shape.
-  return { ...data, trades: (data.trades as Trade[]).map((t) => ({ ...t, source: t.source ?? '' })) }
+  const trades = (data.trades as Trade[])
+    .map((t) => ({ ...t, source: t.source ?? '', account: t.account ?? '' }))
+    .filter((t) => account === ALL_ACCOUNTS || t.account === account)
+
+  // A note for an account is stored as "<date>#<account>"; the main journal's are plain dates.
+  const days: Record<string, DayNote> = {}
+  for (const [key, note] of Object.entries((data.days ?? {}) as Record<string, DayNote>)) {
+    const [date, owner = ''] = key.split('#')
+    if (account !== ALL_ACCOUNTS && owner === account) days[date] = { ...note, account: owner }
+  }
+  return { ...data, trades, days }
 }
 
 /** Creates or updates a trade. Pass the old date when it changed so the server moves it between months. */
@@ -48,7 +64,7 @@ export async function deleteTrade(trade: Pick<Trade, 'id' | 'date'>): Promise<vo
   await call(`/admin/journal/trade?date=${encodeURIComponent(trade.date)}&id=${encodeURIComponent(trade.id)}`, 'DELETE')
 }
 
-/** Saves a day's notes; an empty note deletes the entry and resolves null. */
+/** Saves a day's notes; an empty note deletes the entry and resolves null. Set `day.account` for a Forex account. */
 export async function saveDayNote(day: DayNote): Promise<DayNote | null> {
   const data = await call('/admin/journal/day', 'POST', { day })
   return data.day
@@ -87,3 +103,21 @@ export async function importTrades(trades: Trade[]): Promise<ImportResult> {
   }
   return total
 }
+
+/** An MT5 account and what its uploaded reports said about it (balance, deposits, the broker's own summary). */
+export type Mt5Account = Mt5AccountMeta
+
+export async function fetchAccounts(): Promise<Mt5Account[]> {
+  const data = await call('/admin/journal/accounts')
+  return data.accounts as Mt5Account[]
+}
+
+/**
+ * Saves an account's details from an uploaded report, along with the report file itself for reference. Safe to repeat:
+ * the server merges deposits and never lets an older report overwrite a newer one's balance.
+ */
+export async function saveAccount(account: Mt5AccountMeta, html?: string): Promise<Mt5Account> {
+  const data = await call('/admin/journal/accounts', 'POST', { account, html })
+  return data.account as Mt5Account
+}
+

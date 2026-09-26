@@ -70,7 +70,7 @@ describe('useTheme', () => {
     expect(localStorage.getItem('theme_v2')).toBe('dark')
   })
 
-  it('accepts a stored royal theme and cycles dark → light → royal → dark', () => {
+  it('accepts a stored royal theme and cycles dark → light → royal-light → royal → dark', () => {
     localStorage.setItem('theme_v2', 'royal')
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(result.current.theme).toBe('royal')
@@ -82,8 +82,18 @@ describe('useTheme', () => {
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('light')
     act(() => result.current.cycleTheme())
+    expect(result.current.theme).toBe('royal-light')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('royal-light')
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#fbf7ee')
+    act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('royal')
     expect(localStorage.getItem('theme_v2')).toBe('royal')
+  })
+
+  it('restores a stored royal light theme', () => {
+    localStorage.setItem('theme_v2', 'royal-light')
+    const { result } = renderHook(() => useTheme(), { wrapper })
+    expect(result.current.theme).toBe('royal-light')
   })
 
   it('can jump straight to a theme', () => {

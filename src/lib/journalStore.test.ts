@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { blankTrade } from './journal'
-import { deleteTrade, fetchJournal, fetchSettings, importTrades, saveDayNote, saveSettings, saveTrade } from './journalStore'
+import { deleteTrade, fetchAccounts, fetchJournal, fetchSettings, importTrades, saveAccount, saveDayNote, saveSettings, saveTrade } from './journalStore'
 
 function mockFetch(body: unknown, ok = true, status = 200) {
   const fn = vi.fn(async () => ({ ok, status, json: async () => body }))
@@ -118,4 +118,76 @@ describe('journalStore', () => {
     await expect(importTrades([])).resolves.toEqual({ added: 0, skipped: 0, invalid: 0 })
     expect(fn).not.toHaveBeenCalled()
   })
+
+  describe('separate journals per account', () => {
+    const main = { ...blankTrade('2026-09-22'), id: 'main-trade-1', instrument: 'Options' }
+    const forex = { ...blankTrade('2026-09-22', '62280161'), id: 'mt5-62280161-1', instrument: 'Bitcoin' }
+    const note = (date: string, plan: string, account = '') => ({ date, bias: '', plan, review: '', lessons: '', mood: 0, discipline: 0, account })
+    const data = {
+      trades: [main, forex],
+      days: { '2026-09-22': note('2026-09-22', 'options plan'), '2026-09-22#62280161': note('2026-09-22', 'forex plan', '62280161'), '2026-09-23#99999999': note('2026-09-23', 'other account', '99999999') },
+      months: ['2026-09'],
+    }
+
+    it('returns only the main journal’s trades and notes by default', async () => {
+      mockFetch(data)
+      const r = await fetchJournal('2026-09', '2026-09')
+      expect(r.trades.map((t) => t.id)).toEqual(['main-trade-1'])
+      expect(Object.keys(r.days)).toEqual(['2026-09-22'])
+      expect(r.days['2026-09-22'].plan).toBe('options plan')
+    })
+
+    it('returns only the requested account’s trades and notes, with notes keyed by plain date', async () => {
+      mockFetch(data)
+      const r = await fetchJournal('2026-09', '2026-09', '62280161')
+      expect(r.trades.map((t) => t.id)).toEqual(['mt5-62280161-1'])
+      expect(Object.keys(r.days)).toEqual(['2026-09-22'])
+      expect(r.days['2026-09-22']).toMatchObject({ plan: 'forex plan', account: '62280161' })
+    })
+
+    it('treats trades saved before accounts existed as belonging to the main journal', async () => {
+      const legacy = { ...main } as Partial<typeof main>
+      delete legacy.account
+      mockFetch({ trades: [legacy], days: {}, months: [] })
+      expect((await fetchJournal()).trades).toHaveLength(1)
+      mockFetch({ trades: [legacy], days: {}, months: [] })
+      expect((await fetchJournal(undefined, undefined, '62280161')).trades).toHaveLength(0)
+    })
+
+    it('does not leak another account’s data', async () => {
+      mockFetch(data)
+      expect(Object.values((await fetchJournal(undefined, undefined, '99999999')).days).map((d) => d.plan)).toEqual(['other account'])
+    })
+  })
+
+  describe('MT5 accounts', () => {
+    const meta = {
+      account: '62280161', name: 'Test', currency: 'USD', server: 'Demo', accountType: 'real', marginMode: 'Hedge', company: 'Demo Ltd',
+      balance: 141.57, credit: 0, floating: 0, equity: 141.57, margin: 0, freeMargin: 141.57, marginLevel: 0,
+      balanceOps: [], summary: {}, report: { time: '2026-09-26 08:12', from: '2026-09-22', to: '2026-09-25', trades: 45 },
+    }
+
+    it('lists the saved accounts', async () => {
+      const fn = mockFetch({ accounts: [meta] })
+      const r = await fetchAccounts()
+      expect(r).toEqual([meta])
+      expect(lastCall(fn)[0]).toMatch(/\/admin\/journal\/accounts$/)
+    })
+
+    it('saves an account with its report file and returns the stored copy', async () => {
+      const fn = mockFetch({ account: { ...meta, updatedAt: 'now' }, savedReport: true })
+      const r = await saveAccount(meta, '<html>report</html>')
+      const [url, init] = lastCall(fn)
+      expect(url).toMatch(/\/admin\/journal\/accounts$/)
+      expect(init.method).toBe('POST')
+      expect(JSON.parse(init.body as string)).toEqual({ account: meta, html: '<html>report</html>' })
+      expect(r.updatedAt).toBe('now')
+    })
+
+    it('surfaces the server’s message when a report is refused', async () => {
+      mockFetch({ error: 'That report file is too large to store.' }, false, 413)
+      await expect(saveAccount(meta, 'x')).rejects.toThrow('too large')
+    })
+  })
 })
+

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useTheme } from '@/hooks/useTheme'
+import { isRoyal, useTheme } from '@/hooks/useTheme'
 
 // Small seeded generator so the sky is the same on every render instead of reshuffling.
 function rng(seed: number) {
@@ -19,10 +19,10 @@ interface Burst {
 }
 
 // Twinkling stars and drifting gold dust behind everything, plus a little burst of stars where you click.
-// Only mounted for the royal theme.
+// Only mounted for the royal themes.
 export function RoyalSparkles() {
   const { theme } = useTheme()
-  if (theme !== 'royal') return null
+  if (!isRoyal(theme)) return null
   return <Sky />
 }
 

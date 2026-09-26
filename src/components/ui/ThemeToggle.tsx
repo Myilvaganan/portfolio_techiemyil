@@ -1,16 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Crown, Moon, Sun } from 'lucide-react'
-import { useTheme, type Theme } from '@/hooks/useTheme'
+import { Crown, Gem, Moon, Sun } from 'lucide-react'
+import { isRoyal, useTheme, type Theme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 
 const NEXT: Record<Theme, { next: Theme; label: string }> = {
   dark: { next: 'light', label: 'Switch to light theme' },
-  light: { next: 'royal', label: 'Switch to royal theme' },
+  light: { next: 'royal-light', label: 'Switch to royal light theme' },
+  'royal-light': { next: 'royal', label: 'Switch to royal dark theme' },
   royal: { next: 'dark', label: 'Switch to dark theme' },
 }
 
 // The icon shows the theme you will get by clicking.
-const ICON = { dark: Sun, light: Crown, royal: Moon } as const
+const ICON = { dark: Sun, light: Gem, 'royal-light': Crown, royal: Moon } as const
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, cycleTheme } = useTheme()
@@ -24,7 +25,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={NEXT[theme].label}
       className={cn(
         'relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border text-text-secondary transition-colors hover:border-accent/40 hover:text-text',
-        theme === 'royal' && 'royal-shine',
+        isRoyal(theme) && 'royal-shine',
         className,
       )}
     >

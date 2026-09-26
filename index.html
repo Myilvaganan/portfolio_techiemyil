@@ -17,7 +17,7 @@
     (function () {
       try {
         var stored = localStorage.getItem('theme_v2');
-        var theme = stored === 'dark' || stored === 'light' || stored === 'royal' ? stored : 'royal';
+        var theme = stored === 'dark' || stored === 'light' || stored === 'royal-light' || stored === 'royal' ? stored : 'royal';
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'royal');

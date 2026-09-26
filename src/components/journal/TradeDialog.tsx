@@ -155,6 +155,8 @@ function TradeForm({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isEdit = Boolean(initial.createdAt)
+  // A trade on a Forex account is always in that account's currency, so there is nothing to convert or choose.
+  const accountTrade = Boolean(initial.account)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setF((prev) => ({ ...prev, [key]: value }))
 
@@ -257,16 +259,20 @@ function TradeForm({
       <div>
         <GroupTitle>Size & prices</GroupTitle>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="flex flex-col gap-1">
-            <span className={labelClass}>Currency</span>
-            <Segmented label="Currency" value={f.currency} onChange={(v) => set('currency', v)} options={[{ id: 'INR', label: '₹ INR' }, { id: 'USD', label: '$ USD' }]} />
-          </div>
-          {f.currency === 'USD' ? (
-            <Field label="1 USD = ₹" hint="rate">
-              <input type="number" step="0.01" className={inputClass} value={f.fxRate} onChange={(e) => set('fxRate', e.target.value)} />
-            </Field>
-          ) : (
-            <div className="hidden sm:block" />
+          {!accountTrade && (
+            <>
+              <div className="flex flex-col gap-1">
+                <span className={labelClass}>Currency</span>
+                <Segmented label="Currency" value={f.currency} onChange={(v) => set('currency', v)} options={[{ id: 'INR', label: '₹ INR' }, { id: 'USD', label: '$ USD' }]} />
+              </div>
+              {f.currency === 'USD' ? (
+                <Field label="1 USD = ₹" hint="rate">
+                  <input type="number" step="0.01" className={inputClass} value={f.fxRate} onChange={(e) => set('fxRate', e.target.value)} />
+                </Field>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
+            </>
           )}
           <Field label="Quantity" hint="(units / lots)">
             <input type="number" step="any" className={inputClass} value={f.qty} onChange={(e) => set('qty', e.target.value)} />
@@ -328,7 +334,7 @@ function TradeForm({
           <PreviewCell label="Net (before tax)" node={preview ? <Amount value={preview.net} /> : <span className="text-text-secondary">—</span>} />
           <PreviewCell label={taxRuleFor(settings, f.instrument).rate > 0 ? `After ${taxRuleFor(settings, f.instrument).rate}% tax` : 'After tax'} node={preview ? <Amount value={preview.afterTax} /> : <span className="text-text-secondary">—</span>} />
           <PreviewCell label="R-multiple" node={<span className="font-mono">{preview?.r != null ? `${preview.r >= 0 ? '+' : ''}${preview.r.toFixed(2)}R` : '—'}</span>} />
-          <PreviewCell label="In INR" node={<span className="font-mono text-text-secondary">{preview ? `×${fxOf(preview.t).toFixed(f.currency === 'USD' ? 2 : 0)}` : '—'}</span>} />
+          {!accountTrade && <PreviewCell label="In INR" node={<span className="font-mono text-text-secondary">{preview ? `×${fxOf(preview.t).toFixed(f.currency === 'USD' ? 2 : 0)}` : '—'}</span>} />}
         </div>
       </div>
 

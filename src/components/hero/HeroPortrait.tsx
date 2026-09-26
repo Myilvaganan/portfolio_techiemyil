@@ -4,14 +4,14 @@ import profileImgDark from '@/assets/images/profile.jpg'
 import profileImgLight from '@/assets/images/profile_light.png'
 import profileImgGold from '@/assets/images/profile_gold.jpg'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import { useTheme } from '@/hooks/useTheme'
+import { isRoyal, useTheme } from '@/hooks/useTheme'
 import { FloatingIcons } from './FloatingIcons'
 
 const HeroCanvas = lazy(() => import('./HeroCanvas').then((m) => ({ default: m.HeroCanvas })))
 
 export function HeroPortrait() {
   const { theme } = useTheme()
-  const profileImg = theme === 'light' ? profileImgLight : theme === 'royal' ? profileImgGold : profileImgDark
+  const profileImg = theme === 'light' ? profileImgLight : isRoyal(theme) ? profileImgGold : profileImgDark
 
   return (
     <div className="relative mx-auto flex h-[380px] w-[300px] items-center justify-center sm:h-[440px] sm:w-[340px]">

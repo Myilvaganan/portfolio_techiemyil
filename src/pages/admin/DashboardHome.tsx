@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BarChart3, Calculator, CreditCard, ExternalLink, HandCoins, Landmark, FolderOpen, HardDrive, PieChart, Tags, TrendingUp } from 'lucide-react'
+import { BarChart3, Calculator, CreditCard, ExternalLink, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, PieChart, Tags, TrendingUp } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
@@ -50,6 +50,7 @@ const QUICK_ACTIONS = [
   { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
   { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
   { label: 'Loans', to: '/admin/loans', icon: HandCoins },
+  { label: 'Health Report', to: '/admin/health-report', icon: HeartPulse },
 ]
 
 export function DashboardHome() {
@@ -95,7 +96,7 @@ export function DashboardHome() {
 
       <div>
         <h2 className="mb-4 font-display text-lg font-semibold text-text">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-9">
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.to}

@@ -69,7 +69,7 @@ export function Loans() {
   return (
     <MotionConfig reducedMotion="user">
       <ScrollProgress />
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">ICICI Bank</p>

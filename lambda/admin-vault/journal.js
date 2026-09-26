@@ -3,6 +3,11 @@
 // Data lives under _data/journal/ in the vault bucket (hidden from the document list):
 //   <YYYY-MM>.json  { trades: Trade[], days: { [YYYY-MM-DD]: DayNote }, updatedAt }
 //   settings.json   { taxRate, taxMode, taxRules[], startingCapital, dailyLossLimit, maxTradesPerDay }
+//   mt5-accounts.json  { accounts: { [accountNumber]: Mt5Account } }   MetaTrader 5 account details
+//   mt5-reports/<account>/<stamp>.html   the original uploaded report, kept for reference
+//
+// Trades and day notes carry an `account` ('' = the main options journal, otherwise an MT5 account number) so each
+// account is its own calendar. A day note for an account is stored under "<date>#<account>".
 //
 // One file per month keeps the calendar view a single small read, while the dashboard reads
 // only the months in its range. Everything coming from the browser is re-validated here.
@@ -13,9 +18,13 @@ const { GetObjectCommand, PutObjectCommand, ListObjectsV2Command } = require('@a
 
 const ROOT = '_data/journal'
 const SETTINGS_KEY = `${ROOT}/settings.json`
+const MT5_ACCOUNTS_KEY = `${ROOT}/mt5-accounts.json`
 const MAX_TRADES_PER_MONTH = 3000
 const MAX_MONTHS = 240
 const MAX_IMPORT_PER_REQUEST = 2000
+const MAX_MT5_ACCOUNTS = 20
+const MAX_MT5_BALANCE_OPS = 1000
+const MAX_MT5_REPORT_CHARS = 3_000_000
 
 const DIRECTIONS = ['BUY', 'SELL']
 const CURRENCIES = ['INR', 'USD']
@@ -48,6 +57,11 @@ function optionalNum(value, opts) {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? num(n, { ...opts, fallback: null }) : null
+}
+
+// Account ids end up inside storage keys and day keys ("<date>#<account>"), so keep them to a safe alphabet.
+function cleanAccount(value) {
+  return typeof value === 'string' ? value.replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 40) : ''
 }
 
 function sanitizeTrade(t) {
@@ -90,6 +104,7 @@ function sanitizeTrade(t) {
     followedPlan: t.followedPlan === true ? true : t.followedPlan === false ? false : null,
     rating: Math.round(num(t.rating, { min: 0, max: 5 })),
     notes: text(t.notes, 3000),
+    account: cleanAccount(t.account),
     // Where a trade came from (e.g. "options-analytics:zerodha"); empty for trades typed in by hand.
     source: text(t.source, 40),
     createdAt: typeof t.createdAt === 'string' ? t.createdAt.slice(0, 30) : now,
@@ -101,6 +116,7 @@ function sanitizeDay(d) {
   if (!d || typeof d !== 'object' || !isRealDate(d.date)) return null
   return {
     date: d.date,
+    account: cleanAccount(d.account),
     bias: BIASES.includes(d.bias) ? d.bias : '',
     plan: text(d.plan, 3000),
     review: text(d.review, 3000),
@@ -111,6 +127,72 @@ function sanitizeDay(d) {
 }
 
 const isEmptyDay = (d) => !d.bias && !d.plan && !d.review && !d.lessons && !d.mood && !d.discipline
+
+const dayKey = (d) => (d.account ? `${d.date}#${d.account}` : d.date)
+
+// ---------- MetaTrader 5 accounts ----------
+
+const isMt5Time = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(v)
+
+// null (not 0) for a missing figure, so "no equity in this report" is never shown as $0.
+function moneyOrNull(v) {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isFinite(n) && Math.abs(n) <= 1e12 ? Math.round(n * 100) / 100 : null
+}
+
+function sanitizeMt5Account(a) {
+  if (!a || typeof a !== 'object') return null
+  const account = cleanAccount(a.account)
+  if (!account) return null
+
+  const balanceOps = (Array.isArray(a.balanceOps) ? a.balanceOps : [])
+    .filter((o) => o && typeof o === 'object' && isMt5Time(o.time))
+    .slice(0, MAX_MT5_BALANCE_OPS)
+    .map((o) => ({
+      time: o.time,
+      type: text(o.type, 20),
+      amount: moneyOrNull(o.amount) ?? 0,
+      comment: text(o.comment, 120),
+      balance: moneyOrNull(o.balance),
+    }))
+
+  const summary = {}
+  if (a.summary && typeof a.summary === 'object') {
+    for (const [k, v] of Object.entries(a.summary).slice(0, 60)) {
+      const key = text(k, 60)
+      if (key && typeof v === 'string') summary[key] = text(v, 80)
+    }
+  }
+
+  const rep = a.report && typeof a.report === 'object' ? a.report : {}
+  return {
+    account,
+    name: text(a.name, 80),
+    currency: text(a.currency, 10),
+    server: text(a.server, 60),
+    accountType: text(a.accountType, 20),
+    marginMode: text(a.marginMode, 20),
+    company: text(a.company, 100),
+    balance: moneyOrNull(a.balance),
+    credit: moneyOrNull(a.credit),
+    floating: moneyOrNull(a.floating),
+    equity: moneyOrNull(a.equity),
+    margin: moneyOrNull(a.margin),
+    freeMargin: moneyOrNull(a.freeMargin),
+    marginLevel: moneyOrNull(a.marginLevel),
+    balanceOps,
+    summary,
+    // What the uploaded report covered: when it was generated, the trade date span, and how many trades it held.
+    report: {
+      time: isMt5Time(rep.time) ? rep.time : '',
+      from: isRealDate(rep.from) ? rep.from : '',
+      to: isRealDate(rep.to) ? rep.to : '',
+      trades: Math.round(num(rep.trades, { min: 0, max: 1e6 })),
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
 
 const MAX_TAX_RULES = 30
 // Only Bitcoin is taxed by default; Options Analytics already accounts for its own tax and charges.
@@ -306,10 +388,62 @@ function createJournalApi({ s3, bucket }) {
     if (!day) return { statusCode: 400, body: { error: 'A valid date is required.' } }
     const month = day.date.slice(0, 7)
     const doc = await readMonth(month)
-    if (isEmptyDay(day)) delete doc.days[day.date]
-    else doc.days[day.date] = day
+    if (isEmptyDay(day)) delete doc.days[dayKey(day)]
+    else doc.days[dayKey(day)] = day
     await writeJson(monthKey(month), doc)
     return { statusCode: 200, body: { day: isEmptyDay(day) ? null : day } }
+  }
+
+  async function getAccounts() {
+    const stored = await readJson(MT5_ACCOUNTS_KEY)
+    const accounts = stored?.accounts && typeof stored.accounts === 'object' ? Object.values(stored.accounts) : []
+    accounts.sort((a, b) => String(a.account).localeCompare(String(b.account)))
+    return { statusCode: 200, body: { accounts } }
+  }
+
+  // Saves the account details from an uploaded MT5 report (and the report file itself). Uploading again — say a
+  // newer report — updates the account: deposits are merged so history is never lost, and an *older* report can't
+  // overwrite the balance/equity from a newer one.
+  async function saveAccount(payload) {
+    const incoming = sanitizeMt5Account(payload.account)
+    if (!incoming) return { statusCode: 400, body: { error: 'An MT5 account number is required.' } }
+    // Checked before anything is written, so a rejected upload leaves nothing half-saved.
+    if (typeof payload.html === 'string' && payload.html.length > MAX_MT5_REPORT_CHARS) {
+      return { statusCode: 413, body: { error: 'That report file is too large to store.' } }
+    }
+
+    const stored = await readJson(MT5_ACCOUNTS_KEY)
+    const accounts = stored?.accounts && typeof stored.accounts === 'object' ? { ...stored.accounts } : {}
+    if (!accounts[incoming.account] && Object.keys(accounts).length >= MAX_MT5_ACCOUNTS) {
+      return { statusCode: 413, body: { error: 'Too many MT5 accounts are stored.' } }
+    }
+
+    const prev = accounts[incoming.account]
+    const opKey = (o) => `${o.time}|${o.type}|${o.amount}|${o.comment}`
+    const ops = new Map((prev?.balanceOps ?? []).map((o) => [opKey(o), o]))
+    for (const o of incoming.balanceOps) ops.set(opKey(o), o)
+    const balanceOps = [...ops.values()].sort((a, b) => a.time.localeCompare(b.time)).slice(-MAX_MT5_BALANCE_OPS)
+
+    const isNewer = !prev || incoming.report.time >= (prev.report?.time || '')
+    accounts[incoming.account] = isNewer ? { ...incoming, balanceOps } : { ...prev, balanceOps }
+    await writeJson(MT5_ACCOUNTS_KEY, { accounts })
+
+    // Keep the original file too, exactly as uploaded (already decoded to text by the browser).
+    let savedReport = false
+    if (typeof payload.html === 'string' && payload.html.length > 0) {
+      const stamp = (incoming.report.time || new Date().toISOString()).replace(/\D/g, '').slice(0, 14) || 'report'
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: `${ROOT}/mt5-reports/${incoming.account}/${stamp}.html`,
+          ContentType: 'text/html; charset=utf-8',
+          Body: payload.html,
+        }),
+      )
+      savedReport = true
+    }
+
+    return { statusCode: 200, body: { account: accounts[incoming.account], savedReport } }
   }
 
   async function getSettings() {
@@ -333,8 +467,10 @@ function createJournalApi({ s3, bucket }) {
     if (method === 'POST' && path === '/admin/journal/trades/import') return importTrades(payload)
     if (method === 'DELETE' && path === '/admin/journal/trade') return deleteTrade(query)
     if (method === 'POST' && path === '/admin/journal/day') return saveDay(payload)
+    if (method === 'GET' && path === '/admin/journal/accounts') return getAccounts()
+    if (method === 'POST' && path === '/admin/journal/accounts') return saveAccount(payload)
     return null
   }
 }
 
-module.exports = { createJournalApi, sanitizeTrade, sanitizeDay, sanitizeSettings, isRealDate }
+module.exports = { createJournalApi, sanitizeTrade, sanitizeDay, sanitizeSettings, sanitizeMt5Account, isRealDate }
