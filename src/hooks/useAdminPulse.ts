@@ -7,17 +7,45 @@ import { buildLoans } from '@/lib/loans'
 import { fetchLoanDocs } from '@/lib/statementsApi'
 import { fetchReports } from '@/lib/healthApi'
 import { fetchAnalytics, fetchMessages } from '@/lib/platformApi'
-import { buildPulse, type Pulse } from '@/lib/pulse'
+import { buildPulse, type Notice, type Pulse } from '@/lib/pulse'
+import { fetchStatements } from '@/lib/statementsApi'
+import { fetchFinance } from '@/lib/financeApi'
+import { fetchReminders } from '@/lib/investApi'
+import { applyRules } from '@/lib/rules'
+import { budgetNotices } from '@/lib/budget'
+import { spendAlerts } from '@/lib/anomalies'
+import { buildCardDues, cardDueNotices } from '@/lib/cardDues'
+import { buildReminders, dueReminders } from '@/lib/reminders'
 
 const TTL_MS = 60_000
 let cache: { at: number; promise: Promise<Pulse> } | null = null
 
 const settle = <T,>(p: Promise<T>) => p.catch(() => null)
 
+/** Warnings from the money features. Any source that fails to load is skipped rather than blocking the rest. */
+async function moneyNotices(today: string): Promise<Notice[]> {
+  const [bank, card, settings, custom] = await Promise.all([
+    settle(fetchStatements('bank')),
+    settle(fetchStatements('card')),
+    settle(fetchFinance()),
+    settle(fetchReminders()),
+  ])
+  const out: Notice[] = []
+  const rules = settings?.rules ?? []
+  const bankTxns = bank ? applyRules(bank.transactions, rules) : []
+  const cardTxns = card ? applyRules(card.transactions, rules) : []
+  const all = [...bankTxns, ...cardTxns]
+  if (settings && all.length) for (const n of budgetNotices(settings.budgets, all, today, settings.tags)) out.push({ ...n, tone: 'warn', to: '/admin/budgets' })
+  if (card) for (const n of cardDueNotices(buildCardDues(card.transactions, card.statements, today), today)) out.push({ ...n, tone: 'warn', to: '/admin/credit-cards' })
+  for (const n of dueReminders(buildReminders(bankTxns, today, custom ?? []), today, 14)) out.push({ ...n, tone: 'info', to: '/admin/investments' })
+  for (const n of spendAlerts(all, today).slice(0, 3)) out.push({ ...n, tone: 'info', to: '/admin/budgets' })
+  return out
+}
+
 async function load(): Promise<Pulse> {
   const today = todayStr()
   const month = monthOf(today)
-  const [journal, settings, usdInr, loanDocs, reports, messages, analytics] = await Promise.all([
+  const [journal, settings, usdInr, loanDocs, reports, messages, analytics, extra] = await Promise.all([
     settle(fetchJournal(month, month, ALL_ACCOUNTS)),
     settle(fetchSettings()),
     settle(fetchUsdInr()),
@@ -25,6 +53,7 @@ async function load(): Promise<Pulse> {
     settle(fetchReports()),
     settle(fetchMessages()),
     settle(fetchAnalytics(month)),
+    settle(moneyNotices(today)),
   ])
   const rate = usdInr || FALLBACK_USD_INR
   // Forex (MT5) trades are in dollars; the home screen adds everything up in rupees.
@@ -37,6 +66,7 @@ async function load(): Promise<Pulse> {
     reports,
     messages,
     siteViews: analytics ? analytics.total : null,
+    extra: extra ?? [],
   })
 }
 

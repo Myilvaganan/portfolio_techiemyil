@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -372,3 +372,17 @@ be used twice. Five wrong passwords or codes in a row lock that sender out for 1
 **Lost the authenticator and every recovery code?** Set the environment variable `ADMIN_2FA_DISABLED=1` on the function; sign-in
 then asks for the password only. Turn two-step verification off from the Security page, remove the variable, and set it up again.
 If you rotate `ADMIN_JWT_SECRET` (or `ADMIN_2FA_KEY`), the stored secret can no longer be read, so do the same.
+
+## Personal finance (`finance.js`, `wealth.js`, `invest.js`)
+
+| Route | Stored in | What it does |
+| --- | --- | --- |
+| `GET/POST /admin/finance/budgets` | `_data/finance/budgets.json` | Monthly limit per category |
+| `GET/POST /admin/finance/rules` | `_data/finance/rules.json` | "Always file X as Y" category rules (applied in the app; statements are not rewritten) |
+| `GET/POST /admin/finance/tags` | `_data/finance/tags.json` | Mark a merchant or transaction as family, household or ignore |
+| `GET/POST /admin/wealth/snapshots` | `_data/wealth/snapshots.json` | One net-worth snapshot per month (kept for 20 years) |
+| `GET/POST/DELETE /admin/wealth/goals` | `_data/wealth/goals.json` | Savings goals |
+| `GET/POST /admin/invest/capital-gains` | `_data/invest/capital-gains.json` | Per-financial-year capital-gains totals imported from a Zerodha Tax P&L |
+| `GET/POST/DELETE /admin/invest/reminders` | `_data/invest/reminders.json` | Custom reminders |
+
+All writes use S3 conditional requests and retry on a conflict.

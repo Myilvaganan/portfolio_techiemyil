@@ -19,6 +19,8 @@ export interface Pulse {
   inbodyDaysSince: number | null
   unreadMessages: number
   siteViews: number | null
+  /** Ready-made notices from the money features (budgets, card dues, reminders, unusual spend). */
+  extra: Notice[]
 }
 
 export interface PulseInput {
@@ -29,12 +31,13 @@ export interface PulseInput {
   reports?: HealthReport[] | null
   messages?: ContactMessage[] | null
   siteViews?: number | null
+  extra?: Notice[]
 }
 
 const days = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000)
 
 /** Everything the home screen and the notification bell show, from whatever sources loaded (a failed source is null). */
-export function buildPulse({ today, trades, settings, loans, reports, messages, siteViews = null }: PulseInput): Pulse {
+export function buildPulse({ today, trades, settings, loans, reports, messages, siteViews = null, extra = [] }: PulseInput): Pulse {
   const todays = trades ? trades.filter((t) => t.date === today) : null
   const todayPnl = todays ? todays.reduce((s, t) => s + netInr(t), 0) : null
   const monthPnl = trades ? trades.filter((t) => t.date.slice(0, 7) === today.slice(0, 7)).reduce((s, t) => s + netInr(t), 0) : null
@@ -64,6 +67,7 @@ export function buildPulse({ today, trades, settings, loans, reports, messages, 
     inbodyDaysSince: latestWeight ? days(latestWeight.date, today) : null,
     unreadMessages: (messages ?? []).filter((m) => !m.read).length,
     siteViews,
+    extra,
   }
 }
 
@@ -84,5 +88,5 @@ export function noticesFrom(p: Pulse, fmt: (n: number) => string): Notice[] {
   }
   if (p.inbodyDaysSince !== null && p.inbodyDaysSince >= INBODY_EVERY_DAYS) out.push({ id: 'inbody', tone: 'info', title: 'Time for an InBody test', detail: `Your last test was ${p.inbodyDaysSince} days ago.`, to: '/admin/health-report' })
   if (p.unreadMessages > 0) out.push({ id: 'messages', tone: 'info', title: `${p.unreadMessages} new message${p.unreadMessages === 1 ? '' : 's'}`, detail: 'From the contact form on your website.', to: '/admin/site' })
-  return out
+  return [...out, ...p.extra]
 }

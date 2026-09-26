@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MotionConfig } from 'framer-motion'
-import { Eye, EyeOff, RefreshCw, Wallet } from 'lucide-react'
+import { Camera, Eye, EyeOff, RefreshCw, Wallet } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Card, Kpi } from '@/components/statements/parts'
 import { AreaChart, Donut, HBars, Legend, vizColor } from '@/components/viz/charts'
@@ -15,6 +15,11 @@ import { DEFAULT_FEE } from '@/lib/loans'
 import { HOLDINGS, totalValue } from '@/lib/portfolio'
 import { cardsSummary, monthLabel } from '@/lib/statements'
 import { usePrivacy, useMoney } from '@/lib/privacy'
+import { bestWorst, currentMonth, hasSnapshotData, monthChanges, snapshotFrom, type WealthSnapshot } from '@/lib/netWorthHistory'
+import { fetchSnapshots, saveSnapshot } from '@/lib/wealthApi'
+
+const AUTO_KEY = 'networth-snapshot-month'
+
 
 function Hint({ to, children }: { to: string; children: string }) {
   return (
@@ -42,6 +47,41 @@ export function NetWorth() {
     () => computeNetWorth({ portfolioValue, bankBalances: bankBalances.map((b) => ({ label: b.label, balance: b.balance })), loanOutstanding, cardDues }),
     [portfolioValue, bankBalances, loanOutstanding, cardDues],
   )
+
+  const [snaps, setSnaps] = useState<WealthSnapshot[]>([])
+  const [snapBusy, setSnapBusy] = useState(false)
+  const [snapError, setSnapError] = useState<string | null>(null)
+  const changes = useMemo(() => monthChanges(snaps), [snaps])
+  const { best, worst } = useMemo(() => bestWorst(changes), [changes])
+  const lastChange = changes.at(-1)
+  const ready = !(bank.loading || card.loading || loansHook.loading)
+
+  useEffect(() => {
+    fetchSnapshots().then(setSnaps).catch((e: Error) => setSnapError(e.message))
+  }, [])
+
+  const takeSnapshot = useCallback(async () => {
+    setSnapBusy(true)
+    try {
+      setSnaps(await saveSnapshot(snapshotFrom(summary)))
+      setSnapError(null)
+    } catch (e) {
+      setSnapError((e as Error).message)
+    } finally {
+      setSnapBusy(false)
+    }
+  }, [summary])
+
+  useEffect(() => {
+    if (!ready || !hasSnapshotData(snapshotFrom(summary))) return
+    try {
+      if (sessionStorage.getItem(AUTO_KEY) === currentMonth()) return
+      sessionStorage.setItem(AUTO_KEY, currentMonth())
+    } catch {
+      /* storage unavailable: still save once per mount */
+    }
+    void takeSnapshot()
+  }, [ready, summary, takeSnapshot])
 
   const loading = bank.loading || card.loading || loansHook.loading
   const assetItems = summary.assetGroups.flatMap((g) => g.items)
@@ -79,6 +119,9 @@ export function NetWorth() {
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
+          <button type="button" data-cursor="hover" onClick={() => void takeSnapshot()} disabled={snapBusy || loading} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text disabled:opacity-50">
+            <Camera className="h-3.5 w-3.5" /> {snapBusy ? 'Saving…' : "Save this month's snapshot"}
+          </button>
           <ReportMenu filename="net-worth-report" report={() => netWorthReport(summary)} />
         </div>
       </div>
@@ -94,6 +137,30 @@ export function NetWorth() {
             <Kpi label="Total assets" value={summary.totalAssets} format={money.inr} tone="good" sub={`${assetItems.length} source${assetItems.length === 1 ? '' : 's'}`} delay={0.05} />
             <Kpi label="Total liabilities" value={summary.totalLiabilities} format={money.inr} tone={summary.totalLiabilities > 0 ? 'warn' : undefined} sub={`${liabilityItems.length} source${liabilityItems.length === 1 ? '' : 's'}`} delay={0.1} />
           </div>
+
+          <Card title="Net worth over time" aside={<span className="text-[11px] text-text-secondary">{snaps.length} monthly snapshot{snaps.length === 1 ? '' : 's'}</span>}>
+            <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+              {snaps.length > 1 ? (
+                <AreaChart labels={snaps.map((h) => monthLabel(h.month))} series={[{ key: 'net', label: 'Net worth', color: 'var(--viz-1)', values: snaps.map((h) => h.net) }]} format={money.inr} height={160} />
+              ) : (
+                <p className="flex items-center justify-center py-10 text-center text-sm text-text-secondary">A snapshot is saved each month you open this page — the chart appears after two.</p>
+              )}
+              <div className="grid grid-cols-3 gap-2 text-xs lg:grid-cols-1">
+                {[
+                  { label: 'Last month change', v: lastChange ? `${money.signed(lastChange.change)}${lastChange.pct !== null ? ` · ${money.pct(lastChange.pct, 1)}` : ''}` : '—', tone: lastChange ? (lastChange.change >= 0 ? 'text-positive' : 'text-error') : 'text-text', sub: lastChange ? monthLabel(lastChange.month) : '' },
+                  { label: 'Best month', v: best ? money.signed(best.change) : '—', tone: 'text-positive', sub: best ? monthLabel(best.month) : '' },
+                  { label: 'Worst month', v: worst ? money.signed(worst.change) : '—', tone: 'text-error', sub: worst ? monthLabel(worst.month) : '' },
+                ].map((c) => (
+                  <div key={c.label} className="rounded-xl border border-border bg-surface-2 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">{c.label}</p>
+                    <p className={`mt-0.5 font-mono text-sm font-semibold ${c.tone}`}>{c.v}</p>
+                    {c.sub && <p className="text-[10px] text-text-secondary">{c.sub}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {snapError && <p role="alert" className="mt-2 text-xs text-error">{snapError}</p>}
+          </Card>
 
           <div className="grid gap-5 lg:grid-cols-2">
             <Card title="Assets">

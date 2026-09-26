@@ -23,6 +23,10 @@ const HealthReport = page(() => import('@/pages/admin/HealthReport'), 'HealthRep
 const Household = page(() => import('@/pages/admin/Household'), 'Household')
 const TaxInformation = page(() => import('@/pages/admin/TaxInformation'), 'TaxInformation')
 const NetWorth = page(() => import('@/pages/admin/NetWorth'), 'NetWorth')
+const Budgets = page(() => import('@/pages/admin/Budgets'), 'Budgets')
+const CashFlow = page(() => import('@/pages/admin/CashFlow'), 'CashFlow')
+const Goals = page(() => import('@/pages/admin/Goals'), 'Goals')
+const Investments = page(() => import('@/pages/admin/Investments'), 'Investments')
 const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
 
@@ -62,6 +66,10 @@ export function Admin() {
                 <Route path="household" element={<Household />} />
                 <Route path="tax" element={<TaxInformation />} />
                 <Route path="net-worth" element={<NetWorth />} />
+                <Route path="budgets" element={<Budgets />} />
+                <Route path="cash-flow" element={<CashFlow />} />
+                <Route path="goals" element={<Goals />} />
+                <Route path="investments" element={<Investments />} />
                 <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />

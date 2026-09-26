@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { CreditCard, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AiInsightsPanel, AskAi } from '@/components/statements/AiPanel'
+import { CardDues } from '@/components/statements/CardDues'
 import { RecurringCard } from '@/components/statements/RecurringCard'
 import { StatementLibrary } from '@/components/statements/StatementLibrary'
 import { StatementUploader } from '@/components/statements/StatementUploader'
@@ -131,6 +132,8 @@ export function CreditCards() {
           </Reveal>
         ) : (
           <>
+            <CardDues txns={data.transactions} statements={data.statements} />
+
             <Chips label="Date range" value={range} options={RANGE_OPTIONS} onChange={setRange} />
 
             <Reveal>

@@ -12,6 +12,9 @@ const { createHealthApi } = require('./health')
 const { createTaxApi } = require('./tax')
 const { createPlatformApi } = require('./platform')
 const { createSecurityApi } = require('./security')
+const { createFinanceApi } = require('./finance')
+const { createWealthApi } = require('./wealth')
+const { createInvestApi } = require('./invest')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -40,6 +43,9 @@ const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 const healthApi = createHealthApi({ s3, bucket: S3_BUCKET })
 const taxApi = createTaxApi({ s3, bucket: S3_BUCKET })
 const platformApi = createPlatformApi({ s3, bucket: S3_BUCKET })
+const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
+const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
+const investApi = createInvestApi({ s3, bucket: S3_BUCKET })
 const securityApi = createSecurityApi({ s3, bucket: S3_BUCKET, secretKey: process.env.ADMIN_2FA_KEY || JWT_SECRET, disabled: process.env.ADMIN_2FA_DISABLED === '1' })
 
 // ---------- CORS / request helpers ----------
@@ -612,6 +618,12 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/journal')) {
       const result = await journalApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    for (const [prefix, api] of [['/admin/finance', financeApi], ['/admin/wealth', wealthApi], ['/admin/invest', investApi]]) {
+      if (!path.startsWith(prefix)) continue
+      const result = await api.route({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 
