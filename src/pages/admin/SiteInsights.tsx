@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Loader2, Mail, MailOpen, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
@@ -32,20 +32,27 @@ export function SiteInsights() {
   const [messages, setMessages] = useState<ContactMessage[] | null>(null)
   const [openId, setOpenId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const request = useRef(0)
 
   const load = useCallback(async () => {
+    const id = ++request.current
     setError(null)
-    try {
-      const [a, m] = await Promise.all([fetchAnalytics(month), fetchMessages()])
-      setStats(a)
-      setMessages(m)
-    } catch (e) {
-      setError((e as Error).message)
-    }
+    setLoading(true)
+    setStats(null)
+    const [a, m] = await Promise.allSettled([fetchAnalytics(month), fetchMessages()])
+    if (id !== request.current) return
+    if (a.status === 'fulfilled') setStats(a.value)
+    if (m.status === 'fulfilled') setMessages(m.value)
+    const errors = [a, m].flatMap((r) => r.status === 'rejected' ? [r.reason instanceof Error ? r.reason.message : 'Could not load website data.'] : [])
+    setError(errors.join(' · ') || null)
+    setLoading(false)
   }, [month])
 
   useEffect(() => {
+    const counter = request
     void load()
+    return () => { counter.current++ }
   }, [load])
 
   async function toggleRead(m: ContactMessage, read = !m.read) {
@@ -67,7 +74,7 @@ export function SiteInsights() {
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent">techiemyil.com</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-text">Website</h1>
-          <p className="mt-1 text-sm text-text-secondary">Messages from the contact form and how many people read each page. No cookies, IPs or personal data are collected.</p>
+          <p className="mt-1 text-sm text-text-secondary">Messages from the contact form and how many people read each page. Page-view analytics collect no cookies or IPs. Contact messages contain the details the sender provides.</p>
         </div>
         <Button size="sm" variant="secondary" magnetic={false} onClick={() => void load()}>
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -94,7 +101,7 @@ export function SiteInsights() {
             </span>
           }
         >
-          {!stats ? (
+          {!stats && !loading ? <p className="text-sm text-error">Visitor data could not be loaded. Use Refresh to retry.</p> : !stats ? (
             <p className="flex items-center gap-2 text-sm text-text-secondary">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
@@ -139,7 +146,7 @@ export function SiteInsights() {
         </Card>
 
         <Card title={`Messages${unread ? ` · ${unread} new` : ''}`}>
-          {!messages ? (
+          {!messages && !loading ? <p className="text-sm text-error">Messages could not be loaded. Use Refresh to retry.</p> : !messages ? (
             <p className="flex items-center gap-2 text-sm text-text-secondary">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>

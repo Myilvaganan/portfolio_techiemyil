@@ -52,7 +52,7 @@ Content in `src/data/*.ts` is sourced directly from the resume in `source-files/
 - **Design tokens** live entirely in `src/index.css` via Tailwind v4's `@theme` block (no `tailwind.config.js` needed) — colors, fonts, radii, section spacing, and marquee/float keyframes.
 - **Hero R3F canvas** is lazy-loaded and wrapped in an `ErrorBoundary` so devices/browsers without WebGL still get a fully working hero (just without the particle effect).
 - **Command palette** (`⌘K` / `Ctrl+K`) jumps to any section, opens the resume, or opens socials.
-- **Contact form** validates client-side and hands off to a pre-filled `mailto:` link — there's no backend.
+- **Contact form** validates client-side and sends to the admin Lambda contact endpoint; messages appear in the admin inbox.
 - **Google Map embed** in the Contact section uses the key-free `output=embed` iframe, tinted dark via CSS `invert`/`hue-rotate` filters to match the theme.
 - Resume PDF lives at `public/resume/` and is linked from the header, hero, and command palette.
 
@@ -61,3 +61,13 @@ Content in `src/data/*.ts` is sourced directly from the resume in `source-files/
 - The profile photo is cropped from a low-resolution mockup screenshot; swap `src/assets/images/profile.jpg` for a real high-resolution headshot when available.
 - Project screenshots are generated abstract placeholders (`src/assets/images/project-*.jpg`), not real product screenshots.
 - Testimonials, Blog, Pricing, and Free Tools sections are intentionally placeholders per the design brief — wire up real content when it exists.
+
+## Admin journal sync and search
+
+The Trading Journal has All, Options and per-account Forex calendars. Universal search opens a trade or note on its day in the corresponding journal.
+
+- **MT5:** In Forex, use **Connect MT5 folder** in a browser that supports directory access. Choose the folder containing exported `ReportHistory-<account>.html` files. Saved folders are checked on opening Forex and every minute while visible. **Sync folder** renews permission when the browser requires it; **Disconnect** removes the saved handle. MetaTrader must still export/update the report itself. Unsupported browsers can use **Upload MT5 report**.
+- **Zerodha:** A connected session syncs on opening Options and every five minutes while visible. Expired sessions need reconnection through **Sync Zerodha**. Both syncs stop when their journal is closed; neither is a server-side scheduled task.
+- **Reviews:** Month/year reviews show request errors with a retry button. Forex equity uses all imported trades and balance operations, independently of dashboard period/tag filters; it represents closed-trade history rather than live unrealized equity.
+
+Run `npm test` for frontend and Lambda regression tests and `npm run build` for type checking and the production build. Backend routes and deployment instructions are in [lambda/admin-vault/README.md](lambda/admin-vault/README.md). The earlier feature batch added backend fields/routes that require deploying that Lambda package.

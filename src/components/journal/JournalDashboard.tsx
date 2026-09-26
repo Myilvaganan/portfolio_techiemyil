@@ -82,7 +82,7 @@ function EquityVsDepositsCard({ trades, balanceOps }: { trades: Trade[]; balance
   const { max, current } = useMemo(() => accountDrawdown(curve), [curve])
   return (
     <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
-      <SectionTitle>Equity vs deposits</SectionTitle>
+      <SectionTitle>Equity vs deposits · all history</SectionTitle>
       {curve.length === 0 ? (
         <Empty>No deposits or trades yet.</Empty>
       ) : (
@@ -117,6 +117,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
   const wide = useMediaQuery('(min-width: 1280px)')
   const [range, setRange] = useState<Range>('all')
   const [trades, setTrades] = useState<Trade[]>([])
+  const [equityTrades, setEquityTrades] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -128,8 +129,12 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     const { from, to } = rangeFor(range, viewedMonth, today)
     setLoading(true)
     setError(null)
-    fetchJournal(from, to, account)
+    const fullAccount = Boolean(account) && account !== ALL_ACCOUNTS && Boolean(balanceOps)
+    fetchJournal(fullAccount ? undefined : from, fullAccount ? undefined : to, account)
       .then((data) => {
+        if (cancelled) return
+        setEquityTrades(data.trades)
+        if (fullAccount) data = { ...data, trades: data.trades.filter((t) => (!from || t.date.slice(0, 7) >= from) && (!to || t.date.slice(0, 7) <= to)) }
         if (!cancelled) setTrades(account === ALL_ACCOUNTS ? data.trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : data.trades)
       })
       .catch((err) => {
@@ -141,17 +146,17 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     return () => {
       cancelled = true
     }
-  }, [range, viewedMonth, today, refreshKey, attempt, account, usdInr])
+  }, [range, viewedMonth, today, refreshKey, attempt, account, usdInr, balanceOps])
 
   const allTags = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const tr of trades) for (const g of tr.tags) counts.set(g, (counts.get(g) ?? 0) + 1)
+    for (const tr of trades) for (const g of tr.tags ?? []) counts.set(g, (counts.get(g) ?? 0) + 1)
     return [...counts.entries()].sort((x, y) => y[1] - x[1]).map(([g]) => g)
   }, [trades])
   useEffect(() => {
     if (tagFilter && !allTags.includes(tagFilter)) setTagFilter(null)
   }, [allTags, tagFilter])
-  const filteredTrades = useMemo(() => (tagFilter ? trades.filter((tr) => tr.tags.includes(tagFilter)) : trades), [trades, tagFilter])
+  const filteredTrades = useMemo(() => (tagFilter ? trades.filter((tr) => (tr.tags ?? []).includes(tagFilter)) : trades), [trades, tagFilter])
 
   const a = useMemo(() => analyze(filteredTrades, settings), [filteredTrades, settings])
   const money = (n: number) => `${n < 0 ? '-' : ''}${m.inr(Math.abs(n))}`
@@ -344,7 +349,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
             <TimeAnalysisCard byHour={a.byHour} byWeekday={a.byWeekday} byHoldBucket={a.byHoldBucket} />
 
             {isForexAccount ? (
-              <EquityVsDepositsCard trades={filteredTrades} balanceOps={balanceOps!} />
+              <EquityVsDepositsCard trades={equityTrades} balanceOps={balanceOps!} />
             ) : (
               <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
                 <SectionTitle>By emotion</SectionTitle>

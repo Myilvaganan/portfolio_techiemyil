@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { TradingJournal } from './TradingJournal'
 import { DEFAULT_SETTINGS, blankTrade, type Trade } from '@/lib/journal'
 import { setHidden } from '@/lib/privacy'
-import { deleteTrade, fetchJournal, fetchSettings, importTrades, saveDayNote, saveSettings, saveTrade } from '@/lib/journalStore'
+import { deleteTrade, fetchAccounts, fetchJournal, fetchSettings, importTrades, saveDayNote, saveSettings, saveTrade } from '@/lib/journalStore'
 import { loadBackfillPlan, summarise } from '@/lib/journalBackfill'
 import { MemoryRouter } from 'react-router-dom'
 import { getKiteSession } from '@/lib/kite'
@@ -13,6 +13,7 @@ import { fetchUsdInr } from '@/lib/livePrices'
 
 vi.mock('@/lib/journalStore', () => ({
   fetchJournal: vi.fn(),
+  fetchAccounts: vi.fn(),
   fetchSettings: vi.fn(),
   saveTrade: vi.fn(),
   deleteTrade: vi.fn(),
@@ -73,6 +74,42 @@ describe('TradingJournal', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.clearAllMocks()
+  })
+
+  it('opens a search result in Options on its saved day despite the remembered book', async () => {
+    localStorage.setItem('journal_book', 'all')
+    load([{ ...OPTIONS, date: '2026-08-10' }])
+    render(<MemoryRouter initialEntries={['/admin/trading-journal?book=options&date=2026-08-10']}><TradingJournal /></MemoryRouter>)
+    await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08', ''))
+    expect(await screen.findByText('NIFTY 25000 CE')).toBeInTheDocument()
+  })
+
+  it('opens Forex search results in the requested account without jumping to the report end', async () => {
+    const meta = {
+      account: '123', name: 'Demo', currency: 'USD', server: 'Demo', accountType: 'demo', marginMode: 'Hedge', company: 'Demo',
+      balance: 100, credit: 0, floating: 0, equity: 100, margin: 0, freeMargin: 100, marginLevel: 0,
+      balanceOps: [], summary: {}, report: { time: '2026-09-26 08:12', from: '2026-08-01', to: '2026-09-25', trades: 1 },
+    }
+    vi.mocked(fetchAccounts).mockResolvedValue([meta as Awaited<ReturnType<typeof fetchAccounts>>[number]])
+    load([{ ...OPTIONS, account: '123', date: '2026-08-10' }])
+    render(<MemoryRouter initialEntries={['/admin/trading-journal?book=forex&account=123&date=2026-08-10']}><TradingJournal /></MemoryRouter>)
+    await waitFor(() => expect(fetchJournal).toHaveBeenCalledWith('2026-08', '2026-08', '123'))
+    expect(await screen.findByText('August 2026')).toBeInTheDocument()
+    expect(await screen.findByText('NIFTY 25000 CE')).toBeInTheDocument()
+  })
+
+  it('rejects impossible dates in search links', async () => {
+    render(<MemoryRouter initialEntries={['/admin/trading-journal?book=options&date=2026-02-31']}><TradingJournal /></MemoryRouter>)
+    expect(await screen.findByText('September 2026')).toBeInTheDocument()
+    expect(fetchJournal).not.toHaveBeenCalledWith('2026-02', '2026-02', '')
+  })
+
+  it('surfaces an automatic Zerodha sync failure', async () => {
+    vi.mocked(getKiteSession).mockReturnValue({ accessToken: 'test', userName: 'Test' } as ReturnType<typeof getKiteSession>)
+    vi.mocked(syncZerodhaToJournal).mockRejectedValue(new Error('Session expired. Reconnect Zerodha.'))
+    render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Session expired. Reconnect Zerodha.')
+    expect(syncZerodhaToJournal).toHaveBeenCalledWith(TODAY)
   })
 
   it('shows the month with each day’s result and totals before and after tax', async () => {

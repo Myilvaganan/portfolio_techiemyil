@@ -35,7 +35,7 @@ function score(text: string, words: string[]): number {
   return total
 }
 
-const journalLink = (date: string) => `/admin/trading-journal?date=${date}`
+const journalLink = (date: string, account = '') => `/admin/trading-journal?date=${encodeURIComponent(date)}&book=${account ? 'forex' : 'options'}${account ? `&account=${encodeURIComponent(account)}` : ''}`
 
 export function searchAll(index: SearchIndex, query: string, limit = 20): SearchHit[] {
   const words = norm(query).split(/\s+/).filter(Boolean)
@@ -50,13 +50,13 @@ export function searchAll(index: SearchIndex, query: string, limit = 20): Search
   for (const d of index.documents) add({ kind: 'document', title: d.filename, detail: d.tag, to: `/admin/documents?q=${encodeURIComponent(d.filename)}` }, `${d.filename} ${d.tag}`)
   for (const t of index.trades) {
     const text = [t.instrument, t.symbol, t.strategy, t.emotion, t.notes, t.direction, t.date, ...(t.mistakes ?? []), ...((t as Trade & { tags?: string[] }).tags ?? [])].join(' ')
-    add({ kind: 'trade', title: `${t.instrument}${t.symbol && t.symbol !== t.instrument ? ` · ${t.symbol}` : ''}`, detail: `${t.date} · ${t.direction}${t.strategy ? ` · ${t.strategy}` : ''}`, to: journalLink(t.date) }, text)
+    add({ kind: 'trade', title: `${t.instrument}${t.symbol && t.symbol !== t.instrument ? ` · ${t.symbol}` : ''}`, detail: `${t.date} · ${t.direction}${t.strategy ? ` · ${t.strategy}` : ''}`, to: journalLink(t.date, t.account) }, text)
   }
   for (const [key, n] of Object.entries(index.notes)) {
-    const date = key.split('#')[0]
+    const [date, account = ''] = key.split('#')
     const text = [n.bias, n.plan, n.review, n.lessons].join(' ')
     const snippet = (n.review || n.plan || n.lessons || n.bias).slice(0, 80)
-    add({ kind: 'note', title: `Journal note · ${date}`, detail: snippet, to: journalLink(date) }, `${text} ${date}`)
+    add({ kind: 'note', title: `Journal note · ${date}`, detail: snippet, to: journalLink(date, account) }, `${text} ${date}`)
   }
   for (const r of index.reports) {
     const date = r.testedAt.slice(0, 10)

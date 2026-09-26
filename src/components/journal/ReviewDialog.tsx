@@ -20,19 +20,22 @@ function rangeOf(scope: Scope, viewedMonth: string): { from: string; to: string;
 function Body({ settings, viewedMonth, account, usdInr }: { settings: JournalSettings; viewedMonth: string; account: string; usdInr: number }) {
   const m = useMoney()
   const [scope, setScope] = useState<Scope>('month')
+  const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
   const [trades, setTrades] = useState<Trade[] | null>(null)
   const { from, to, label } = rangeOf(scope, viewedMonth)
 
   useEffect(() => {
     let cancelled = false
     setTrades(null)
+    setError(null)
     fetchJournal(from, to, account)
       .then((data) => !cancelled && setTrades(account === '*' ? data.trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : data.trades))
-      .catch(() => !cancelled && setTrades([]))
+      .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load the review.') })
     return () => {
       cancelled = true
     }
-  }, [from, to, account, usdInr])
+  }, [from, to, account, usdInr, attempt])
 
   const a = useMemo(() => analyze(trades ?? [], settings), [trades, settings])
   const money = (n: number) => `${n < 0 ? '-' : ''}${m.inr(Math.abs(n))}`
@@ -69,7 +72,7 @@ function Body({ settings, viewedMonth, account, usdInr }: { settings: JournalSet
         </Button>
       </div>
 
-      {trades === null ? (
+      {error ? <div role="alert" className="space-y-2 text-sm text-error"><p>{error}</p><Button onClick={() => setAttempt((n) => n + 1)}>Try again</Button></div> : trades === null ? (
         <p role="status" className="flex items-center justify-center gap-2 py-16 text-sm text-text-secondary">
           <Loader2 className="h-4 w-4 animate-spin" /> Building the review…
         </p>

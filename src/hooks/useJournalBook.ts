@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ALL_ACCOUNTS,
@@ -20,6 +21,7 @@ import { FALLBACK_USD_INR } from '@/lib/margin'
  * separate ('' is the main journal; an MT5 account number is that account's own calendar).
  */
 export function useJournalBook(account: string) {
+  const { search } = useLocation()
   const today = useMemo(() => todayStr(), [])
   const [month, setMonth] = useState(monthOf(today))
   const [selected, setSelected] = useState(today)
@@ -78,6 +80,15 @@ export function useJournalBook(account: string) {
     },
     [today],
   )
+
+  useEffect(() => {
+    const date = new URLSearchParams(search).get('date')
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return
+    const parsed = new Date(`${date}T00:00:00Z`)
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) return
+    setMonth(monthOf(date))
+    setSelected(date)
+  }, [search])
 
   /** Move the selected day by whole days, following the calendar into the neighbouring month when needed. */
   const stepDay = useCallback(

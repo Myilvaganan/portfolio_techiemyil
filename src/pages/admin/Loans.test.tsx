@@ -30,7 +30,7 @@ describe('Loans', () => {
     data = { statements: allLoanDocs(), insights: null }
     vi.mocked(api.fetchLoanDocs).mockImplementation(async () => data)
     // The real server stores the fingerprint it is given (previously it cut it to 64 characters).
-    vi.mocked(api.generateInsights).mockImplementation(async (_k, _c, fp) => ({ ...insights, fingerprint: fp.slice(0, 64) }))
+    vi.mocked(api.generateInsights).mockImplementation(async (_k, _c, fp) => ({ ...insights, fingerprint: fp }))
   })
 
   it('asks for loan documents when there are none', async () => {
@@ -114,14 +114,16 @@ describe('Loans', () => {
 
   it('generates loan insights once, then reuses saved ones', async () => {
     const first = render(<Loans />)
-    expect(await screen.findByText(/Two loans, one bounce/)).toBeInTheDocument()
+    // Loading the full schedule and then generating insights spans multiple renders.
+    expect(await screen.findByText(/Two loans, one bounce/, {}, { timeout: 5000 })).toBeInTheDocument()
     expect(api.generateInsights).toHaveBeenCalledTimes(1)
     expect(vi.mocked(api.generateInsights).mock.calls[0][0]).toBe('loan')
     first.unmount()
     vi.mocked(api.generateInsights).mockClear()
     data = { ...data, insights: { ...insights, fingerprint: loanFingerprint(data.statements) } }
     render(<Loans />)
-    expect(await screen.findByText(/Two loans, one bounce/)).toBeInTheDocument()
+    // Loading the full schedule and then generating insights spans multiple renders.
+    expect(await screen.findByText(/Two loans, one bounce/, {}, { timeout: 5000 })).toBeInTheDocument()
     expect(api.generateInsights).not.toHaveBeenCalled()
   })
 

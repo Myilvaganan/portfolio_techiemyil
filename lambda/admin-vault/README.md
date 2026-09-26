@@ -315,6 +315,9 @@ Implemented in [`health.js`](health.js). InBody body-composition reports are sto
 | `POST /admin/health/reports {report}` or `{reports: []}` | Create (no id) or update (existing id). Returns every report |
 | `DELETE /admin/health/reports?id=` | Removes one report |
 | `POST /admin/health/scan {image}` | Reads a photo of the sheet (a `data:image/jpeg|png|webp;base64,…` URL, which the browser downscales to 2000 px) with `OPENAI_MODEL_VISION`. Returns the unsaved `report` and any earlier tests from the sheet's history table as `history[]`. The photo is not stored, and the request uses `store: false` |
+| `GET` / `POST /admin/health/goal` | Read or save weight/body-fat targets and target date |
+| `GET` / `POST /admin/health/logs` | Read or save daily weight, steps, water and sleep |
+| `DELETE /admin/health/logs?date=YYYY-MM-DD` | Remove a daily log |
 
 Each report keeps the normal ranges printed on its sheet, because InBody works them out from height and sex. The
 browser falls back to standard ranges for BMI, body-fat %, waist-hip ratio, visceral fat and obesity degree.
@@ -335,3 +338,6 @@ ETag, `If-None-Match: *` for a new file) and retry on a conflict, so simultaneou
 
 The bucket has **versioning** on with a lifecycle rule that expires old versions after 90 days (keeping the newest 20), so any
 file can be restored from the S3 console if a save goes wrong.
+
+
+Deployment check (26 September 2026): the previous deployed package lacked `platformApi` routing and the health goal/log handlers. Redeployed the complete package and verified authenticated GETs to `/admin/contact`, `/admin/analytics`, `/admin/health/goal`, `/admin/health/logs`, `/admin/health/reports` and `/admin/journal/settings` return HTTP 200. Include **all five runtime JS files** in future deployments; updating frontend code alone does not add Lambda routes.

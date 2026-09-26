@@ -49,7 +49,8 @@ export async function fetchJournal(from?: string, to?: string, account = ''): Pr
   const days: Record<string, DayNote> = {}
   for (const [key, note] of Object.entries((data.days ?? {}) as Record<string, DayNote>)) {
     const [date, owner = ''] = key.split('#')
-    if (account !== ALL_ACCOUNTS && owner === account) days[date] = { ...note, account: owner }
+    if (account === ALL_ACCOUNTS) days[key] = { ...note, account: owner }
+    else if (owner === account) days[date] = { ...note, account: owner }
   }
   return { ...data, trades, days }
 }

@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Calculator, DatabaseZap, Plus, RefreshCw, Settings as SettingsIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { BackfillDialog, type ImportSummary } from '@/components/journal/BackfillDialog'
@@ -10,10 +11,10 @@ import { SettingsDialog } from '@/components/journal/SettingsDialog'
 import { TradeDialog } from '@/components/journal/TradeDialog'
 import { ZerodhaSyncDialog } from '@/components/journal/ZerodhaSyncDialog'
 import { BookSwitch, HideNumbersButton, JournalTabs, pillClass, type Book, type Tab } from '@/components/journal/chrome'
-import { blankTrade, monthOf, type Trade } from '@/lib/journal'
+import { blankTrade, monthOf, todayStr, type Trade } from '@/lib/journal'
 import { analyze } from '@/lib/journalAnalytics'
 import { getKiteSession } from '@/lib/kite'
-import type { SyncResult } from '@/lib/kiteSync'
+import { syncZerodhaToJournal, type SyncResult } from '@/lib/kiteSync'
 import { useBackfillStatus } from '@/hooks/useBackfillStatus'
 import { useJournalBook } from '@/hooks/useJournalBook'
 import { AllJournal } from './AllJournal'
@@ -32,7 +33,12 @@ function readBook(): Book {
 
 /** The Trading Journal: two separate journals — Options (India) and Forex (MetaTrader 5) — behind one switch. */
 export function TradingJournal() {
-  const [book, setBook] = useState<Book>(readBook)
+  const { search } = useLocation()
+  const linkedBook = new URLSearchParams(search).get('book')
+  const [book, setBook] = useState<Book>(() => linkedBook === 'options' || linkedBook === 'forex' ? linkedBook : readBook())
+  useEffect(() => {
+    if (linkedBook === 'options' || linkedBook === 'forex' || linkedBook === 'all') setBook(linkedBook)
+  }, [linkedBook, search])
 
   function choose(next: Book) {
     setBook(next)
@@ -50,16 +56,43 @@ export function TradingJournal() {
 }
 
 function OptionsJournal({ switcher }: { switcher: ReactNode }) {
+  const { search } = useLocation()
   const b = useJournalBook('')
   const { today, month, selected, setSelected, goToMonth, stepDay, trades, days, byDate, settings, usdInr } = b
 
   const [tab, setTab] = useState<Tab>('calendar')
+  useEffect(() => { if (new URLSearchParams(search).has('date')) setTab('calendar') }, [search])
   const [tradeDialog, setTradeDialog] = useState<{ open: boolean; trade: Trade | null }>({ open: false, trade: null })
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [backfillOpen, setBackfillOpen] = useState(false)
   const [backfillCheck, setBackfillCheck] = useState(0)
   const [zerodhaOpen, setZerodhaOpen] = useState(false)
   const [sizerOpen, setSizerOpen] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const { reload } = b
+  useEffect(() => {
+    let cancelled = false
+    let busy = false
+    const sync = async () => {
+      if (busy || document.visibilityState === 'hidden' || !getKiteSession()) return
+      busy = true
+      try {
+        const result = await syncZerodhaToJournal(todayStr())
+        if (!cancelled) {
+          setSyncError(null)
+          if (result.tradesAdded) {
+            reload()
+            setBackfillCheck((n) => n + 1)
+          }
+        }
+      } catch (err) {
+        if (!cancelled) setSyncError(err instanceof Error ? err.message : 'Zerodha auto-sync failed. Try Sync Zerodha.')
+      } finally { busy = false }
+    }
+    void sync()
+    const timer = window.setInterval(() => void sync(), 5 * 60_000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [today, reload])
 
   // Once the month has loaded, quietly see whether Options Analytics has trades the journal is missing.
   const backfill = useBackfillStatus(today, !b.loading && !b.error, backfillCheck)
@@ -149,6 +182,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
         </div>
       </div>
 
+      {syncError && <p role="alert" className="text-sm text-error">{syncError}</p>}
       {tab === 'dashboard' ? (
         <JournalDashboard settings={settings} viewedMonth={month} today={today} refreshKey={b.refreshKey} lead={tabs} />
       ) : (

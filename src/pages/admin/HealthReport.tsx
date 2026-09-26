@@ -88,6 +88,10 @@ export function HealthReport() {
   const [goal, setGoal] = useState<Goal | null>(null)
   const [logs, setLogs] = useState<DailyLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [reportsLoaded, setReportsLoaded] = useState(false)
+  const [goalLoaded, setGoalLoaded] = useState(false)
+  const [logsLoaded, setLogsLoaded] = useState(false)
+  const request = useRef(0)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState('')
   const [editing, setEditing] = useState<Report | null>(null)
@@ -99,21 +103,22 @@ export function HealthReport() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(async () => {
-    try {
-      const [reportList, goalValue, logList] = await Promise.all([fetchReports(), fetchGoal(), fetchLogs()])
-      setReports(reportList)
-      setGoal(goalValue)
-      setLogs(logList)
-      setError(null)
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setLoading(false)
-    }
+    const id = ++request.current
+    setLoading(true)
+    const [r, g, l] = await Promise.allSettled([fetchReports(), fetchGoal(), fetchLogs()])
+    if (id !== request.current) return
+    if (r.status === 'fulfilled') { setReports(r.value); setReportsLoaded(true) }
+    if (g.status === 'fulfilled') { setGoal(g.value); setGoalLoaded(true) }
+    if (l.status === 'fulfilled') { setLogs(l.value); setLogsLoaded(true) }
+    const errors = [r, g, l].flatMap((result) => result.status === 'rejected' ? [result.reason instanceof Error ? result.reason.message : 'Could not load health data.'] : [])
+    setError(errors.join(' · ') || null)
+    setLoading(false)
   }, [])
 
   useEffect(() => {
+    const counter = request
     void reload()
+    return () => { counter.current++ }
   }, [reload])
 
   const sorted = useMemo(() => sortReports(reports), [reports])
@@ -287,7 +292,7 @@ export function HealthReport() {
           </p>
         )}
 
-        {!loading && reminder.due && (
+        {!loading && reportsLoaded && reminder.due && (
           <p className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-text">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
             {reminder.daysSince === null ? "You haven't logged a test yet." : `Your last test was ${reminder.daysSince} days ago.`}
@@ -302,10 +307,10 @@ export function HealthReport() {
         {!loading && (
           <div className="grid gap-5 lg:grid-cols-2">
             <Card title="Goal">
-              <GoalCard reports={full} goal={goal} onSave={onSaveGoal} />
+              {goalLoaded ? <GoalCard reports={full} goal={goal} onSave={onSaveGoal} /> : <p className="text-sm text-error">Goal could not be loaded. Refresh to retry.</p>}
             </Card>
             <Card title="Daily log">
-              <DailyLogCard logs={logs} onSave={onSaveLog} onDelete={onDeleteLog} />
+              {logsLoaded ? <DailyLogCard logs={logs} onSave={onSaveLog} onDelete={onDeleteLog} /> : <p className="text-sm text-error">Daily logs could not be loaded. Refresh to retry.</p>}
             </Card>
           </div>
         )}
@@ -314,7 +319,7 @@ export function HealthReport() {
           <GlassCard hover={false} className="flex items-center justify-center gap-3 py-24 text-sm text-text-secondary">
             <RefreshCw className="h-4 w-4 animate-spin" /> Loading your reports…
           </GlassCard>
-        ) : !report ? (
+        ) : !reportsLoaded ? <p className="text-sm text-error">Reports could not be loaded. Refresh to retry.</p> : !report ? (
           <Reveal>
             <GlassCard hover={false} className="flex flex-col items-center gap-3 px-6 py-16 text-center">
               <motion.span animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 3 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">

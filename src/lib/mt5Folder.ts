@@ -24,19 +24,26 @@ function idb<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest
     open.onupgradeneeded = () => open.result.createObjectStore(STORE)
     open.onerror = () => reject(open.error)
     open.onsuccess = () => {
-      const req = run(open.result.transaction(STORE, mode).objectStore(STORE))
-      req.onsuccess = () => resolve(req.result)
-      req.onerror = () => reject(req.error)
+      const db = open.result
+      const tx = db.transaction(STORE, mode)
+      const req = run(tx.objectStore(STORE))
+      tx.oncomplete = () => { db.close(); resolve(req.result) }
+      tx.onabort = () => { db.close(); reject(tx.error || req.error) }
+      tx.onerror = () => { db.close(); reject(tx.error || req.error) }
     }
   })
 }
 
 export const savedFolder = () => idb<DirHandle | undefined>('readonly', (s) => s.get(KEY) as IDBRequest<DirHandle | undefined>).catch(() => undefined)
-export const forgetFolder = () => idb('readwrite', (s) => s.delete(KEY)).catch(() => undefined)
+export const forgetFolder = async () => {
+  await idb('readwrite', (s) => s.delete(KEY))
+  try { localStorage.removeItem(SEEN_KEY) } catch { /* Storage may be unavailable. */ }
+}
 
 export async function pickFolder(): Promise<DirHandle> {
   const handle = (await (window as unknown as { showDirectoryPicker: (o: object) => Promise<DirHandle> }).showDirectoryPicker({ id: 'mt5-reports', mode: 'read' })) as DirHandle
   await idb('readwrite', (s) => s.put(handle, KEY))
+  try { localStorage.removeItem(SEEN_KEY) } catch { /* Rechecking is safe. */ }
   return handle
 }
 
@@ -50,7 +57,8 @@ export async function folderPermission(handle: DirHandle, ask = false): Promise<
 
 function readSeen(): Record<string, number> {
   try {
-    return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}')
+    const value = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}')
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
   } catch {
     return {}
   }
@@ -83,7 +91,8 @@ export async function syncFolder(handle: DirHandle): Promise<FolderSyncResult> {
       const report = parseMt5Report(html)
       const trades = positionsToTrades(report)
       await saveAccount(accountFromReport(report), html)
-      const outcome = trades.length ? await importTrades(trades) : { added: 0 }
+      const outcome = trades.length ? await importTrades(trades) : { added: 0, invalid: 0 }
+      if (outcome.invalid) throw new Error(`${outcome.invalid} trades were rejected; report will be retried`)
       result.files++
       result.added += outcome.added
       if (!result.accounts.includes(report.account)) result.accounts.push(report.account)

@@ -15,8 +15,8 @@ describe('searchAll', () => {
   it('finds pages by keyword, documents, trades, notes and health tests', () => {
     expect(searchAll(index, 'emi')[0]).toMatchObject({ kind: 'page', to: '/admin/loans' })
     expect(searchAll(index, 'form16')[0]).toMatchObject({ kind: 'document' })
-    expect(searchAll(index, 'revenge')[0]).toMatchObject({ kind: 'trade', to: '/admin/trading-journal?date=2026-09-23' })
-    expect(searchAll(index, 'london')[0]).toMatchObject({ kind: 'note', to: '/admin/trading-journal?date=2026-09-24' })
+    expect(searchAll(index, 'revenge')[0]).toMatchObject({ kind: 'trade', to: '/admin/trading-journal?date=2026-09-23&book=options' })
+    expect(searchAll(index, 'london')[0]).toMatchObject({ kind: 'note', to: '/admin/trading-journal?date=2026-09-24&book=forex&account=62280161' })
     expect(searchAll(index, 'inbody')[0]).toMatchObject({ kind: 'health' })
   })
 

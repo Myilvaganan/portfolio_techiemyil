@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
+import { Mt5FolderSync } from '@/components/journal/Mt5FolderSync'
 import { CalendarDays, Globe, Landmark, LineChart, Loader2, Plus, RefreshCw, Settings as SettingsIcon, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -86,10 +88,22 @@ function EmptyForex({ switcher, onUpload }: { switcher: ReactNode; onUpload: () 
 }
 
 export function ForexJournal({ switcher }: { switcher: ReactNode }) {
+  const [revision, setRevision] = useState(0)
+  return <div className="space-y-3">
+    <Mt5FolderSync onSynced={() => setRevision((n) => n + 1)} />
+    <ForexBooks switcher={switcher} revision={revision} />
+  </div>
+}
+
+function ForexBooks({ switcher, revision }: { switcher: ReactNode; revision: number }) {
+  const { search } = useLocation()
+  const linkedAccount = new URLSearchParams(search).get('account')
+
   const [accounts, setAccounts] = useState<Mt5Account[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
-  const [activeId, setActiveId] = useState(readActive)
+  const [activeId, setActiveId] = useState(() => linkedAccount || readActive())
+  useEffect(() => { if (linkedAccount) setActiveId(linkedAccount) }, [linkedAccount, search])
   const [uploadOpen, setUploadOpen] = useState(false)
   const [landing, setLanding] = useState<Landing | null>(null)
 
@@ -102,7 +116,7 @@ export function ForexJournal({ switcher }: { switcher: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [attempt])
+  }, [attempt, revision])
 
   const choose = useCallback((id: string) => {
     setActiveId(id)
@@ -161,6 +175,7 @@ export function ForexJournal({ switcher }: { switcher: ReactNode }) {
       <ForexWorkspace
         // A different account is a different calendar: start it fresh.
         key={active.account}
+        revision={revision}
         account={active}
         accounts={accounts}
         onSelectAccount={choose}
@@ -174,6 +189,7 @@ export function ForexJournal({ switcher }: { switcher: ReactNode }) {
 }
 
 function ForexWorkspace({
+  revision,
   account,
   accounts,
   onSelectAccount,
@@ -181,6 +197,7 @@ function ForexWorkspace({
   switcher,
   landing,
 }: {
+  revision: number
   account: Mt5Account
   accounts: Mt5Account[]
   onSelectAccount: (id: string) => void
@@ -188,11 +205,14 @@ function ForexWorkspace({
   switcher: ReactNode
   landing: Landing | null
 }) {
+  const { search } = useLocation()
+  const linkedDate = new URLSearchParams(search).get('date')
   const b = useJournalBook(account.account)
   const { today, month, selected, setSelected, goToMonth, stepDay, byDate, days, trades, usdInr } = b
   const currency = account.currency || 'USD'
 
   const [tab, setTab] = useState<Tab>('calendar')
+  useEffect(() => { if (linkedDate) setTab('calendar') }, [linkedDate])
   const [tradeDialog, setTradeDialog] = useState<{ open: boolean; trade: Trade | null }>({ open: false, trade: null })
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -200,14 +220,15 @@ function ForexWorkspace({
   const openOn = landing?.date || account.report.to
   const reloadToken = landing?.token
   const { reload } = b
+  useEffect(() => { if (revision) reload() }, [revision, reload])
   useEffect(() => {
-    if (!openOn) return
+    if (!openOn || (linkedDate && !reloadToken)) return
     goToMonth(monthOf(openOn))
     setSelected(openOn)
     if (reloadToken) reload()
     // goToMonth/setSelected/reload are stable; the trigger is a new landing day or upload.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openOn, reloadToken])
+  }, [openOn, reloadToken, linkedDate])
 
   // Rupee-based limits mean nothing in dollars, and the deposits are the account's real starting capital.
   const netDeposits = useMemo(() => account.balanceOps.filter((o) => o.type === 'balance').reduce((s, o) => s + o.amount, 0), [account.balanceOps])

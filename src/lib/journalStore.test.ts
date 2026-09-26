@@ -154,6 +154,14 @@ describe('journalStore', () => {
       expect((await fetchJournal(undefined, undefined, '62280161')).trades).toHaveLength(0)
     })
 
+    it('preserves distinct account note keys for universal search', async () => {
+      mockFetch(data)
+      const result = await fetchJournal(undefined, undefined, '*')
+      expect(Object.keys(result.days)).toHaveLength(3)
+      expect(result.days['2026-09-22#62280161'].plan).toBe('forex plan')
+      expect(result.days['2026-09-22'].plan).toBe('options plan')
+    })
+
     it('does not leak another account’s data', async () => {
       mockFetch(data)
       expect(Object.values((await fetchJournal(undefined, undefined, '99999999')).days).map((d) => d.plan)).toEqual(['other account'])

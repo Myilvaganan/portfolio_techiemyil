@@ -96,7 +96,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
       setJobs((prev) => [...prev, ...created])
       void runAll(created.filter((j) => j.status === 'queued'))
     },
-    [runAll],
+    [kind, runAll],
   )
 
   const retryLocked = () => {

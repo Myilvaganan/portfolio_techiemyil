@@ -32,6 +32,25 @@ describe('HealthReport', () => {
     vi.mocked(api.fetchLogs).mockResolvedValue([])
   })
 
+  it('keeps existing reports visible when the goal and daily-log routes fail', async () => {
+    vi.mocked(api.fetchReports).mockResolvedValue([report('a', '2026-09-24', 90)])
+    vi.mocked(api.fetchGoal).mockRejectedValue(new Error('Goal unavailable'))
+    vi.mocked(api.fetchLogs).mockRejectedValue(new Error('Logs unavailable'))
+    render(<HealthReport />)
+    expect(await screen.findByText('Muscle-fat analysis')).toBeInTheDocument()
+    expect(screen.queryByText("You haven't logged a test yet.")).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Goal unavailable')
+    expect(screen.queryByRole('button', { name: 'Save goal' })).not.toBeInTheDocument()
+  })
+
+  it('does not show an empty report state when fetching reports failed', async () => {
+    vi.mocked(api.fetchReports).mockRejectedValue(new Error('Reports unavailable'))
+    render(<HealthReport />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Reports unavailable')
+    expect(screen.queryByText(/add your first body-composition report/i)).not.toBeInTheDocument()
+    expect(screen.queryByText("You haven't logged a test yet.")).not.toBeInTheDocument()
+  })
+
   it('invites a photo when there are no reports', async () => {
     vi.mocked(api.fetchReports).mockResolvedValue([])
     render(<HealthReport />)
