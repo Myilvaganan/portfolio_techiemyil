@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { PageBadge } from '@/components/admin/AdminShell'
-import { motion } from 'framer-motion'
-import { Database, Loader2, Send, Sparkles, Trash2 } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronDown, Database, Loader2, Send, Sparkles, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
+import { personal } from '@/data/personal'
 import { Avatar, IconBadge } from '@/components/ui/Avatar'
 import profilePhoto from '@/assets/images/profile.jpg'
 import { MASK, usePrivacy } from '@/lib/privacy'
@@ -111,6 +112,8 @@ export function Chat() {
   }
 
   const empty = turns.length === 0
+  // Closed on phones so the chat gets the screen; open beside the chat on desktop.
+  const [showSees, setShowSees] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1280)
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_18rem]">
@@ -121,7 +124,7 @@ export function Chat() {
             <div className="min-w-0">
             <p className="page-eyebrow">Ask your data</p>
             <h1 className="mt-1 page-title">Chat</h1>
-            <p className="page-lede">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
+            <p className="page-lede hidden sm:block">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -135,7 +138,7 @@ export function Chat() {
         </div>
       </div>
 
-      <GlassCard hover={false} className="flex min-h-[28rem] min-w-0 flex-col p-0 xl:h-[calc(100vh-15rem)]">
+      <GlassCard hover={false} className="flex h-[calc(100dvh-13.5rem)] min-h-[24rem] min-w-0 flex-col p-0 sm:h-[calc(100dvh-15rem)] xl:h-[calc(100vh-15rem)]">
         <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5" aria-live="polite">
           {empty ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -193,7 +196,7 @@ export function Chat() {
                   )}
                 </div>
                 {t.role === 'user' && (
-                  <Avatar name="Admin" src={profilePhoto} size="sm" className="mt-0.5" />
+                  <Avatar name={personal.brand} src={profilePhoto} size="sm" className="mt-0.5" />
                 )}
               </motion.div>
             ))
@@ -229,28 +232,40 @@ export function Chat() {
       </GlassCard>
 
       <GlassCard hover={false} className="h-fit p-4">
-        <h2 className="mb-3 flex items-center gap-2 label-caps">
-          <Database className="h-3.5 w-3.5" /> What it can see
-        </h2>
-        {!coverage ? (
-          <p className="flex items-center gap-2 text-xs text-text-secondary">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking…
-          </p>
-        ) : coverage.length === 0 ? (
-          <p className="text-xs text-text-secondary">Could not check your data right now.</p>
-        ) : (
-          <ul className="space-y-2.5 text-xs">
-            {coverage.map((c) => (
-              <li key={c.source}>
-                <span className="block font-medium text-text">{c.source}</span>
-                <span className="block text-text-secondary">{c.detail}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="mt-4 border-t border-border pt-3 text-2xs leading-relaxed text-text-secondary">
-          Questions and the relevant records are sent to OpenAI to write each answer. If something is missing from an answer, upload it and ask again.
-        </p>
+        <button type="button" aria-expanded={showSees} aria-controls="chat-coverage" onClick={() => setShowSees((v) => !v)} className="flex w-full items-center justify-between gap-2 text-left">
+          <span className="flex items-center gap-2 label-caps">
+            <Database className="h-3.5 w-3.5" /> What it can see
+            {coverage && coverage.length > 0 && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-2xs font-semibold normal-case tracking-normal text-accent">{coverage.length} sources</span>}
+          </span>
+          <ChevronDown className={cn('h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200', showSees && 'rotate-180')} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showSees && (
+            <motion.div id="chat-coverage" key="coverage" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="overflow-hidden">
+              <div className="pt-3">
+                {!coverage ? (
+                  <p className="flex items-center gap-2 text-xs text-text-secondary">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking…
+                  </p>
+                ) : coverage.length === 0 ? (
+                  <p className="text-xs text-text-secondary">Could not check your data right now.</p>
+                ) : (
+                  <ul className="space-y-2.5 text-xs">
+                    {coverage.map((c) => (
+                      <li key={c.source}>
+                        <span className="block font-medium text-text">{c.source}</span>
+                        <span className="block text-text-secondary">{c.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-4 border-t border-border pt-3 text-2xs leading-relaxed text-text-secondary">
+                  Questions and the relevant records are sent to OpenAI to write each answer. If something is missing from an answer, upload it and ask again.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </GlassCard>
     </div>
   )

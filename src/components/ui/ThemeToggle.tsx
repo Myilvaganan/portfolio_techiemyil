@@ -24,7 +24,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={cycleTheme}
       aria-label={NEXT[theme].label}
       className={cn(
-        'relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border text-text-secondary transition-colors hover:border-accent/40 hover:text-text',
+        'btn-3d glitter relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-3 text-text-secondary transition-colors hover:border-accent/40 hover:text-text',
         isRoyal(theme) && 'royal-shine',
         className,
       )}

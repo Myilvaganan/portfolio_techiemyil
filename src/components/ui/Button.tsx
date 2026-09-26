@@ -11,7 +11,7 @@ const buttonVariants = cva(
         primary:
           'btn-primary royal-shine bg-accent text-[#05130a] shadow-[0_0_0_0_rgb(var(--accent-rgb)/0.45)] hover:bg-accent-hover hover:shadow-[0_0_32px_4px_rgb(var(--accent-rgb)/0.35)]',
         secondary:
-          'border border-border bg-transparent text-text hover:border-accent/50 hover:bg-surface-3',
+          'btn-3d border border-border bg-surface-3 text-text hover:border-accent/50',
         ghost: 'bg-transparent text-text-secondary hover:text-text',
       },
       size: {

@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Banknote, Bus, CircleHelp, ChevronDown, Clapperboard, Coins, Fuel, GraduationCap, HandCoins, HeartPulse, Home, Landmark, LineChart, Plane, ReceiptText, Repeat, ShieldCheck, ShoppingBag, ShoppingBasket, UtensilsCrossed, Zap, X, type LucideIcon } from 'lucide-react'
-import { IconBadge } from '@/components/ui/Avatar'
+import { IconBadge, assignColors } from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
 
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -25,6 +25,9 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Taxes: Landmark,
   Other: CircleHelp,
 }
+// One colour per category, none repeated.
+assignColors(Object.keys(CATEGORY_ICONS))
+
 export const categoryIcon = (c: string): LucideIcon => CATEGORY_ICONS[c] ?? CircleHelp
 
 /** A category shown as a coloured icon and name. */

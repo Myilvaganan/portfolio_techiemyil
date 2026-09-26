@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { PageBadge } from '@/components/admin/AdminShell'
+import { Greeting } from '@/components/admin/Greeting'
+import { IconBadge } from '@/components/ui/Avatar'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, Home, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, Tags, TrendingUp, Wallet } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -39,9 +40,7 @@ function StatCard({
           <p className="label-caps">{label}</p>
           <p className="mt-2 font-display text-2xl font-semibold text-text">{value}</p>
         </div>
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-          <Icon className="h-5 w-5" />
-        </span>
+        <IconBadge icon={Icon} seed={label} size="md" />
       </div>
     </GlassCard>
   )
@@ -77,9 +76,7 @@ function PulseCard({ label, value, sub, icon: Icon, valueClass, onClick }: { lab
             <p className={cn('mt-1.5 truncate font-mono text-xl font-semibold text-text', valueClass)}>{value}</p>
             {sub && <p className="mt-0.5 truncate text-xs text-text-secondary">{sub}</p>}
           </div>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-            <Icon className="h-4 w-4" />
-          </span>
+          <IconBadge icon={Icon} seed={label} size="sm" />
         </div>
       </GlassCard>
     </button>
@@ -137,25 +134,21 @@ export function DashboardHome() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-start gap-3.5">
-          <PageBadge />
-          <div className="min-w-0">
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-lede">Welcome back! Here&apos;s today across your trading, money, health and website.</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" magnetic={false} onClick={() => void backup()} disabled={backingUp}>
+      <Greeting
+        actions={
+          <>
+          <Button variant="secondary" size="sm" magnetic={false} className="w-full px-3 sm:w-auto sm:px-5" onClick={() => void backup()} disabled={backingUp}>
             {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />}
             Download backup
           </Button>
-          <Button variant="secondary" size="sm" magnetic={false} onClick={() => window.open('/', '_blank')}>
+          <Button variant="secondary" size="sm" magnetic={false} className="w-full px-3 sm:w-auto sm:px-5" onClick={() => window.open('/', '_blank')}>
             Visit Website
             <ExternalLink className="h-4 w-4" />
           </Button>
-        </div>
-      </div>
+
+          </>
+        }
+      />
       {backupNote && <p role="status" className="-mt-3 text-xs text-text-secondary">{backupNote} Older versions of every file are also kept in the vault for 90 days.</p>}
 
       {notices.length > 0 && showNotices && (
@@ -247,9 +240,7 @@ export function DashboardHome() {
               onClick={() => navigate(action.to)}
               className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card/70 px-3 py-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-accent/30"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent">
-                <action.icon className="h-5 w-5" />
-              </span>
+              <IconBadge icon={action.icon} seed={action.to} size="lg" />
               <span className="text-sm font-medium text-text">{action.label}</span>
             </button>
           ))}

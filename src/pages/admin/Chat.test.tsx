@@ -18,6 +18,8 @@ describe('Chat', () => {
     api.askVault.mockResolvedValue({ answer: 'You spent ₹10,450 last month.\n\n- Rent ₹10,000\n- Food ₹450', sources: ['Bank statements'], followUps: ['And the month before?'], inScope: true, queries: [] })
     const user = userEvent.setup()
     render(<Chat />)
+    // Closed by default on narrow screens, so open it like a person would.
+    await user.click(screen.getByRole('button', { name: /What it can see/ }))
     expect(await screen.findByText('8146 transactions, 2018-08-01 to 2026-09-20')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /How much did I spend last month/ }))
     expect(await screen.findByText('You spent ₹10,450 last month.')).toBeInTheDocument()

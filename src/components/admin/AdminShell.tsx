@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Wrench, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
-import { Avatar, IconBadge } from '@/components/ui/Avatar'
+import { personal } from '@/data/personal'
+import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
 import profilePhoto from '@/assets/images/profile.jpg'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -51,7 +52,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-      { label: 'Ask My Data', to: '/admin/chat', icon: MessagesSquare },
+      { label: 'Ask My Data', to: '/admin/chat', icon: Sparkles },
       { label: 'Website', to: '/admin/site', icon: Globe },
       { label: 'Security', to: '/admin/security', icon: ShieldCheck },
     ],
@@ -134,7 +135,7 @@ function AppLockRow({ lock }: { lock: AppLock }) {
       <IconBadge icon={Fingerprint} seed="app-lock" size="sm" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium text-text">App lock</span>
-        <span className="block text-xs text-text-secondary">Face ID or fingerprint to open</span>
+        <span className="block truncate text-xs text-text-secondary">Face ID or fingerprint</span>
       </span>
       <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', lock.enabled ? 'bg-accent' : 'bg-surface-15')}>
         <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', lock.enabled ? 'left-[1.125rem]' : 'left-0.5')} />
@@ -175,7 +176,7 @@ function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
             aria-checked={scale === s.id}
             aria-label={s.label}
             onClick={() => onScale(s.id)}
-            className={cn('flex h-11 items-center justify-center rounded-xl border font-semibold transition-colors', scale === s.id ? 'border-accent/40 bg-accent/15 text-accent' : 'border-border bg-surface-2 text-text')}
+            className={cn('btn-3d flex h-11 items-center justify-center rounded-xl border font-semibold transition-colors', scale === s.id ? 'border-accent/40 bg-accent/15 text-accent' : 'border-border bg-surface-2 text-text')}
             style={{ fontSize: `${12 + i * 2.5}px` }}
           >
             A
@@ -197,14 +198,14 @@ function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void 
         type="button"
         data-cursor="hover"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-border bg-surface-2 py-1 pl-1 pr-2 text-left transition-colors hover:border-accent/40"
+        aria-label="Profile menu" className="btn-3d glitter flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 p-0.5 transition-colors hover:border-accent/40"
       >
-        <Avatar name="Admin" src={profilePhoto} size="sm" />
+        <Avatar name={personal.brand} src={profilePhoto} size="sm" className="h-full w-full ring-0" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <div className="absolute right-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
           <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-medium text-text">Admin</p>
+            <p className="text-sm font-medium text-text">{personal.brand}</p>
             <p className="text-xs text-text-secondary">Administrator</p>
           </div>
           <div className="space-y-3 border-b border-border p-3">
@@ -292,7 +293,7 @@ function NotificationBell() {
           if (!open) refresh()
           setOpen((v) => !v)
         }}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
+        className="btn-3d glitter relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-3 text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
       >
         <Bell className="h-4 w-4" />
         {notices.length > 0 && (
@@ -342,8 +343,12 @@ function NotificationBell() {
   )
 }
 
+// Every menu item gets its own colour, so no two tiles in a sheet look alike.
+assignColors(NAV_SECTIONS.flatMap((sec) => sec.items).map((i) => i.to))
+
 const FINANCE_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Finance')!
-const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Finance')
+const TOOLS_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Tools')!
+const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Finance' && sec.label !== 'Tools')
 
 const tap = () => {
   try {
@@ -357,12 +362,13 @@ const tap = () => {
 function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const [sheet, setSheet] = useState<null | 'finance' | 'more'>(null)
+  const [sheet, setSheet] = useState<null | 'finance' | 'tools' | 'more'>(null)
   // Only the grab handle drags the sheet closed, so swiping inside it scrolls the list as normal.
   const dragControls = useDragControls()
   useEffect(() => setSheet(null), [pathname])
 
   const inFinance = FINANCE_SECTION.items.some((i) => pathname.startsWith(i.to))
+  const inTools = TOOLS_SECTION.items.some((i) => pathname.startsWith(i.to))
   const tab = (active: boolean) =>
     cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
   const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
@@ -371,7 +377,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
       {label}
     </NavLink>
   )
-  const sections = sheet === 'finance' ? [FINANCE_SECTION] : MORE_SECTIONS
+  const sections = sheet === 'finance' ? [FINANCE_SECTION] : sheet === 'tools' ? [TOOLS_SECTION] : MORE_SECTIONS
 
   return (
     <div className="lg:hidden">
@@ -408,7 +414,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                         to={item.to}
                         end={item.to === '/admin'}
                         className={({ isActive }) =>
-                          cn('flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
+                          cn('btn-3d flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
                         }
                       >
                         <IconBadge icon={item.icon} seed={item.to} size="md" />
@@ -448,7 +454,6 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
 
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[60] flex border-t border-border bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
         {link('/admin', 'Home', LayoutDashboard, true)}
-        {link('/admin/chat', 'Ask', MessagesSquare)}
         <button type="button" onClick={() => {
             tap()
             setSheet(sheet === 'finance' ? null : 'finance')
@@ -456,7 +461,27 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
           <Wallet className="h-5 w-5" />
           Finance
         </button>
-        {link('/admin/documents', 'Docs', FolderOpen)}
+        <NavLink to="/admin/chat" onClick={tap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
+          {({ isActive }) => (
+            <>
+              <span className={cn('-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
+                <Sparkles className="h-6 w-6" />
+              </span>
+              <span className={cn('mt-0.5', isActive && !sheet ? 'text-accent' : 'text-text-secondary')}>Ask AI</span>
+            </>
+          )}
+        </NavLink>
+        <button
+          type="button"
+          onClick={() => {
+            tap()
+            setSheet(sheet === 'tools' ? null : 'tools')
+          }}
+          className={tab(sheet === 'tools' || (!sheet && inTools))}
+        >
+          <Wrench className="h-5 w-5" />
+          Tools
+        </button>
         <button type="button" onClick={() => {
             tap()
             setSheet(sheet === 'more' ? null : 'more')
@@ -543,12 +568,12 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
         <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5">
-            <Avatar name="Admin" src={profilePhoto} size="md" />
+            <Avatar name={personal.brand} src={profilePhoto} size="md" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-text">Admin</p>
+              <p className="truncate text-sm font-medium text-text">{personal.brand}</p>
               <p className="flex items-center gap-1 text-xs text-text-secondary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                Admin
+                Administrator
               </p>
             </div>
           </div>
@@ -556,8 +581,9 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/80 px-4 backdrop-blur-md sm:px-6">
-<GlobalSearch pages={SEARCH_PAGES} />
+        <header className="glitter sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/80 px-5 backdrop-blur-md sm:px-8 lg:px-10">
+<HeaderTitle />
+          <GlobalSearch pages={SEARCH_PAGES} />
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
@@ -566,7 +592,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </div>
         </header>
 
-        <motion.main key={`${pathname}-${refreshKey}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
+        <motion.main key={`${pathname}-${refreshKey}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
           {children}
         </motion.main>
       </div>
@@ -579,6 +605,19 @@ function PageBadgeInner() {
   const { pathname } = useLocation()
   const item = NAV_SECTIONS.flatMap((sec) => sec.items).find((i) => (i.to === '/admin' ? pathname === '/admin' : pathname.startsWith(i.to)))
   return item ? <IconBadge icon={item.icon} seed={item.to} size="lg" className="mt-0.5" /> : null
+}
+
+/** Phone-only: the logo and the current page's name fill the left of the top bar. */
+function HeaderTitle() {
+  return useInRouterContext() ? <HeaderTitleInner /> : null
+}
+function HeaderTitleInner() {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+      <Logo showName={false} />
+      <span className="truncate font-display text-base font-semibold text-text sm:hidden">{personal.brand}</span>
+    </div>
+  )
 }
 
 /** The coloured icon tile shown beside a page's title, matched to the page from the menu. */

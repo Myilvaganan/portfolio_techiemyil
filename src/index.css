@@ -3,9 +3,10 @@
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
-@import '@fontsource/space-grotesk/500.css';
-@import '@fontsource/space-grotesk/600.css';
-@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/plus-jakarta-sans/800.css';
 
 @custom-variant light (&:where([data-theme='light'], [data-theme='light'] *, [data-theme='royal-light'], [data-theme='royal-light'] *));
 
@@ -13,7 +14,7 @@
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
   /* No typewriter font anywhere: figures use Inter with equal-width digits so columns still line up. */
   --font-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
@@ -183,7 +184,7 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
   }
 
   ::selection {
@@ -757,5 +758,119 @@ input[type='number'] {
   }
   .touch-app .text-gradient-accent {
     animation: none !important;
+  }
+}
+
+/* ---------- 3D depth: raised cards and buttons, sunken inputs, soft light from above ---------- */
+:root {
+  --depth-raise: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 -1px 0 rgba(0, 0, 0, 0.35) inset, 0 2px 3px rgba(0, 0, 0, 0.3), 0 16px 32px -16px rgba(0, 0, 0, 0.7);
+  --depth-lift: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 -1px 0 rgba(0, 0, 0, 0.35) inset, 0 4px 6px rgba(0, 0, 0, 0.3), 0 26px 44px -18px rgba(0, 0, 0, 0.8), 0 0 28px -14px rgb(var(--accent-rgb) / 0.4);
+  --depth-inset: 0 2px 5px rgba(0, 0, 0, 0.35) inset, 0 1px 0 rgba(255, 255, 255, 0.05);
+  --depth-bar-down: 0 10px 24px -14px rgba(0, 0, 0, 0.75);
+  --depth-bar-up: 0 -10px 24px -14px rgba(0, 0, 0, 0.75);
+}
+:root[data-theme='light'],
+:root[data-theme='royal-light'] {
+  --depth-raise: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 -1px 0 rgba(15, 17, 21, 0.06) inset, 0 1px 2px rgba(15, 17, 21, 0.1), 0 14px 26px -16px rgba(15, 17, 21, 0.3);
+  --depth-lift: 0 1px 0 rgba(255, 255, 255, 1) inset, 0 -1px 0 rgba(15, 17, 21, 0.06) inset, 0 3px 6px rgba(15, 17, 21, 0.12), 0 24px 40px -18px rgba(15, 17, 21, 0.38), 0 0 26px -14px rgb(var(--accent-rgb) / 0.35);
+  --depth-inset: 0 2px 4px rgba(15, 17, 21, 0.1) inset, 0 1px 0 rgba(255, 255, 255, 0.9);
+  --depth-bar-down: 0 10px 22px -14px rgba(15, 17, 21, 0.3);
+  --depth-bar-up: 0 -10px 22px -14px rgba(15, 17, 21, 0.3);
+}
+
+:root[data-theme] .royal-card {
+  box-shadow: var(--depth-raise);
+}
+:root[data-theme] .royal-card:hover {
+  box-shadow: var(--depth-lift);
+}
+
+/* Solid buttons look pressable: a lit top edge, a darker bottom edge, and they sink when pressed. */
+:root[data-theme] .btn-primary {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 -3px 0 rgba(0, 0, 0, 0.18) inset, 0 8px 16px -6px rgb(var(--accent-rgb) / 0.55);
+}
+:root[data-theme] .btn-primary:active:not(:disabled) {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+.btn-3d {
+  box-shadow: var(--depth-raise);
+}
+.btn-3d:hover:not(:disabled) {
+  box-shadow: var(--depth-lift);
+}
+.btn-3d:active:not(:disabled) {
+  box-shadow: var(--depth-inset);
+}
+
+/* Fields are sunken into the surface. */
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+select,
+textarea {
+  box-shadow: var(--depth-inset);
+}
+
+/* Bars cast a soft shadow onto the page under and over them. */
+.touch-app header {
+  box-shadow: var(--depth-bar-down);
+}
+.touch-app nav[aria-label='Main'] {
+  box-shadow: var(--depth-bar-up);
+}
+.touch-app aside {
+  box-shadow: 14px 0 30px -20px rgba(0, 0, 0, 0.6);
+}
+
+/* Glitter: tiny lights that twinkle on bars and buttons. Two layers fade in and out out of step; only opacity animates, so it stays cheap. */
+:root {
+  --glitter: rgba(255, 255, 255, 0.95);
+  --glitter-warm: rgba(246, 217, 122, 0.95);
+}
+:root[data-theme='light'],
+:root[data-theme='royal-light'] {
+  --glitter: rgba(255, 255, 255, 1);
+  --glitter-warm: rgb(var(--accent-rgb) / 0.7);
+}
+.glitter {
+  position: relative;
+  isolation: isolate;
+}
+.glitter::before,
+.glitter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  animation: glitter-twinkle 4s ease-in-out infinite;
+}
+.glitter::before {
+  background-image: radial-gradient(1.4px 1.4px at 9% 32%, var(--glitter), transparent), radial-gradient(1px 1px at 24% 74%, var(--glitter-warm), transparent),
+    radial-gradient(1.6px 1.6px at 41% 26%, var(--glitter), transparent), radial-gradient(1px 1px at 58% 68%, var(--glitter), transparent),
+    radial-gradient(1.4px 1.4px at 74% 30%, var(--glitter-warm), transparent), radial-gradient(1px 1px at 91% 70%, var(--glitter), transparent);
+}
+.glitter::after {
+  animation-delay: 2s;
+  background-image: radial-gradient(1.2px 1.2px at 16% 62%, var(--glitter-warm), transparent), radial-gradient(1.6px 1.6px at 33% 34%, var(--glitter), transparent),
+    radial-gradient(1px 1px at 50% 78%, var(--glitter-warm), transparent), radial-gradient(1.4px 1.4px at 67% 24%, var(--glitter), transparent),
+    radial-gradient(1px 1px at 83% 60%, var(--glitter), transparent), radial-gradient(1.2px 1.2px at 96% 28%, var(--glitter-warm), transparent);
+}
+@keyframes glitter-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glitter::before,
+  .glitter::after {
+    animation: none;
+    opacity: 0.5;
   }
 }
