@@ -736,3 +736,26 @@ table,
 input[type='number'] {
   font-variant-numeric: tabular-nums;
 }
+
+/* Smooth scrolling on phones: no live blur behind cards or bars and no looping shimmer, which force a repaint every frame while scrolling. */
+@media (pointer: coarse), (max-width: 1023px) {
+  .touch-app,
+  .touch-app * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .touch-app header {
+    background-color: var(--color-bg);
+  }
+  .touch-app nav[aria-label='Main'] {
+    background-color: var(--color-card);
+  }
+  .touch-app .royal-shine::after,
+  .touch-app .royal-card::after {
+    animation: none !important;
+    display: none;
+  }
+  .touch-app .text-gradient-accent {
+    animation: none !important;
+  }
+}

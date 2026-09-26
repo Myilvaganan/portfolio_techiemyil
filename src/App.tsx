@@ -32,7 +32,7 @@ function AppShell() {
   const location = useLocation()
   const isAdmin = location.pathname.startsWith('/admin')
 
-  useLenis()
+  useLenis({ disabled: isAdmin })
   useDisableContextMenu({ disabled: isAdmin })
   useDisableCopy({ disabled: isAdmin })
   useVisitNotify()

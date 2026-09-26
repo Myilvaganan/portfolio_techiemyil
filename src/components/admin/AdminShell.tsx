@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useDragControls } from 'framer-motion'
 import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { Avatar, IconBadge } from '@/components/ui/Avatar'
@@ -358,6 +358,8 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [sheet, setSheet] = useState<null | 'finance' | 'more'>(null)
+  // Only the grab handle drags the sheet closed, so swiping inside it scrolls the list as normal.
+  const dragControls = useDragControls()
   useEffect(() => setSheet(null), [pathname])
 
   const inFinance = FINANCE_SECTION.items.some((i) => pathname.startsWith(i.to))
@@ -384,14 +386,18 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 320 }}
               drag="y"
+              dragControls={dragControls}
+              dragListener={false}
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.6 }}
               onDragEnd={(_, info) => {
                 if (info.offset.y > 90 || info.velocity.y > 500) setSheet(null)
               }}
-              className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-border bg-card px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3"
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-border bg-card px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3"
             >
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-15" />
+              <div onPointerDown={(e) => dragControls.start(e)} className="-mx-4 -mt-3 mb-1 flex cursor-grab touch-none justify-center px-4 pb-4 pt-3">
+                <div className="h-1 w-10 rounded-full bg-surface-15" />
+              </div>
               {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="mb-4">
                   {section.label && sheet === 'more' && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}

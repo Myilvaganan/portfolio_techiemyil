@@ -7,8 +7,10 @@ export function getLenis() {
   return lenisInstance
 }
 
-export function useLenis() {
+/** Smooth-scroll for the public site. The admin scrolls natively, which is smoother and cheaper on phones. */
+export function useLenis({ disabled = false }: { disabled?: boolean } = {}) {
   useEffect(() => {
+    if (disabled) return
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReducedMotion) return
 
@@ -30,5 +32,5 @@ export function useLenis() {
       lenis.destroy()
       lenisInstance = null
     }
-  }, [])
+  }, [disabled])
 }
