@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -341,3 +341,14 @@ file can be restored from the S3 console if a save goes wrong.
 
 
 Deployment check (26 September 2026): the previous deployed package lacked `platformApi` routing and the health goal/log handlers. Redeployed the complete package and verified authenticated GETs to `/admin/contact`, `/admin/analytics`, `/admin/health/goal`, `/admin/health/logs`, `/admin/health/reports` and `/admin/journal/settings` return HTTP 200. Include **all five runtime JS files** in future deployments; updating frontend code alone does not add Lambda routes.
+
+## Bank statement reading (`bankParse.js`, `bankClassify.js`)
+
+ICICI and Axis savings statements are read by fixed rules, not the model. Both banks print part of a transaction's text on the
+line above its date row, and reading rows one at a time attached that text to the wrong amount (a transfer between my own
+accounts showed up as "Indian Oil ₹20,000"). `bankParse.js` rebuilds each row from the whole layout and proves it with the
+running balance (every row, and every day, must add up). `bankClassify.js` reads the payee from the transaction's own text
+and only assigns a category it is sure of; everything else stays "Other" so it can be fixed once in the app.
+
+`node rebuildBank.js` re-reads every stored bank statement and rewrites `_data/statements/bank/data.json` (a dry run by default;
+`--write` first copies the previous file to `data.backup-<time>.json`). Other bank layouts still go through the model.

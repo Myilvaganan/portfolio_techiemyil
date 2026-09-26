@@ -36,8 +36,8 @@ describe('Household', () => {
     )
     expect(await screen.findByRole('button', { name: /Salem house rent/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Bengaluru house rent/ })).toBeInTheDocument()
-    expect(screen.getAllByText('₹26,320').length).toBeGreaterThan(0)
-    expect(screen.queryByText('₹46,320')).not.toBeInTheDocument()
+    expect(screen.getAllByText('₹16,320').length).toBeGreaterThan(0)
+    expect(screen.queryByText('₹36,320')).not.toBeInTheDocument()
   })
 
   it('opens a card to list its transactions and filters by section', async () => {

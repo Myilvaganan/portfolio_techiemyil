@@ -21,6 +21,9 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const KINDS = ['bank', 'card', 'loan']
 const DATA_ROOT = '_data/statements'
 const MAX_TXNS = 100000
+const { parseBankStatement } = require('./bankParse')
+const { classifyBankRow } = require('./bankClassify')
+
 const CHUNK_LINES = 30
 const UPLOAD_TTL = 300
 const DOWNLOAD_TTL = 120
@@ -291,6 +294,14 @@ const META_RULES = {
 const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s))
 const amount = (n) => (typeof n === 'number' && Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0)
 const clean = (s, max = 160) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
+
+// Which fixed layout a bank statement uses, from its own header text.
+function detectBank(lines) {
+  const head = lines.slice(0, 60).join('\n')
+  if (/Statement of Axis Account|Tran Date \| Chq No/i.test(head) && /OPENING BALANCE/i.test(lines.join('\n'))) return 'axis'
+  if (/Statement of Transactions in Saving Account|Transaction \| Withdrawal/i.test(head)) return 'icici'
+  return null
+}
 
 function normalizeTxns(kind, raw) {
   const cats = kind === 'bank' ? BANK_CATEGORIES : CARD_CATEGORIES
@@ -571,6 +582,23 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
       return { statusCode: 200, body: { meta: normalizeMeta(kind, raw) } }
     }
 
+    // ICICI and Axis savings statements are read by fixed rules and checked against the running balance, which keeps
+    // each payee on its own row. Chunk 0 carries every row; the remaining chunks are empty. Other layouts use the model.
+    if (kind === 'bank') {
+      const det = detectBank(text.lines)
+      const parsed = det ? parseBankStatement(det, text.lines) : null
+      if (parsed && parsed.rows.length >= 3 && parsed.unresolvedDays <= Math.ceil(parsed.rows.length / 200)) {
+        const idxPre = Number(payload.chunk)
+        if (!Number.isInteger(idxPre) || idxPre < 0 || idxPre >= chunkLines(text.lines).length) return bad('That chunk does not exist.')
+        if (idxPre > 0) return { statusCode: 200, body: { transactions: [] } }
+        const rows = parsed.rows.map((r) => {
+          const c = classifyBankRow(r)
+          return { date: r.date, description: r.description, merchant: c.merchant, debit: r.debit, credit: r.credit, category: c.category, balance: r.balance, channel: c.channel }
+        })
+        return { statusCode: 200, body: { transactions: normalizeTxns('bank', rows) } }
+      }
+    }
+
     const chunks = chunkLines(text.lines)
     const idx = Number(payload.chunk)
     if (!Number.isInteger(idx) || idx < 0 || idx >= chunks.length) return bad('That chunk does not exist.')
@@ -796,4 +824,5 @@ module.exports = {
   normalizeMeta,
   readPdf,
   normMerchant,
+  detectBank,
 }

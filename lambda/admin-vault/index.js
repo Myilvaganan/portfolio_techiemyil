@@ -9,6 +9,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { createStatementsApi } = require('./statements')
 const { createJournalApi } = require('./journal')
 const { createHealthApi } = require('./health')
+const { createTaxApi } = require('./tax')
 const { createPlatformApi } = require('./platform')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
@@ -36,6 +37,7 @@ const s3 = new S3Client({})
 const statementsApi = createStatementsApi({ s3, bucket: S3_BUCKET })
 const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 const healthApi = createHealthApi({ s3, bucket: S3_BUCKET })
+const taxApi = createTaxApi({ s3, bucket: S3_BUCKET })
 const platformApi = createPlatformApi({ s3, bucket: S3_BUCKET })
 
 // ---------- CORS / request helpers ----------
@@ -601,6 +603,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/health')) {
       const result = await healthApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path.startsWith('/admin/tax')) {
+      const result = await taxApi({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 

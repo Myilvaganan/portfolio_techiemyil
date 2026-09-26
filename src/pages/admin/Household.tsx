@@ -32,6 +32,7 @@ const SECTIONS: { id: Section; title: string; icon: LucideIcon }[] = [
 ]
 
 const RANGES = [
+  { id: 1, label: 'This month' },
   { id: 3, label: '3 months' },
   { id: 6, label: '6 months' },
   { id: 12, label: '12 months' },
@@ -89,7 +90,7 @@ function Delta({ now, before }: { now: number; before: number }) {
   )
 }
 
-function GroupCard({ s, months, active, onOpen }: { s: GroupStats; months: string[]; active: boolean; onOpen: () => void }) {
+function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: GroupStats; trend: GroupStats; trendMonths: string[]; single: boolean; active: boolean; onOpen: () => void }) {
   const m = useMoney()
   const g = GROUP[s.id]
   const Icon = ICONS[s.id]
@@ -141,7 +142,8 @@ function GroupCard({ s, months, active, onOpen }: { s: GroupStats; months: strin
               <div>
                 <p className="font-mono text-lg font-semibold leading-tight text-text">{m.inr(s.total)}</p>
                 <p className="text-[11px] text-text-secondary">
-                  {s.count} payment{s.count === 1 ? '' : 's'} · {m.inr(s.avgMonth)}/mo avg
+                  {s.count} payment{s.count === 1 ? '' : 's'}
+                  {!single && <> · {m.inr(s.avgMonth)}/mo avg</>}
                 </p>
               </div>
               <div className="text-right">
@@ -150,7 +152,7 @@ function GroupCard({ s, months, active, onOpen }: { s: GroupStats; months: strin
               </div>
             </div>
 
-            <div className="mt-2.5">{g.monthly ? <PaidStrip paid={s.paid} months={months} /> : <MiniBars values={s.byMonth} months={months} color={g.color} format={(n) => m.inr(n)} />}</div>
+            <div className="mt-2.5">{g.monthly ? <PaidStrip paid={trend.paid} months={trendMonths} /> : <MiniBars values={trend.byMonth} months={trendMonths} color={g.color} format={(n) => m.inr(n)} />}</div>
 
             {g.monthly ? (
               <p className="mt-2.5 text-[11px] text-text-secondary">
@@ -251,7 +253,7 @@ export function Household() {
   const m = useMoney()
   const [txns, setTxns] = useState<HouseTxn[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [range, setRange] = useState<number>(12)
+  const [range, setRange] = useState<number>(1)
   const [open, setOpen] = useState<HouseGroup | null>(null)
   const [section, setSection] = useState<Section | 'all'>('all')
   const current = todayStr().slice(0, 7)
@@ -267,7 +269,10 @@ export function Household() {
   }, [])
 
   const months = useMemo(() => lastMonths(current, range), [current, range])
+  // The cards' little charts always show at least the last six months, even when the totals cover only this month.
+  const trendMonths = useMemo(() => lastMonths(current, Math.max(range, 6)), [current, range])
   const stats = useMemo(() => (txns ? groupStats(txns, months, current) : []), [txns, months, current])
+  const trendStats = useMemo(() => (txns ? groupStats(txns, trendMonths, current) : []), [txns, trendMonths, current])
   const by = (ids: HouseGroup[]) => stats.filter((s) => ids.includes(s.id))
   const sum = (list: GroupStats[], k: 'total' | 'thisMonth' | 'lastMonth') => list.reduce((t, s) => t + s[k], 0)
 
@@ -319,7 +324,7 @@ export function Household() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-5 [&>*:first-child]:col-span-2 xl:[&>*:first-child]:col-span-1">
-            <Kpi label={`Household · ${range} months`} value={m.inr(total)} sub={<>{m.inr(total / range)} a month on average</>} accent="var(--color-accent)" />
+            <Kpi label={range === 1 ? 'Household · this month' : `Household · ${range} months`} value={m.inr(total)} sub={range === 1 ? <>{m.inr(sum(stats, 'lastMonth'))} last month</> : <>{m.inr(total / range)} a month on average</>} accent="var(--color-accent)" />
             <Kpi label="Rent" value={m.inr(sum(rent, 'total'))} sub={<>This month {m.inr(sum(rent, 'thisMonth'))}</>} accent="var(--viz-1)" />
             <Kpi label="Bills" value={m.inr(sum(bills, 'total'))} sub="Electricity + cooking gas" accent="var(--viz-2)" />
             <Kpi label="Bike" value={m.inr(sum(bike, 'total'))} sub="Petrol + service" accent="var(--viz-6)" />
@@ -346,13 +351,13 @@ export function Household() {
                   .map((g) => stats.find((s) => s.id === g.id)!)
                   .filter((s) => s.id !== 'rentOther' || s.count > 0)
                   .map((s) => (
-                    <GroupCard key={s.id} s={s} months={months} active={open === s.id} onOpen={() => setOpen(open === s.id ? null : s.id)} />
+                    <GroupCard key={s.id} s={s} trend={trendStats.find((t) => t.id === s.id)!} trendMonths={trendMonths} single={range === 1} active={open === s.id} onOpen={() => setOpen(open === s.id ? null : s.id)} />
                   ))}
               </div>
               {open && <Details group={open} txns={txns} months={months} onClose={() => setOpen(null)} />}
             </div>
 
-            <GlassCard hover={false} className="h-fit p-4 xl:sticky xl:top-20">
+            <GlassCard hover={false} className="h-fit p-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Where it goes</h2>
               {slices.length === 0 ? (
                 <p className="text-sm text-text-secondary">No household spending found in this period.</p>

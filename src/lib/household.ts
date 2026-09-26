@@ -61,7 +61,7 @@ const BRANDS: Partial<Record<HouseGroup, [RegExp, string][]>> = {
 const FALLBACK_BRAND: Partial<Record<HouseGroup, string>> = { fuel: 'Petrol bunk', cookingGas: 'Gas', rentOther: 'Other landlord' }
 
 // Never household spending: paying off a card, EMIs, fees and surcharges, cashback and money moved between my own accounts.
-const EXCLUDE = /credit ca|card payment|fuel surcharge|surcharge|\bemi\b|loan repay|cashback|s myilvag|myilvaganan/
+const EXCLUDE = /credit ca|card payment|fuel surcharge|surcharge|\bemi\b|loan repay|cashback|s myilvag|myilvaganan|pay ?later|amznlpa|amazonpayccbil/
 const EXCLUDED_CATEGORIES = new Set(['EMI & Loans', 'Fees & Interest', 'Card Payment', 'Salary', 'Interest', 'Investments'])
 
 function brandFor(group: HouseGroup, text: string, merchant: string): string {
