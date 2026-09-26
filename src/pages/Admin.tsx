@@ -1,7 +1,7 @@
 import { Suspense, lazy, useState, type ComponentType } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { getStoredToken } from '@/lib/adminAuth'
 import { retryImport } from '@/lib/lazyRetry'
 import { AdminLogin } from '@/components/admin/AdminLogin'
@@ -34,11 +34,7 @@ const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
 
 function PageLoading() {
-  return (
-    <div role="status" aria-busy="true" className="flex min-h-[40vh] items-center justify-center gap-2 text-sm text-text-secondary">
-      <Loader2 className="h-5 w-5 animate-spin text-accent" /> Loading…
-    </div>
-  )
+  return <PageSkeleton />
 }
 
 export function Admin() {

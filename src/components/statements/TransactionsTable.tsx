@@ -87,7 +87,7 @@ export function TransactionsTable({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] text-left text-xs">
           <thead>
-            <tr className="border-b border-border text-[11px] text-text-secondary">
+            <tr className="border-b border-border text-2xs text-text-secondary">
               <Th k="date">Date</Th>
               <th className="py-2 pr-3 font-medium uppercase tracking-wide">Merchant</th>
               <th className="py-2 pr-3 font-medium uppercase tracking-wide">Category</th>
@@ -102,7 +102,7 @@ export function TransactionsTable({
                 <td className="whitespace-nowrap py-2.5 pr-3 text-text-secondary">{dayLabel(t.date)}</td>
                 <td className="max-w-64 py-2.5 pr-3">
                   <p className="truncate font-medium text-text">{t.merchant}</p>
-                  <p className="truncate text-[11px] text-text-secondary/80">{t.description}</p>
+                  <p className="truncate text-2xs text-text-secondary/80">{t.description}</p>
                 </td>
                 <td className="py-2.5 pr-3">
                   {onRecategorize ? (
@@ -110,14 +110,14 @@ export function TransactionsTable({
                       value={t.category}
                       aria-label={`Category for ${t.merchant}`}
                       onChange={(e) => onRecategorize(t.merchant, e.target.value)}
-                      className="rounded-full border-none bg-surface-10 px-2 py-0.5 text-[10px] text-text-secondary outline-none focus:ring-1 focus:ring-accent/50"
+                      className="rounded-full border-none bg-surface-10 px-2 py-0.5 text-2xs text-text-secondary outline-none focus:ring-1 focus:ring-accent/50"
                     >
                       {(kind === 'bank' ? BANK_CATEGORIES : CARD_CATEGORIES).map((c) => (
                         <option key={c} value={c} className="bg-card">{c}</option>
                       ))}
                     </select>
                   ) : (
-                    <span className="rounded-full bg-surface-10 px-2 py-0.5 text-[10px] text-text-secondary">{t.category}</span>
+                    <span className="rounded-full bg-surface-10 px-2 py-0.5 text-2xs text-text-secondary">{t.category}</span>
                   )}
                 </td>
                 <td className="whitespace-nowrap py-2.5 pr-3 text-text-secondary">{kind === 'bank' ? t.channel : (cardLabels?.[t.accountKey] ?? t.type)}</td>

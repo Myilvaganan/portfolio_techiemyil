@@ -50,12 +50,12 @@ export function PnlColumns({ rows, height = 190 }: { rows: ColumnRow[]; height?:
                 <div className="relative w-3 sm:w-4">{bar(r.post, 'var(--viz-3)', 'After tax')}</div>
               </div>
             </div>
-            <span className="mt-1 text-[10px] text-text-secondary">{r.label}</span>
-            <span className={cn('font-mono text-[10px] font-semibold', tone(r.pre))}>{m.compact(r.pre)}</span>
+            <span className="mt-1 text-2xs text-text-secondary">{r.label}</span>
+            <span className={cn('font-mono text-2xs font-semibold', tone(r.pre))}>{m.compact(r.pre)}</span>
           </div>
         ))}
       </div>
-      <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-text-secondary">
+      <div className="mt-2 flex items-center justify-center gap-4 text-2xs text-text-secondary">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ background: 'var(--viz-1)' }} />
           Before tax
@@ -85,7 +85,7 @@ export function PnlBars({ items, emptyText = 'Nothing to show yet.' }: { items: 
           <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-7">
             <div className={cn('h-full rounded-full', s.net >= 0 ? 'bg-positive' : 'bg-error')} style={{ width: `${(Math.abs(s.net) / maxAbs) * 100}%` }} />
           </div>
-          <p className="mt-0.5 text-[11px] text-text-secondary">
+          <p className="mt-0.5 text-2xs text-text-secondary">
             {s.trades} trade{s.trades === 1 ? '' : 's'} · {s.winRate.toFixed(0)}% win
             {s.tax > 0 && ` · after tax ${m.inr(s.afterTax)}`}
           </p>

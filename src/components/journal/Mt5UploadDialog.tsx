@@ -42,9 +42,9 @@ function periodLabel(from: string, to: string): string {
 function Stat({ label, children, sub }: { label: string; children: ReactNode; sub?: ReactNode }) {
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-text-secondary">{label}</p>
       <p className="mt-0.5 truncate text-base font-semibold text-text">{children}</p>
-      {sub && <p className="truncate text-[11px] text-text-secondary">{sub}</p>}
+      {sub && <p className="truncate text-2xs text-text-secondary">{sub}</p>}
     </div>
   )
 }
@@ -80,7 +80,7 @@ function HowTo() {
             On a Mac the file is saved inside the MetaTrader app folder. In the file picker press <span className="font-mono text-text">⌘⇧G</span> and paste:
           </p>
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5">
-            <code className="min-w-0 flex-1 break-all font-mono text-[11px] text-text">{MAC_REPORT_FOLDER}</code>
+            <code className="min-w-0 flex-1 break-all font-mono text-2xs text-text">{MAC_REPORT_FOLDER}</code>
             <button type="button" data-cursor="hover" onClick={copy} aria-label="Copy folder path" className="shrink-0 rounded-md p-1.5 text-text-secondary hover:bg-surface-3 hover:text-text">
               {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-positive" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -116,7 +116,7 @@ function Preview({ stage, onImport, onBack }: { stage: Extract<Stage, { kind: 'p
             {report.company && <> · {report.company}</>}
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold uppercase tracking-wide">
+        <div className="flex flex-wrap gap-1.5 text-2xs font-semibold uppercase tracking-wide">
           {[report.accountType, report.currency, report.marginMode].filter(Boolean).map((b) => (
             <span key={b} className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-text-secondary">
               {b}
@@ -176,7 +176,7 @@ function Preview({ stage, onImport, onBack }: { stage: Extract<Stage, { kind: 'p
           {fresh.length > 0 ? `Import ${plural(fresh.length, 'trade')}` : 'Update account details'}
         </Button>
       </div>
-      {fresh.length === 0 && <p className="-mt-2 text-right text-[11px] text-text-secondary">Every trade in this report is already saved; this will refresh the balance and deposits.</p>}
+      {fresh.length === 0 && <p className="-mt-2 text-right text-2xs text-text-secondary">Every trade in this report is already saved; this will refresh the balance and deposits.</p>}
     </div>
   )
 }

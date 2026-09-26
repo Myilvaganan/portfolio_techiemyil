@@ -24,7 +24,7 @@ export function RecurringCard({ txns, limit = 8 }: { txns: Txn[]; limit?: number
             </span>
             <span className="text-right font-mono text-text">
               {inr(r.lastAmount)}
-              <span className="block text-[10px] text-text-secondary">{r.count} charges</span>
+              <span className="block text-2xs text-text-secondary">{r.count} charges</span>
             </span>
           </li>
         )

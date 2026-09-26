@@ -3,12 +3,14 @@ import { Star } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { FitValue } from '@/components/viz/FitValue'
 import { cn } from '@/lib/utils'
+import { IconBadge } from '@/components/ui/Avatar'
+import { kpiIcon } from '@/components/ui/kpiIcon'
 import { useMoney } from '@/lib/privacy'
 
 export const inputClass =
   'w-full min-w-0 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-sm text-text outline-none transition-colors placeholder:text-text-secondary/50 focus:border-accent/50'
 
-export const labelClass = 'text-[11px] font-medium uppercase tracking-wide text-text-secondary'
+export const labelClass = 'label-caps'
 
 export const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 'text-text-secondary')
 
@@ -51,11 +53,14 @@ export function Kpi({
 }) {
   return (
     <GlassCard hover={false} className={cn('p-3 sm:p-4 xl:p-3', className)}>
-      <p className={labelClass}>{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className={labelClass}>{label}</p>
+        <IconBadge icon={kpiIcon(label)} seed={label} size="sm" className="h-7 w-7 rounded-lg" />
+      </div>
       <FitValue max={22} text={fit} className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', valueClassName)}>
         {value}
       </FitValue>
-      {sub && <p className="mt-1 text-[11px] leading-snug text-text-secondary">{sub}</p>}
+      {sub && <p className="mt-1 text-2xs leading-snug text-text-secondary">{sub}</p>}
     </GlassCard>
   )
 }

@@ -26,6 +26,8 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 import { deleteDocument, getDownloadUrl, listDocuments, type VaultDocument } from '@/lib/adminVault'
 import { addCustomCategory, getCustomCategories } from '@/lib/vaultCategories'
 import { slugifyTag, tagLabel } from '@/constants/vaultTags'
@@ -430,11 +432,9 @@ export function DocumentManager() {
 
       <GlassCard hover={false} className="overflow-hidden p-0">
         {loading ? (
-          <div className="p-10 text-center text-sm text-text-secondary">Loading documents…</div>
+          <div className="p-4"><ListSkeleton rows={6} /></div>
         ) : pageItems.length === 0 ? (
-          <div className="p-10 text-center text-sm text-text-secondary">
-            No documents match your filters. {documents.length === 0 && 'Upload one to get started.'}
-          </div>
+          <EmptyState icon={FolderOpen} title={documents.length === 0 ? 'No documents yet' : 'No documents match'} hint={documents.length === 0 ? 'Upload a PDF, image or spreadsheet to get started.' : 'Try a different search or category.'} />
         ) : view === 'list' ? (
           <>
           {/* Phones: one compact line per file, tap to preview */}

@@ -124,7 +124,7 @@ export function AreaChart({ labels, series, height = 230, format, axisFormat = c
         {grid.map((g) => (
           <g key={g}>
             <line x1={PX} x2={W - PR + 4} y1={y(g)} y2={y(g)} stroke="currentColor" className="text-border" strokeDasharray={g === 0 ? undefined : '3 5'} />
-            <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={11}>
+            <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={12.5}>
               {axisFormat(g)}
             </text>
           </g>
@@ -154,7 +154,7 @@ export function AreaChart({ labels, series, height = 230, format, axisFormat = c
           </>
         )}
       </svg>
-      <div className="mt-1 flex justify-between text-[11px] text-text-secondary">
+      <div className="mt-1 flex justify-between text-2xs text-text-secondary">
         <span>{labels[0]}</span>
         <span>{labels[n - 1]}</span>
       </div>
@@ -238,7 +238,7 @@ export function BarChart({
         {grid.map((g) => (
           <g key={g}>
             <line x1={PX} x2={W - PR + 4} y1={y(g)} y2={y(g)} stroke="currentColor" className="text-border" strokeDasharray={g === 0 ? undefined : '3 5'} />
-            <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={11}>
+            <text x={W - 2} y={y(g) + 4} textAnchor="end" className="fill-text-secondary/80" fontSize={12.5}>
               {axisFormat(g)}
             </text>
           </g>
@@ -274,7 +274,7 @@ export function BarChart({
                 )
               })}
               {i % labelStep === 0 && (
-                <text x={Math.min(Math.max(cx(i), PX + 18), W - PR - 18)} y={height - 7} textAnchor="middle" className="fill-text-secondary" fontSize={n > 9 ? 10 : 11.5}>
+                <text x={Math.min(Math.max(cx(i), PX + 18), W - PR - 18)} y={height - 7} textAnchor="middle" className="fill-text-secondary" fontSize={n > 9 ? 11.5 : 12.5}>
                   {label}
                 </text>
               )}
@@ -352,13 +352,13 @@ export function Donut({ slices, centerLabel, format, size = 190 }: { slices: Don
         })}
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="max-w-[12ch] truncate text-[11px] text-text-secondary">{shown ? shown.label : centerLabel}</span>
+        <span className="max-w-[12ch] truncate text-2xs text-text-secondary">{shown ? shown.label : centerLabel}</span>
         <div style={{ width: size * 0.56 }}>
           <FitValue max={18} min={9} text={format(shown ? shown.value : total)} className="whitespace-nowrap text-center font-mono font-semibold leading-tight text-text">
             {format(shown ? shown.value : total)}
           </FitValue>
         </div>
-        {shown && <span className="text-[11px] text-text-secondary">{((shown.value / (total || 1)) * 100).toFixed(1)}%</span>}
+        {shown && <span className="text-2xs text-text-secondary">{((shown.value / (total || 1)) * 100).toFixed(1)}%</span>}
       </div>
     </div>
   )
@@ -388,7 +388,7 @@ export function HBars({ items, format, onPick }: { items: { label: string; value
               transition={{ duration: 0.8, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>
-          {it.sub && <p className="mt-0.5 text-[11px] text-text-secondary">{it.sub}</p>}
+          {it.sub && <p className="mt-0.5 text-2xs text-text-secondary">{it.sub}</p>}
         </li>
       ))}
     </ul>
@@ -453,7 +453,7 @@ export function CalendarHeatmap({ values, format }: { values: Map<string, number
           ))}
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-text-secondary">
+      <div className="mt-2 flex items-center gap-1.5 text-2xs text-text-secondary">
         Less
         {pct.map((p, i) => (
           <span key={i} className="h-2.5 w-2.5 rounded-[3px]" style={{ background: i === 0 ? 'var(--color-surface-7)' : `color-mix(in srgb, var(--viz-1) ${p}%, transparent)` }} />
@@ -493,7 +493,7 @@ export function Gauge({ value, label, sub, size = 150, invert = false }: { value
       </svg>
       <div className="absolute inset-x-0 bottom-0 text-center">
         <p className="font-mono text-xl font-semibold text-text">{v.toFixed(0)}%</p>
-        <p className="text-[11px] text-text-secondary">{sub ?? label}</p>
+        <p className="text-2xs text-text-secondary">{sub ?? label}</p>
       </div>
     </div>
   )

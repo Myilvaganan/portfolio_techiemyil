@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FileJson, Loader2, Receipt, Trash2, UploadCloud } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -546,12 +547,15 @@ export function TaxInformation() {
         setDrag(true)
       }} onDragLeave={() => setDrag(false)} onDrop={onDrop}>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Finance</p>
           <h1 className="mt-1 page-title">Tax Information</h1>
           <p className="page-lede">
             What you paid in income tax each year, how it was worked out, and which transactions in your bank and card statements matter for tax. Add the JSON file from each filed return.
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input ref={input} type="file" accept=".json,application/json" multiple hidden onChange={(e) => {

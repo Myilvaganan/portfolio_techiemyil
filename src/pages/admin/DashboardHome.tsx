@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, Home, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, Tags, TrendingUp, Wallet } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -137,9 +138,12 @@ export function DashboardHome() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <h1 className="page-title">Dashboard</h1>
           <p className="page-lede">Welcome back! Here&apos;s today across your trading, money, health and website.</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" magnetic={false} onClick={() => void backup()} disabled={backingUp}>

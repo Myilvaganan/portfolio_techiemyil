@@ -33,10 +33,10 @@ export function CardDues({ txns, statements }: { txns: Txn[]; statements: Statem
             <GlassCard key={c.key} hover={false} className="p-3.5">
               <div className="flex items-start justify-between gap-2">
                 <p className="truncate text-xs font-semibold text-text">{c.label}</p>
-                <span className={cn('shrink-0 text-[11px] font-semibold', tone.text)}>{tone.label}</span>
+                <span className={cn('shrink-0 text-2xs font-semibold', tone.text)}>{tone.label}</span>
               </div>
               <p className="mt-1.5 font-mono text-lg font-semibold text-text">{c.totalDue !== null ? money.inr(c.totalDue) : '—'}</p>
-              <p className="text-[11px] text-text-secondary">
+              <p className="text-2xs text-text-secondary">
                 {c.dueDate ? `${c.estimated ? 'Est. due' : 'Due'} ${c.dueDate}` : 'Due date unknown'}
                 {c.minDue !== null && ` · min ${money.inr(c.minDue)}`}
               </p>
@@ -44,7 +44,7 @@ export function CardDues({ txns, statements }: { txns: Txn[]; statements: Statem
                 <div className="h-1.5 overflow-hidden rounded-full bg-surface-7">
                   <div className={cn('h-full rounded-full', util === null ? 'bg-transparent' : util > 70 ? 'bg-error' : util > 30 ? 'bg-amber-500' : 'bg-positive')} style={{ width: `${Math.min(100, util ?? 0)}%` }} />
                 </div>
-                <div className="mt-1 flex justify-between text-[10px] text-text-secondary">
+                <div className="mt-1 flex justify-between text-2xs text-text-secondary">
                   <span>{util === null ? 'Limit unknown' : `${util.toFixed(0)}% of ${money.inr(c.limit ?? 0)}`}</span>
                   <span>Interest {money.inr(c.interestPaid)}{c.feesPaid > 0 && ` · fees ${money.inr(c.feesPaid)}`}</span>
                 </div>

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { Loader2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { HideNumbersButton } from '@/components/journal/chrome'
@@ -27,10 +28,13 @@ export function CashFlow() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Money</p>
           <h1 className="mt-1 page-title">Cash flow</h1>
           <p className="page-lede">Income against spending, how long your bank balance lasts, and the next three months.</p>
+          </div>
         </div>
         <HideNumbersButton />
       </div>

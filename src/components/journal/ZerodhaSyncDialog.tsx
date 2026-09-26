@@ -19,7 +19,7 @@ type State =
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-3 py-2 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-text-secondary">{label}</p>
       <p className="mt-0.5 truncate text-sm font-semibold">{children}</p>
     </div>
   )
@@ -115,7 +115,7 @@ function Body({ asOf, onSynced, onClose }: { asOf: string; onSynced: (r: SyncRes
           <Stat label="Closed trades">
             <span className="font-mono">{t.closed}</span>
             {t.closed > 0 && (
-              <span className="block text-[11px] font-normal text-text-secondary">
+              <span className="block text-2xs font-normal text-text-secondary">
                 {t.wins}W · {t.losses}L
               </span>
             )}

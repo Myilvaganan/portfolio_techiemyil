@@ -175,7 +175,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
             </button>
           )}
         </label>
-        <p className="mt-2 text-[11px] text-text-secondary/80">
+        <p className="mt-2 text-2xs text-text-secondary/80">
           The password is used once to unlock the PDF, is never stored, and the unlocked copy is saved to your private vault. Card statements are often locked with your name + date of birth.
         </p>
       </div>
@@ -190,7 +190,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-text">{j.file.name}</p>
-                  <p className={cn('mt-0.5 text-[11px]', j.status === 'error' ? 'text-error' : j.status === 'locked' ? 'text-amber-500' : 'text-text-secondary')}>
+                  <p className={cn('mt-0.5 text-2xs', j.status === 'error' ? 'text-error' : j.status === 'locked' ? 'text-amber-500' : 'text-text-secondary')}>
                     {j.status === 'done' ? `${j.label ?? `${j.txns} transactions`} saved${j.message ? ` · ${j.message}` : ''}` : (j.message ?? j.stage ?? 'Waiting…')}
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export function StatementUploader({ kind, onSaved, onBusyChange, compact }: { ki
                     data-cursor="hover"
                     disabled={busy}
                     onClick={() => void run(j)}
-                    className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] font-medium text-text transition-colors hover:border-accent/50 hover:text-accent disabled:opacity-50"
+                    className="shrink-0 rounded-full border border-border px-3 py-1 text-2xs font-medium text-text transition-colors hover:border-accent/50 hover:text-accent disabled:opacity-50"
                   >
                     Retry
                   </button>

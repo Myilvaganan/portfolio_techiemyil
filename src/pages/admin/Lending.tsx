@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion } from 'framer-motion'
 import { Calculator, CalendarClock, ChevronDown, HandCoins, Loader2, Pencil, Phone, Plus, Trash2, Users, X } from 'lucide-react'
@@ -6,6 +7,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
+import { Avatar } from '@/components/ui/Avatar'
 import { useMoney } from '@/lib/privacy'
 import { todayStr } from '@/lib/journal'
 import { blankEntry, owedOn, passThrough, summarize, type EntryDraft, type LendingEntry, type PassThroughLoan, type Repayment } from '@/lib/lending'
@@ -196,12 +198,15 @@ function PersonCard({ e, today, onEdit, onDelete, onSave, onSplit }: { e: Lendin
     <GlassCard hover={false} className="relative overflow-hidden p-4">
       <span aria-hidden className={cn('pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl', o.status === 'overdue' ? 'bg-error' : o.status === 'settled' ? 'bg-positive' : 'bg-accent')} />
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar name={e.name} size="md" />
+          <div className="min-w-0">
           <h3 className="truncate card-title">{e.name}</h3>
           <p className="truncate text-xs text-text-secondary">
             Lent {dayLabel(e.date)}
             {e.note ? ` · ${e.note}` : ''}
           </p>
+          </div>
         </div>
         <span className="flex shrink-0 items-center gap-1">
           <button type="button" aria-label={`Edit ${e.name}`} onClick={onEdit} className="rounded-md p-1.5 text-text-secondary hover:bg-surface-3 hover:text-text">
@@ -499,10 +504,13 @@ export function Lending() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Money owed to me</p>
           <h1 className="mt-1 page-title">Lending</h1>
           <p className="page-lede">Who owes you, what they have paid back, and what a friend owes on a loan you took for them.</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div role="tablist" aria-label="Lending" className="inline-flex rounded-full border border-border bg-surface-2 p-0.5 text-sm">

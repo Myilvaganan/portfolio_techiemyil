@@ -33,15 +33,15 @@ const MONEY_LABELS = new Set([
 function Metric({ label, value, sub, valueClass }: { label: string; value: ReactNode; sub?: ReactNode; valueClass?: string }) {
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-text-secondary">{label}</p>
       <p className={cn('truncate font-mono text-sm font-semibold text-text sm:text-base', valueClass)}>{value}</p>
-      {sub && <p className="truncate font-mono text-[10px] text-text-secondary/70">{sub}</p>}
+      {sub && <p className="truncate font-mono text-2xs text-text-secondary/70">{sub}</p>}
     </div>
   )
 }
 
 function Badge({ children }: { children: ReactNode }) {
-  return <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">{children}</span>
+  return <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-text-secondary">{children}</span>
 }
 
 interface Props {
@@ -124,7 +124,7 @@ export function Mt5AccountCard({ account, usdInr, onUpload, compact = false }: P
               Account <span className="font-mono text-text">{account.account}</span>
               {account.server && <> · {account.server}</>}
             </p>
-            {account.company && <p className="truncate text-[11px] text-text-secondary/80">{account.company}</p>}
+            {account.company && <p className="truncate text-2xs text-text-secondary/80">{account.company}</p>}
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export function Mt5AccountCard({ account, usdInr, onUpload, compact = false }: P
                       <span className="min-w-0">
                         <span className="font-mono text-text-secondary">{o.time.slice(0, 10)}</span>
                         <span className="ml-2 capitalize text-text">{o.type === 'balance' ? (o.amount < 0 ? 'withdrawal' : 'deposit') : o.type}</span>
-                        {o.comment && <span className="ml-2 truncate font-mono text-[10px] text-text-secondary/70">{o.comment}</span>}
+                        {o.comment && <span className="ml-2 truncate font-mono text-2xs text-text-secondary/70">{o.comment}</span>}
                       </span>
                       <span className={cn('shrink-0 font-mono font-semibold', tone(o.amount))}>{m.signed(o.amount)}</span>
                     </li>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { MotionConfig, motion } from 'framer-motion'
 import { AlertTriangle, Camera, HeartPulse, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -259,10 +260,13 @@ export function HealthReport() {
       <ScrollProgress />
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">InBody</p>
             <h1 className="mt-1 page-title">Health Report</h1>
             <p className="page-lede">Snap your body-composition sheet. The numbers are read for you, and you can see where each one sits against its normal range and how it changes over time.</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" aria-label="Report photo" onChange={(e) => void onPhotos(e.target.files)} />

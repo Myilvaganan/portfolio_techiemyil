@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import { FolderOpen } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { HandCoins, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -72,10 +75,13 @@ export function Loans() {
       <ScrollProgress />
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">ICICI Bank</p>
             <h1 className="mt-1 page-title">Loans</h1>
             <p className="page-lede">Upload each loan&apos;s account statement and amortization schedule — see every EMI, what you&apos;ve paid, and exactly how to close early.</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">
@@ -174,7 +180,7 @@ export function Loans() {
 
             <Card title={`Your documents (${docs.length})`}>
               {docs.length === 0 ? (
-                <p className="py-4 text-center text-sm text-text-secondary">Nothing uploaded yet.</p>
+                <EmptyState icon={FolderOpen} title="Nothing uploaded yet" hint="Loan statements you upload will be listed here." className="py-6" />
               ) : (
                 <ul className="divide-y divide-border/60">
                   {docs.slice((docCurrent - 1) * docSize, docCurrent * docSize).map((d) => (

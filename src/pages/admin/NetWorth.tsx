@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Scale } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
 import { MotionConfig } from 'framer-motion'
 import { Camera, Eye, EyeOff, RefreshCw, Wallet } from 'lucide-react'
@@ -97,10 +100,13 @@ export function NetWorth() {
       <ScrollProgress />
       <div className="w-full space-y-6 xl:space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Complete picture</p>
           <h1 className="mt-1 page-title">Net Worth</h1>
           <p className="page-lede">Portfolio, bank balances, loans and card dues combined — pulled from what you&apos;ve already uploaded across the other modules.</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <button type="button" data-cursor="hover" onClick={toggle} aria-pressed={hidden} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
@@ -165,7 +171,7 @@ export function NetWorth() {
           <div className="grid gap-5 lg:grid-cols-2">
             <Card title="Assets">
               {assetItems.length === 0 ? (
-                <p className="py-10 text-center text-sm text-text-secondary">No assets found yet.</p>
+                <EmptyState icon={Scale} title="No assets found yet" hint="Add bank statements and investments and they will show up here." />
               ) : (
                 <div className="flex flex-wrap items-center justify-center gap-6">
                   <Donut slices={assetDonut} centerLabel="Total assets" format={money.inr} />

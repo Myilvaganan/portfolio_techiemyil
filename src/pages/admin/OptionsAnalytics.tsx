@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { ArrowDownRight, ArrowUpRight, FileUp, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
@@ -715,7 +716,9 @@ export function OptionsAnalytics() {
       )}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Options only</p>
           <h1 className="mt-1 page-title">Options trading analytics</h1>
           <p className="page-lede">
@@ -723,6 +726,7 @@ export function OptionsAnalytics() {
               ? 'Showing sample trades — not your account.'
               : 'Where you win, where you leak, and what it costs — kept separately for each broker, saved to your private vault.'}
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input

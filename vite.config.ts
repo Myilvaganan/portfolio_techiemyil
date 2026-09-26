@@ -40,7 +40,20 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,woff,woff2}'],
-        navigateFallbackDenylist: [/^\/resume\//, /^\/admin/],
+        navigateFallbackDenylist: [/^\/resume\//],
+        // Read-only offline mode: the last successful answers for vault data are kept for a week and used when the network fails.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, request }) => request.method === 'GET' && /\.execute-api\.[^.]+\.amazonaws\.com$/.test(url.hostname),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'vault-api',
+              networkTimeoutSeconds: 6,
+              expiration: { maxEntries: 120, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],

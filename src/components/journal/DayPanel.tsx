@@ -10,7 +10,7 @@ import { Amount, Chip, Empty, Field, StarRating, inputClass, labelClass, tone } 
 function Tile({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 p-2.5 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-text-secondary">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold">{children}</p>
     </div>
   )
@@ -54,22 +54,22 @@ function TradeRow({ trade, onEdit, onDelete, readOnly }: { trade: Trade; onEdit:
           <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-medium text-text">
             {trade.time && <span className="font-mono text-xs text-text-secondary">{trade.time}</span>}
             <span className="truncate">{trade.instrument}</span>
-            <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', trade.direction === 'BUY' ? 'bg-positive/15 text-positive' : 'bg-error/15 text-error')}>{trade.direction}</span>
+            <span className={cn('rounded px-1.5 py-0.5 text-2xs font-bold', trade.direction === 'BUY' ? 'bg-positive/15 text-positive' : 'bg-error/15 text-error')}>{trade.direction}</span>
           </p>
           {trade.symbol && <p className="truncate text-xs text-text-secondary">{trade.symbol}</p>}
-          {detail && <p className="mt-0.5 truncate font-mono text-[11px] text-text-secondary/80">{detail}</p>}
+          {detail && <p className="mt-0.5 truncate font-mono text-2xs text-text-secondary/80">{detail}</p>}
         </div>
         <div className="shrink-0 text-right">
           <Amount value={net} className="text-sm font-semibold" />
           {trade.currency === 'USD' && fxOf(trade) !== 1 && (
-            <p className="font-mono text-[10px] text-text-secondary">
+            <p className="font-mono text-2xs text-text-secondary">
               {m.hidden ? `$${MASK}` : `${native < 0 ? '-' : ''}$${Math.abs(native).toFixed(2)}`}
             </p>
           )}
         </div>
       </div>
 
-      <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-text-secondary">
+      <div className="mt-1 flex flex-wrap items-center gap-1 text-2xs text-text-secondary">
         {(trade.source ?? '').startsWith('mt5:') && (
           <span title="From your MetaTrader 5 report" className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">
             MT5

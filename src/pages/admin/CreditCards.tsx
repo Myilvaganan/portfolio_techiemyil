@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { CreditCard, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -84,10 +85,13 @@ export function CreditCards() {
       <ScrollProgress />
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">ICICI Bank</p>
             <h1 className="mt-1 page-title">Credit cards</h1>
             <p className="page-lede">All your ICICI cards in one place — spend, dues, utilisation, fees and interest, with AI recommendations.</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">

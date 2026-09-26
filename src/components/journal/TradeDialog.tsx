@@ -177,7 +177,7 @@ function TagInput({ tags, onChange }: { tags: string[]; onChange: (tags: string[
 }
 
 function GroupTitle({ children }: { children: string }) {
-  return <p className="mb-2 mt-1 border-b border-border pb-1 text-[11px] font-semibold uppercase tracking-wide text-accent/80">{children}</p>
+  return <p className="mb-2 mt-1 border-b border-border pb-1 text-2xs font-semibold uppercase tracking-wide text-accent/80">{children}</p>
 }
 
 function TradeForm({
@@ -361,7 +361,7 @@ function TradeForm({
                 {auto === null ? 'from entry × exit × qty' : `${auto < 0 ? '-' : ''}${symbol}${Math.abs(auto).toLocaleString('en-IN')}`}
               </p>
             )}
-            <label className="mt-0.5 flex cursor-pointer items-center gap-1.5 text-[11px] text-text-secondary">
+            <label className="mt-0.5 flex cursor-pointer items-center gap-1.5 text-2xs text-text-secondary">
               <input
                 type="checkbox"
                 checked={f.manualPnl}
@@ -474,7 +474,7 @@ function TradeForm({
 function PreviewCell({ label, node }: { label: string; node: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="text-2xs uppercase tracking-wide text-text-secondary">{label}</p>
       <p className="mt-0.5 truncate text-sm font-semibold">{node}</p>
     </div>
   )

@@ -45,7 +45,7 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
     <div role="grid" aria-label="Trading calendar" className="select-none">
       <div className="mb-1.5 grid grid-cols-[repeat(7,minmax(0,1fr))_minmax(0,1.15fr)] gap-1 sm:gap-1.5">
         {[...WEEKDAYS, 'Week'].map((d) => (
-          <div key={d} role="columnheader" className="text-center text-[10px] font-semibold uppercase tracking-wide text-text-secondary sm:text-[11px]">
+          <div key={d} role="columnheader" className="text-center text-2xs font-semibold uppercase tracking-wide text-text-secondary sm:text-2xs">
             {d}
           </div>
         ))}
@@ -80,7 +80,7 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                     >
                       <span
                         className={cn(
-                          'inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] sm:text-[11px]',
+                          'inline-flex h-5 w-5 items-center justify-center rounded-full text-2xs sm:text-2xs',
                           cell.date === today ? 'bg-accent font-bold text-[#05130a]' : 'text-text-secondary',
                         )}
                       >
@@ -94,8 +94,8 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                       )}
                       {d && (
                         <>
-                          <span className={cn('mt-auto font-mono text-[11px] font-semibold leading-tight sm:text-sm', tone(d.net))}>{m.compact(d.net)}</span>
-                          <span className="text-[9px] leading-tight text-text-secondary sm:text-[10px]">
+                          <span className={cn('mt-auto font-mono text-2xs font-semibold leading-tight sm:text-sm', tone(d.net))}>{m.compact(d.net)}</span>
+                          <span className="text-2xs leading-tight text-text-secondary sm:text-2xs">
                             {d.trades} trade{d.trades === 1 ? '' : 's'}
                           </span>
                         </>
@@ -121,11 +121,11 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
               <div role="gridcell" className="flex min-h-[58px] flex-col items-center justify-center rounded-lg border border-dashed border-border p-1 text-center sm:min-h-[72px] 2xl:min-h-[72px]">
                 {weekTrades > 0 ? (
                   <>
-                    <span className={cn('font-mono text-[11px] font-semibold sm:text-sm', tone(weekNet))}>{m.compact(weekNet)}</span>
-                    <span className="text-[9px] text-text-secondary sm:text-[10px]">{weekTrades} trades</span>
+                    <span className={cn('font-mono text-2xs font-semibold sm:text-sm', tone(weekNet))}>{m.compact(weekNet)}</span>
+                    <span className="text-2xs text-text-secondary sm:text-2xs">{weekTrades} trades</span>
                   </>
                 ) : (
-                  <span className="text-[10px] text-text-secondary/50">—</span>
+                  <span className="text-2xs text-text-secondary/50">—</span>
                 )}
               </div>
             </div>

@@ -48,7 +48,7 @@ export function StatementLibrary({ statements, onOpen, onDelete }: { statements:
                     {s.periodFrom && s.periodTo ? `${dayLabel(s.periodFrom)} – ${dayLabel(s.periodTo)}` : 'Period not detected'} · {s.txnCount} transactions · {s.pages} page{s.pages === 1 ? '' : 's'}
                     {s.duplicatesSkipped ? ` · ${s.duplicatesSkipped} duplicates skipped` : ''}
                   </p>
-                  <p className="truncate text-[11px] text-text-secondary/70">{s.filename}</p>
+                  <p className="truncate text-2xs text-text-secondary/70">{s.filename}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { motion } from 'framer-motion'
-import { Database, Loader2, Send, Sparkles, Trash2, User } from 'lucide-react'
+import { Database, Loader2, Send, Sparkles, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
+import { Avatar, IconBadge } from '@/components/ui/Avatar'
+import profilePhoto from '@/assets/images/profile.jpg'
 import { MASK, usePrivacy } from '@/lib/privacy'
 import { askVault, fetchCoverage, type ChatMessage, type ChatReply, type Coverage } from '@/lib/chatApi'
 
@@ -113,10 +116,13 @@ export function Chat() {
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="min-w-0 xl:col-span-2">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">Ask your data</p>
             <h1 className="mt-1 page-title">Chat</h1>
             <p className="page-lede">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {!empty && (
@@ -152,9 +158,7 @@ export function Chat() {
             turns.map((t, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={cn('flex gap-2.5', t.role === 'user' && 'justify-end')}>
                 {t.role === 'assistant' && (
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </span>
+                  <IconBadge icon={Sparkles} seed="assistant" size="sm" className="mt-0.5 rounded-full" />
                 )}
                 <div className={cn('max-w-[85%] rounded-2xl px-4 py-3', t.role === 'user' ? 'rounded-br-md bg-accent/15 text-sm text-text' : t.error ? 'rounded-bl-md border border-error/40 bg-error/10' : 'rounded-bl-md border border-border bg-surface-2')}>
                   {t.role === 'user' ? (
@@ -189,9 +193,7 @@ export function Chat() {
                   )}
                 </div>
                 {t.role === 'user' && (
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-text-secondary">
-                    <User className="h-3.5 w-3.5" />
-                  </span>
+                  <Avatar name="Admin" src={profilePhoto} size="sm" className="mt-0.5" />
                 )}
               </motion.div>
             ))

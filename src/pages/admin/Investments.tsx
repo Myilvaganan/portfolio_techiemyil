@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
 import { CalendarClock, Loader2, Plus, Trash2, Upload } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -401,9 +402,12 @@ export function Investments() {
   return (
     <div className="mx-auto w-full max-w-[1200px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <h1 className="page-title">Investments</h1>
           <p className="page-lede">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/admin/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
+          </div>
         </div>
         <HideNumbersButton />
       </div>

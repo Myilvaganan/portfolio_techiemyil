@@ -59,7 +59,7 @@ export function BookSwitch({ value, onChange }: { value: Book; onChange: (book: 
         >
           <Icon className="h-3.5 w-3.5" />
           {label}
-          <span className={cn('hidden text-[11px] font-normal sm:inline', value === id ? 'text-accent/70' : 'text-text-secondary/60')}>{hint}</span>
+          <span className={cn('hidden text-2xs font-normal sm:inline', value === id ? 'text-accent/70' : 'text-text-secondary/60')}>{hint}</span>
         </button>
       ))}
     </div>

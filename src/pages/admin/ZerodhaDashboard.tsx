@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Link2, PlugZap, RefreshCw, Unplug, Wallet } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -571,7 +572,9 @@ export function ZerodhaDashboard() {
       <style>{SERIES_CSS}</style>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Zerodha · Kite</p>
           <h1 className="mt-1 page-title">
             {userName ? `${userName}'s portfolio` : 'Trading dashboard'}
@@ -579,6 +582,7 @@ export function ZerodhaDashboard() {
           <p className="page-lede">
             {demo ? 'Showing sample data — not your account.' : 'Live holdings, positions, orders and margin from Kite Connect.'}
           </p>
+          </div>
         </div>
 
         {(live || demo) && (

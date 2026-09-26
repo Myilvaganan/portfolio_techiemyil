@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
 import { ReportMenu } from '@/components/viz/ReportMenu'
@@ -109,13 +110,16 @@ export function PortfolioRebalance() {
   return (
     <div className="w-full space-y-4 xl:space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-4 xl:items-end">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Portfolio intelligence</p>
           <h1 className="mt-1 page-title">Portfolio Rebalance Blueprint</h1>
           <p className="page-lede xl:hidden">
             A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
             goal is long-term wealth building, not a guaranteed daily return.
           </p>
+          </div>
         </div>
         <ReportMenu filename="portfolio-rebalance-report" report={() => rebalanceReport(rows, HOLDINGS, total)} />
       </div>

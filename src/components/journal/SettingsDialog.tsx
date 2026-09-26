@@ -17,7 +17,7 @@ interface RuleRow {
   mode: TaxMode
 }
 
-const groupTitle = 'mb-2 text-[11px] font-semibold uppercase tracking-wide text-accent/80'
+const groupTitle = 'mb-2 text-2xs font-semibold uppercase tracking-wide text-accent/80'
 
 function SettingsForm({
   settings,
@@ -111,7 +111,7 @@ function SettingsForm({
                     className={cn('rounded-xl border px-3 py-2 text-left transition-colors', mode === o.id ? 'border-accent/60 bg-accent/10' : 'border-border bg-surface-2 hover:border-accent/40')}
                   >
                     <span className={cn('block text-xs font-medium', mode === o.id ? 'text-accent' : 'text-text')}>{o.title}</span>
-                    <span className="mt-0.5 line-clamp-2 block text-[11px] leading-snug text-text-secondary">{o.text}</span>
+                    <span className="mt-0.5 line-clamp-2 block text-2xs leading-snug text-text-secondary">{o.text}</span>
                   </button>
                 ))}
               </div>

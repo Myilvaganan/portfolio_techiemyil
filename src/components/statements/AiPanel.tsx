@@ -25,7 +25,7 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className="font-mono text-2xl font-bold text-text">{value}</span>
-        <span className="max-w-[8ch] text-[10px] leading-tight text-text-secondary">{label}</span>
+        <span className="max-w-[8ch] text-2xs leading-tight text-text-secondary">{label}</span>
       </div>
     </div>
   )
@@ -96,7 +96,7 @@ export function AiPeriodPicker({ id, custom, onId, onCustom, resolved }: { id: A
           </label>
         </div>
       )}
-      <p className="text-[11px] text-text-secondary/80">{resolved ? `Will analyse ${periodLabel(resolved)}.` : 'Pick a valid from and to date.'}</p>
+      <p className="text-2xs text-text-secondary/80">{resolved ? `Will analyse ${periodLabel(resolved)}.` : 'Pick a valid from and to date.'}</p>
     </div>
   )
 }
@@ -128,7 +128,7 @@ export function AiInsightsPanel({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
             <Sparkles className="h-4 w-4 text-accent" /> AI analysis
-            {insights && <span className="rounded-full bg-surface-10 px-2 py-0.5 text-[10px] font-normal normal-case tracking-normal">{insights.model}</span>}
+            {insights && <span className="rounded-full bg-surface-10 px-2 py-0.5 text-2xs font-normal normal-case tracking-normal">{insights.model}</span>}
           </h2>
           <button
             type="button"
@@ -184,11 +184,11 @@ export function AiInsightsPanel({
 
             <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-secondary"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> What to do</p>
+                <p className="mb-2 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-text-secondary"><Lightbulb className="h-3.5 w-3.5 text-amber-500" /> What to do</p>
                 <ol className="space-y-2.5">
                   {insights.tips.map((t, i) => (
                     <li key={t.title} className="flex gap-3 text-xs">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 font-mono text-[11px] font-bold text-accent">{i + 1}</span>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 font-mono text-2xs font-bold text-accent">{i + 1}</span>
                       <span>
                         <span className="font-semibold text-text">{t.title}. </span>
                         <span className="leading-relaxed text-text-secondary">{t.detail}</span>
@@ -199,7 +199,7 @@ export function AiInsightsPanel({
               </div>
               {insights.risks.length > 0 && (
                 <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-secondary"><ShieldAlert className="h-3.5 w-3.5 text-error" /> Watch out</p>
+                  <p className="mb-2 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-text-secondary"><ShieldAlert className="h-3.5 w-3.5 text-error" /> Watch out</p>
                   <ul className="space-y-2 text-xs leading-relaxed text-text-secondary">
                     {insights.risks.map((r) => (
                       <li key={r} className="rounded-lg border border-border bg-surface-2 p-2.5">{r}</li>
@@ -208,7 +208,7 @@ export function AiInsightsPanel({
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-text-secondary/70">Generated {new Date(insights.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} from your statements only. AI can make mistakes — check against the original statements.</p>
+            <p className="text-2xs text-text-secondary/70">Generated {new Date(insights.generatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} from your statements only. AI can make mistakes — check against the original statements.</p>
           </div>
         )}
       </div>

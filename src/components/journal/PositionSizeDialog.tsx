@@ -47,15 +47,15 @@ function Form() {
 
       <div className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-surface-2 p-3 text-center">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-text-secondary">Lots</p>
+          <p className="text-2xs uppercase tracking-wide text-text-secondary">Lots</p>
           <p className="mt-0.5 font-mono text-sm font-semibold text-text">{result ? result.lots : '—'}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-text-secondary">Quantity</p>
+          <p className="text-2xs uppercase tracking-wide text-text-secondary">Quantity</p>
           <p className="mt-0.5 font-mono text-sm font-semibold text-text">{result ? result.qty : '—'}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-text-secondary">Rupees at risk</p>
+          <p className="text-2xs uppercase tracking-wide text-text-secondary">Rupees at risk</p>
           <p className="mt-0.5 font-mono text-sm font-semibold text-text">{result ? m.inr(result.rupeesAtRisk) : '—'}</p>
         </div>
       </div>

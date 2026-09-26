@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Globe, MessagesSquare } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { ChevronLeft, ChevronRight, Loader2, Mail, MailOpen, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
@@ -71,10 +74,13 @@ export function SiteInsights() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">techiemyil.com</p>
           <h1 className="mt-1 page-title">Website</h1>
           <p className="page-lede">Messages from the contact form and how many people read each page. Page-view analytics collect no cookies or IPs. Contact messages contain the details the sender provides.</p>
+          </div>
         </div>
         <Button size="sm" variant="secondary" magnetic={false} onClick={() => void load()}>
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -106,7 +112,7 @@ export function SiteInsights() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
           ) : stats.total === 0 ? (
-            <p className="text-sm text-text-secondary">No visits recorded this month yet. Counting starts once the updated site is live.</p>
+            <EmptyState icon={Globe} title="No visits recorded yet" hint="Counting starts once the updated site is live." />
           ) : (
             <div className="space-y-5">
               <p className="font-mono text-3xl font-semibold text-text">
@@ -151,7 +157,7 @@ export function SiteInsights() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
           ) : messages.length === 0 ? (
-            <p className="text-sm text-text-secondary">No messages yet. Anything sent through the contact form on your website lands here.</p>
+            <EmptyState icon={MessagesSquare} title="No messages yet" hint="Anything sent through the contact form on your website lands here." />
           ) : (
             <ul className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
               {messages.map((m) => {

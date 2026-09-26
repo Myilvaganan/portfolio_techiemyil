@@ -95,7 +95,7 @@ function Body({ settings, viewedMonth, account, usdInr }: { settings: JournalSet
               { label: 'Worst day', value: a.worstDay ? money(a.worstDay.net) : '—' },
             ].map((k) => (
               <div key={k.label} className="rounded-xl border border-border bg-surface-2 p-2.5 text-center">
-                <p className="text-[10px] uppercase tracking-wide text-text-secondary">{k.label}</p>
+                <p className="text-2xs uppercase tracking-wide text-text-secondary">{k.label}</p>
                 <p className="mt-0.5 truncate font-mono text-sm font-semibold text-text">{k.value}</p>
               </div>
             ))}

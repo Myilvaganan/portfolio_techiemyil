@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Bike, Building2, Car, ChevronDown, Flame, Fuel, Home, Loader2, ShoppingBag, ShoppingBasket, UtensilsCrossed, Wrench, Zap, type LucideIcon } from 'lucide-react'
@@ -287,13 +289,16 @@ export function Household() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Home &amp; living</p>
           <h1 className="mt-1 page-title">Household</h1>
           <p className="page-lede">
             Rent for both houses, electricity and gas, the bike, and every delivery and shopping app — read from your bank and card statements.
             {latest && <> Statements up to {dayLabel(latest)}.</>}
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div role="group" aria-label="Period" className="inline-flex rounded-full border border-border bg-surface-2 p-0.5 text-xs">
@@ -360,7 +365,7 @@ export function Household() {
             <GlassCard hover={false} className="h-fit p-4 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
               <h2 className="mb-3 label-caps">Where it goes</h2>
               {slices.length === 0 ? (
-                <p className="text-sm text-text-secondary">No household spending found in this period.</p>
+                <EmptyState icon={Home} title="No household spending" hint="Nothing found in this period. Try a longer range." className="py-6" />
               ) : (
                 <>
                   <div className="flex justify-center">

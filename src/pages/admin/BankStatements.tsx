@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { Landmark, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -89,10 +90,13 @@ export function BankStatements() {
       <ScrollProgress />
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">ICICI · Axis</p>
             <h1 className="mt-1 page-title">Bank statements</h1>
             <p className="page-lede">Upload statements once — get cash flow, spending patterns, recurring charges and AI insights, saved to your private vault.</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={() => setUploaderOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90">

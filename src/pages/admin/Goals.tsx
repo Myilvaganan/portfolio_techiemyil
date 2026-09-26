@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ListSkeleton } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { MotionConfig } from 'framer-motion'
 import { Bike, Home, LifeBuoy, Pencil, Plus, ShieldCheck, Target, Trash2, X } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -135,10 +138,13 @@ export function Goals() {
     <MotionConfig reducedMotion="user">
       <div className="w-full space-y-5 xl:space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="flex items-start gap-3.5">
+            <PageBadge />
+            <div className="min-w-0">
             <p className="page-eyebrow">Plan ahead</p>
             <h1 className="mt-1 page-title">Goals</h1>
             <p className="page-lede">House, bike, emergency fund — what to save each month and whether you are on track.</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" data-cursor="hover" onClick={emergencyPreset} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
@@ -162,11 +168,10 @@ export function Goals() {
         {error && <p role="alert" className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{error}</p>}
 
         {loading ? (
-          <GlassCard hover={false} className="py-16 text-center text-sm text-text-secondary">Loading goals…</GlassCard>
+          <ListSkeleton rows={3} />
         ) : plans.length === 0 ? (
-          <GlassCard hover={false} className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <Target className="h-8 w-8 text-accent" />
-            <p className="text-sm text-text-secondary">No goals yet. Add one, or start with the emergency-fund preset (6 months of your average spend).</p>
+          <GlassCard hover={false}>
+            <EmptyState icon={Target} title="No goals yet" hint="Add one, or start with the emergency-fund preset (6 months of your average spend)." />
           </GlassCard>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

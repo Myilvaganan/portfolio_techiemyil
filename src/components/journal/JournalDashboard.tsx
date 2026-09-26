@@ -60,7 +60,7 @@ function TimeAnalysisCard({ byHour, byWeekday, byHoldBucket }: { byHour: Slice[]
               data-cursor="hover"
               aria-pressed={view === v}
               onClick={() => setView(v)}
-              className={cn('rounded-full px-2 py-0.5 text-[10px] transition-colors', view === v ? 'bg-accent/15 font-semibold text-accent' : 'text-text-secondary hover:text-text')}
+              className={cn('rounded-full px-2 py-0.5 text-2xs transition-colors', view === v ? 'bg-accent/15 font-semibold text-accent' : 'text-text-secondary hover:text-text')}
             >
               {v}
             </button>
@@ -97,7 +97,7 @@ function EquityVsDepositsCard({ trades, balanceOps }: { trades: Trade[]; balance
             format={m.signed}
             axisFormat={m.axis}
           />
-          <p className="mt-1 flex flex-wrap items-center justify-center gap-3 text-[10px] text-text-secondary">
+          <p className="mt-1 flex flex-wrap items-center justify-center gap-3 text-2xs text-text-secondary">
             <span>
               Max drawdown <span className="font-mono font-semibold text-error">{m.inr(max.amount)}</span>
               {max.pct !== null && ` (${m.pct(max.pct)})`}
@@ -302,7 +302,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
                 format={m.signed}
                 axisFormat={m.axis}
               />
-              <p className="mt-1 flex flex-wrap items-center justify-center gap-4 text-[11px] text-text-secondary">
+              <p className="mt-1 flex flex-wrap items-center justify-center gap-4 text-2xs text-text-secondary">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ background: 'var(--viz-1)' }} /> Before tax
                 </span>
@@ -366,7 +366,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
               ) : (
                 <div className="space-y-2 xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
                   <PnlBars items={[a.discipline.followed, a.discipline.broke].filter((s) => s.trades > 0)} />
-                  <p className="text-[11px] leading-snug text-text-secondary">
+                  <p className="text-2xs leading-snug text-text-secondary">
                     Per trade: <span className="text-positive">{m.inr(a.discipline.followed.avgNet)}</span> on plan, <span className="text-error">{m.inr(a.discipline.broke.avgNet)}</span> off plan.
                   </p>
                 </div>

@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react'
+import { PiggyBank } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageBadge } from '@/components/admin/AdminShell'
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { HideNumbersButton } from '@/components/journal/chrome'
@@ -195,12 +198,15 @@ export function Budgets() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3.5">
+          <PageBadge />
+          <div className="min-w-0">
           <p className="page-eyebrow">Money</p>
           <h1 className="mt-1 page-title">Budgets</h1>
           <p className="page-lede">
             Monthly limits per category from your bank and card spending{latest && <> · statements up to {latest}</>}. Transfers, card bill payments, family and ignored items are left out.
           </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-border bg-surface-2 p-0.5 text-xs">
@@ -237,7 +243,7 @@ export function Budgets() {
 
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid content-start grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {rows.length === 0 && <p className="text-sm text-text-secondary">No spending this month yet.</p>}
+              {rows.length === 0 && <EmptyState icon={PiggyBank} title="No spending this month yet" hint="Upload a bank or card statement to see budgets by category." className="sm:col-span-2 2xl:col-span-3" />}
               {rows.map((s) => (
                 <CategoryCard key={s.category} s={s} onSave={saveLimit} />
               ))}

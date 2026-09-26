@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { Nfc } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
+import { IconBadge } from '@/components/ui/Avatar'
+import { kpiIcon } from '@/components/ui/kpiIcon'
 import { CountNumber, Reveal } from '@/components/viz/motion'
 import { FitValue } from '@/components/viz/FitValue'
 import { Sparkline, vizColor } from '@/components/viz/charts'
@@ -40,7 +42,10 @@ export function Kpi({
   return (
     <Reveal delay={delay} y={18}>
       <GlassCard hover className={cn('h-full p-4 transition-colors duration-500', tone && TONE_SURFACE[tone])}>
-        <p className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">{label}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="label-caps">{label}</p>
+          <IconBadge icon={kpiIcon(label)} seed={label} size="sm" className="h-7 w-7 rounded-lg" />
+        </div>
         <FitValue
           max={24}
           text={format(value)}
@@ -48,7 +53,7 @@ export function Kpi({
         >
           <CountNumber value={value} format={format} />
         </FitValue>
-        {sub && <p className="mt-1 text-[11px] text-text-secondary">{sub}</p>}
+        {sub && <p className="mt-1 text-2xs text-text-secondary">{sub}</p>}
         {spark && spark.length > 1 && <div className="mt-2 opacity-90"><Sparkline values={spark} color={tone === 'bad' ? 'var(--color-error)' : tone === 'good' ? 'var(--color-positive)' : tone === 'warn' ? '#f59e0b' : 'var(--viz-1)'} /></div>}
       </GlassCard>
     </Reveal>
@@ -132,7 +137,7 @@ export function CreditCardTile({ card, index, active, onClick }: { card: CardSum
         <Nfc className="h-4 w-4 text-white/60" aria-hidden />
       </div>
       <p className="mt-5 font-mono text-base tracking-[0.2em]">•••• {card.last4 || '····'}</p>
-      <div className="mt-4 flex items-end justify-between gap-2 text-[11px]">
+      <div className="mt-4 flex items-end justify-between gap-2 text-2xs">
         <div>
           <p className="text-white/60">Total due</p>
           <p className="font-mono text-sm font-semibold">{card.totalDue !== null ? inr(card.totalDue) : '—'}</p>
@@ -149,7 +154,7 @@ export function CreditCardTile({ card, index, active, onClick }: { card: CardSum
           <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
             <motion.div className="h-full rounded-full bg-white/85" initial={{ width: 0 }} animate={{ width: `${Math.min(util, 100)}%` }} transition={{ duration: 1, delay: 0.2 }} />
           </div>
-          <p className="mt-1 text-[10px] text-white/60">{util.toFixed(0)}% of {card.limit ? inr(card.limit) : 'limit'} used</p>
+          <p className="mt-1 text-2xs text-white/60">{util.toFixed(0)}% of {card.limit ? inr(card.limit) : 'limit'} used</p>
         </div>
       )}
     </motion.button>

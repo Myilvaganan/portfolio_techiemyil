@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { PageBadge } from '@/components/admin/AdminShell'
 import QRCode from 'qrcode'
 import { Check, Copy, KeyRound, Loader2, ShieldCheck, ShieldOff } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -120,10 +121,13 @@ export function Security() {
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
-      <div>
+      <div className="flex items-start gap-3.5">
+        <PageBadge />
+        <div className="min-w-0">
         <p className="page-eyebrow">Account</p>
         <h1 className="mt-1 page-title">Security</h1>
         <p className="page-lede">Add a second step to signing in, so a stolen password alone can&apos;t open your admin.</p>
+        </div>
       </div>
 
       {error && (

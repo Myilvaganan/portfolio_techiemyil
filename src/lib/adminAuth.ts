@@ -19,6 +19,8 @@ export function storeToken(token: string, expiresAt: number) {
 }
 
 export function clearStoredToken() {
+  // Offline copies of vault data must not outlive the session.
+  if (typeof caches !== 'undefined') void caches.delete('vault-api').catch(() => {})
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(EXPIRES_KEY)
 }

@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { Avatar, IconBadge } from '@/components/ui/Avatar'
+import profilePhoto from '@/assets/images/profile.jpg'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 import { clearStoredToken } from '@/lib/adminAuth'
@@ -11,6 +13,8 @@ import { noticesFrom, type Notice } from '@/lib/pulse'
 import { useAdminPulse } from '@/hooks/useAdminPulse'
 import { useIdleLock } from '@/hooks/useIdleLock'
 import { UI_SCALES, useUiScale, type UiScaleId } from '@/hooks/useUiScale'
+import { useAppLock } from '@/hooks/useAppLock'
+import { useOnline, useTouchGestures } from '@/hooks/useTouchGestures'
 import { GlobalSearch } from './GlobalSearch'
 
 interface NavItem {
@@ -102,12 +106,63 @@ function useOutsideClick(onOutside: () => void) {
   return ref
 }
 
+type AppLock = ReturnType<typeof useAppLock>
 interface ScaleProps {
   scale: UiScaleId
   onScale: (id: UiScaleId) => void
+  lock: AppLock
 }
 
-function SizePicker({ scale, onScale }: ScaleProps) {
+/** Turns the Face ID / fingerprint app lock on or off. Hidden on devices that can't do it. */
+function AppLockRow({ lock }: { lock: AppLock }) {
+  const [busy, setBusy] = useState(false)
+  if (!lock.supported && !lock.enabled) return null
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={lock.enabled}
+      disabled={busy}
+      onClick={async () => {
+        if (lock.enabled) return lock.disable()
+        setBusy(true)
+        await lock.enable()
+        setBusy(false)
+      }}
+      className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left"
+    >
+      <IconBadge icon={Fingerprint} seed="app-lock" size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-text">App lock</span>
+        <span className="block text-xs text-text-secondary">Face ID or fingerprint to open</span>
+      </span>
+      <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', lock.enabled ? 'bg-accent' : 'bg-surface-15')}>
+        <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', lock.enabled ? 'left-[1.125rem]' : 'left-0.5')} />
+      </span>
+    </button>
+  )
+}
+
+/** Covers the admin until the person passes Face ID / fingerprint. */
+function LockScreen({ onUnlock }: { onUnlock: () => Promise<void> }) {
+  useEffect(() => {
+    void onUnlock()
+  }, [onUnlock])
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-5 bg-bg px-6 text-center">
+      <IconBadge icon={Fingerprint} seed="app-lock" size="lg" className="h-20 w-20 rounded-3xl [&>svg]:h-10 [&>svg]:w-10" />
+      <div>
+        <p className="font-display text-xl font-semibold text-text">Vault locked</p>
+        <p className="mt-1 text-sm text-text-secondary">Use Face ID or your fingerprint to continue.</p>
+      </div>
+      <button type="button" onClick={() => void onUnlock()} className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-black">
+        Unlock
+      </button>
+    </div>
+  )
+}
+
+function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
   return (
     <div>
       <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">Display size</p>
@@ -131,7 +186,7 @@ function SizePicker({ scale, onScale }: ScaleProps) {
   )
 }
 
-function ProfileMenu({ onLogout, scale, onScale }: { onLogout: () => void } & ScaleProps) {
+function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
   const [open, setOpen] = useState(false)
   const ref = useOutsideClick(() => setOpen(false))
   const navigate = useNavigate()
@@ -144,9 +199,7 @@ function ProfileMenu({ onLogout, scale, onScale }: { onLogout: () => void } & Sc
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full border border-border bg-surface-2 py-1 pl-1 pr-2 text-left transition-colors hover:border-accent/40"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-xs font-semibold text-accent">
-          A
-        </span>
+        <Avatar name="Admin" src={profilePhoto} size="sm" />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
@@ -154,8 +207,9 @@ function ProfileMenu({ onLogout, scale, onScale }: { onLogout: () => void } & Sc
             <p className="text-sm font-medium text-text">Admin</p>
             <p className="text-xs text-text-secondary">Administrator</p>
           </div>
-          <div className="border-b border-border p-3">
+          <div className="space-y-3 border-b border-border p-3">
             <SizePicker scale={scale} onScale={onScale} />
+            <AppLockRow lock={lock} />
           </div>
           <button
             type="button"
@@ -300,7 +354,7 @@ const tap = () => {
 }
 
 /** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
-function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & ScaleProps) {
+function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [sheet, setSheet] = useState<null | 'finance' | 'more'>(null)
@@ -351,7 +405,7 @@ function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & S
                           cn('flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
                         }
                       >
-                        <item.icon className="h-5 w-5" />
+                        <IconBadge icon={item.icon} seed={item.to} size="md" />
                         <span className="leading-tight">{item.label}</span>
                       </NavLink>
                     ))}
@@ -359,8 +413,9 @@ function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & S
                 </div>
               ))}
               {sheet === 'more' && (
-                <div className="mb-4">
+                <div className="mb-4 space-y-3">
                   <SizePicker scale={scale} onScale={onScale} />
+                  <AppLockRow lock={lock} />
                 </div>
               )}
               {sheet === 'more' && (
@@ -413,9 +468,36 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   useIdleLock(() => {}, { lockAfter: Infinity })
   const { pathname } = useLocation()
   const { scale, setScale } = useUiScale()
+  const lock = useAppLock()
+  const online = useOnline()
+  const navigate = useNavigate()
+  // Bumping the key remounts the page, so it fetches fresh data: that is what pull-to-refresh does.
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+  const refresh = useCallback(() => {
+    if (!navigator.onLine) return
+    setRefreshing(true)
+    setRefreshKey((k) => k + 1)
+    window.setTimeout(() => setRefreshing(false), 900)
+  }, [])
+  const back = useCallback(() => navigate(-1), [navigate])
+  const pull = useTouchGestures({ onRefresh: refresh, onBack: back })
 
   return (
     <div className="touch-app min-h-screen bg-bg">
+      {lock.enabled && lock.locked && <LockScreen onUnlock={lock.unlock} />}
+      {!online && (
+        <div role="status" className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black">
+          <WifiOff className="h-3.5 w-3.5" /> You are offline. Showing the last saved data.
+        </div>
+      )}
+      {(pull > 0 || refreshing) && (
+        <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center lg:hidden" style={{ transform: `translateY(${refreshing ? 24 : pull * 40}px)`, opacity: refreshing ? 1 : pull }}>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-lg">
+            {refreshing ? <Loader2 className="h-5 w-5 animate-spin text-accent" /> : <ArrowDown className={cn('h-5 w-5 text-accent transition-transform', pull >= 1 && 'rotate-180')} />}
+          </span>
+        </div>
+      )}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
           <Logo />
@@ -444,7 +526,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
                       )
                     }
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <IconBadge icon={item.icon} seed={item.to} size="sm" />
                     <span className="truncate">{item.label}</span>
                   </NavLink>
                 ))}
@@ -455,9 +537,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
         <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent">
-              A
-            </span>
+            <Avatar name="Admin" src={profilePhoto} size="md" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-text">Admin</p>
               <p className="flex items-center gap-1 text-xs text-text-secondary">
@@ -476,15 +556,26 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <NotificationBell />
-            <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} />
+            <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} />
           </div>
         </header>
 
-        <motion.main key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
+        <motion.main key={`${pathname}-${refreshKey}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
           {children}
         </motion.main>
       </div>
-      <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} />
+      <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} />
     </div>
   )
+}
+
+function PageBadgeInner() {
+  const { pathname } = useLocation()
+  const item = NAV_SECTIONS.flatMap((sec) => sec.items).find((i) => (i.to === '/admin' ? pathname === '/admin' : pathname.startsWith(i.to)))
+  return item ? <IconBadge icon={item.icon} seed={item.to} size="lg" className="mt-0.5" /> : null
+}
+
+/** The coloured icon tile shown beside a page's title, matched to the page from the menu. */
+export function PageBadge() {
+  return useInRouterContext() ? <PageBadgeInner /> : null
 }
