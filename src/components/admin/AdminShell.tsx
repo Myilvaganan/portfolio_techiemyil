@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse } from 'lucide-react'
+import { AlertTriangle, Bell, Home, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/loans': 'emi prepay foreclosure',
   '/admin/trading-journal': 'mt5 forex options calendar',
   '/admin/health-report': 'inbody weight fat body',
+  '/admin/household': 'rent electricity bescom tangedco petrol bike zomato swiggy rapido ola instamart amazon appusamy visalakshi',
   '/admin/net-worth': 'assets liabilities wealth',
   '/admin/site': 'messages contact analytics visitors',
   '/admin/credit-cards': 'card spend',
@@ -49,6 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
       { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
       { label: 'Loans', to: '/admin/loans', icon: HandCoins },
+      { label: 'Household', to: '/admin/household', icon: Home },
       { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
     ],
   },

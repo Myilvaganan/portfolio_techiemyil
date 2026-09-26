@@ -20,6 +20,7 @@ const BankStatements = page(() => import('@/pages/admin/BankStatements'), 'BankS
 const CreditCards = page(() => import('@/pages/admin/CreditCards'), 'CreditCards')
 const Loans = page(() => import('@/pages/admin/Loans'), 'Loans')
 const HealthReport = page(() => import('@/pages/admin/HealthReport'), 'HealthReport')
+const Household = page(() => import('@/pages/admin/Household'), 'Household')
 const NetWorth = page(() => import('@/pages/admin/NetWorth'), 'NetWorth')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
 
@@ -56,6 +57,7 @@ export function Admin() {
                 <Route path="credit-cards" element={<CreditCards />} />
                 <Route path="loans" element={<Loans />} />
                 <Route path="health-report" element={<HealthReport />} />
+                <Route path="household" element={<Household />} />
                 <Route path="net-worth" element={<NetWorth />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />

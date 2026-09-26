@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, Scale, Tags, TrendingUp, Wallet } from 'lucide-react'
+import { AlertTriangle, Home, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, Scale, Tags, TrendingUp, Wallet } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
@@ -57,6 +57,7 @@ const QUICK_ACTIONS = [
   { label: 'Loans', to: '/admin/loans', icon: HandCoins },
   { label: 'Health Report', to: '/admin/health-report', icon: HeartPulse },
   { label: 'Trading Journal', to: '/admin/trading-journal', icon: BookOpen },
+  { label: 'Household', to: '/admin/household', icon: Home },
   { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
   { label: 'Website', to: '/admin/site', icon: Globe },
 ]
