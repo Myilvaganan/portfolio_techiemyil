@@ -6,7 +6,7 @@
 const crypto = require('crypto')
 const { S3Client, ListObjectsV2Command, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
-const { createStatementsApi, readPdf: statementsReadPdf, detectBank: statementsDetectBank } = require('./statements')
+const { createStatementsApi, readPdf: statementsReadPdf, detectBank: statementsDetectBank, callOpenAI: statementsCallOpenAI, EXTRACT_MODEL: statementsModel } = require('./statements')
 const { createJournalApi } = require('./journal')
 const { createHealthApi } = require('./health')
 const { createTaxApi } = require('./tax')
@@ -17,6 +17,7 @@ const { createWealthApi } = require('./wealth')
 const { createInvestApi } = require('./invest')
 const { createInboxApi } = require('./inbox')
 const { createLendingApi } = require('./lending')
+const { createChatApi } = require('./chat')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -54,6 +55,7 @@ const inboxApi = createInboxApi({
   readPdf: statementsReadPdf,
   detectBank: statementsDetectBank,
 })
+const chatApi = createChatApi({ s3, bucket: S3_BUCKET, callOpenAI: (o) => statementsCallOpenAI({ ...o, model: statementsModel() }), model: undefined })
 const lendingApi = createLendingApi({ s3, bucket: S3_BUCKET })
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
@@ -643,7 +645,7 @@ exports.handler = async (event) => {
       if (result) return respond(result.statusCode, result.body)
     }
 
-    for (const [prefix, api] of [['/admin/finance', financeApi], ['/admin/wealth', wealthApi], ['/admin/invest', investApi], ['/admin/lending', lendingApi]]) {
+    for (const [prefix, api] of [['/admin/finance', financeApi], ['/admin/wealth', wealthApi], ['/admin/invest', investApi], ['/admin/lending', lendingApi], ['/admin/chat', chatApi]]) {
       if (!path.startsWith(prefix)) continue
       const result = await api.route({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)

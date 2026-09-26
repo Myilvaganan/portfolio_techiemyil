@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -416,3 +416,16 @@ The Bank Statements, Credit Cards and Loans pages show what is waiting, with a "
 Stored in `_data/lending/entries.json` with conditional writes. The EMI-split calculation is done in the app (`src/lib/lending.ts`):
 the person pays the same share of every EMI as the share of the loan that went to them, so what they owe today is that share of the
 EMIs due so far, less what they have already paid.
+
+## Ask my data (`chat.js`)
+
+| Route | What it does |
+| --- | --- |
+| `GET /admin/chat/sources` | What the assistant can see: counts and date ranges per source |
+| `POST /admin/chat` `{ messages }` | Answers the last question from the vault only. Returns `{ answer, sources, followUps, inScope, queries }` |
+
+Every request reads the current data from S3 (cached for 45 seconds), so new uploads are included automatically. It builds a compact overview
+of every source, asks the model which detailed look-ups the question needs (search, total or group of bank/card transactions or journal trades),
+runs those look-ups in code on the real data, then asks the model to answer using only the overview and those results. Questions that are
+not about the data get a one-line "I can only answer from your uploaded data" and no sources. It uses the same `OPENAI_API_KEY` and model as
+statement reading, so the account needs OpenAI credit. Two model calls have to fit inside the 29-second function timeout.

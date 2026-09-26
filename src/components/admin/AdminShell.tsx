@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Handshake, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/budgets': 'budget limit category overspend rules family',
   '/admin/cash-flow': 'income savings runway burn projection',
   '/admin/lending': 'lend loan owed friend borrowed money receivable emi split pass through',
+  '/admin/chat': 'ask question assistant chatbot ai answer',
   '/admin/goals': 'goal target house bike emergency fund savings',
   '/admin/investments': 'returns sip capital gains deductions 80c reminders itr',
   '/admin/security': '2fa two factor authenticator password login',
@@ -44,6 +45,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
+      { label: 'Ask My Data', to: '/admin/chat', icon: MessagesSquare },
       { label: 'Website', to: '/admin/site', icon: Globe },
       { label: 'Security', to: '/admin/security', icon: ShieldCheck },
     ],

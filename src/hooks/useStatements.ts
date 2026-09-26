@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { aiContext, emptyStatements, fingerprint, inPeriod, insightsFingerprint, periodOfFingerprint, presetPeriod, type AiInsights, type AiPeriod, type AiPeriodId, type Options, type StatementKind, type StatementsData } from '@/lib/statements'
+import { aiContext, emptyStatements, fingerprint, inPeriod, insightsFingerprint, periodOfFingerprint, presetPeriod, weeklyDue, type AiInsights, type AiPeriod, type AiPeriodId, type Options, type StatementKind, type StatementsData } from '@/lib/statements'
 import { askAi, deleteStatement, fetchStatements, generateInsights, statementFileUrl } from '@/lib/statementsApi'
 
 // `autoInsights` can be switched off (e.g. while files are still uploading) so the analysis runs once after the last one.
@@ -69,10 +69,10 @@ export function useStatements(kind: StatementKind, options: Options = {}, autoIn
   const shownPeriod = current && insights ? periodOfFingerprint(insights.fingerprint) : null
   const periodMatches = current && insights?.fingerprint === print
   useEffect(() => {
-    if (!autoInsights || loading || (choice && !period) || !data.transactions.length || !stale || insightsBusy || attempted.current === print) return
+    if (!autoInsights || loading || (choice && !period) || !data.transactions.length || !stale || !weeklyDue(insights) || insightsBusy || attempted.current === print) return
     attempted.current = print
     void generate()
-  }, [autoInsights, loading, choice, period, data.transactions.length, stale, insightsBusy, print, generate])
+  }, [autoInsights, loading, choice, period, data.transactions.length, stale, insights, insightsBusy, print, generate])
 
   const ask = useCallback((question: string) => askAi(kind, question, aiContext(kind, data, options)), [kind, data, options])
 

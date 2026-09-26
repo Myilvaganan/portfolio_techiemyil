@@ -557,7 +557,7 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     const pages = Number.isInteger(payload.pages) && payload.pages > 0 && payload.pages < 500 ? payload.pages : 1
     const entry = { id, kind: 'loan', docType: doc.docType, accountNo: doc.accountNo, filename: clean(payload.filename, 120) || 'loan-document', uploadedAt: new Date().toISOString(), pages, fileKey, parsed: doc }
     data.statements.push(entry)
-    data.insights = null
+    // keep the last analysis: it is refreshed at most weekly (or on request), not on every upload
     data.updatedAt = new Date().toISOString()
     await store.putJson(store.key('loan', 'data.json'), data)
     return { statusCode: 200, body: { statement: { ...entry, parsed: undefined }, replaced: same.length } }
@@ -663,7 +663,7 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     data.statements.push(statement)
     data.transactions.push(...added)
     data.transactions.sort((a, b) => a.date.localeCompare(b.date))
-    data.insights = null
+    // keep the last analysis: it is refreshed at most weekly (or on request), not on every upload
     data.updatedAt = new Date().toISOString()
     await store.putJson(store.key(kind, 'data.json'), data)
     return { statusCode: 200, body: { statement, replaced: same.length } }
@@ -708,7 +708,7 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     const data = await store.getJson(store.key(kind, 'data.json'), emptyData())
     data.statements = data.statements.filter((s) => s.id !== id)
     data.transactions = data.transactions.filter((t) => t.statementId !== id)
-    data.insights = null
+    // keep the last analysis: it is refreshed at most weekly (or on request), not on every upload
     data.updatedAt = new Date().toISOString()
     await store.putJson(store.key(kind, 'data.json'), data)
     await store.delPrefix(store.key(kind, id) + '/')

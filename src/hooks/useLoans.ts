@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLoans, loanAiContext, loanFingerprint, type FeeAssumption, type LoanData } from '@/lib/loans'
-import type { AiInsights } from '@/lib/statements'
+import { weeklyDue, type AiInsights } from '@/lib/statements'
 import { askAi, deleteStatement, fetchLoanDocs, generateInsights, statementFileUrl } from '@/lib/statementsApi'
 
 export function useLoans(fee: FeeAssumption, autoInsights = true) {
@@ -48,10 +48,10 @@ export function useLoans(fee: FeeAssumption, autoInsights = true) {
   // Generated once per change to the documents, then saved and simply reloaded on later visits.
   const stale = !insights || insights.fingerprint !== print
   useEffect(() => {
-    if (!autoInsights || loading || !loans.length || !stale || insightsBusy || attempted.current === print) return
+    if (!autoInsights || loading || !loans.length || !stale || !weeklyDue(insights) || insightsBusy || attempted.current === print) return
     attempted.current = print
     void generate()
-  }, [autoInsights, loading, loans.length, stale, insightsBusy, print, generate])
+  }, [autoInsights, loading, loans.length, stale, insights, insightsBusy, print, generate])
 
   const ask = useCallback((question: string) => askAi('loan', question, loanAiContext(loans, fee)), [loans, fee])
   const remove = useCallback(

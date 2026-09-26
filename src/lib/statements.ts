@@ -62,6 +62,15 @@ export interface AiInsights {
   risks: string[]
 }
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+// Automatic AI analysis runs only when there is none yet or the last one is over a week old.
+export function weeklyDue(insights: { generatedAt: string } | null): boolean {
+  if (!insights) return true
+  const at = Date.parse(insights.generatedAt)
+  return !Number.isFinite(at) || Date.now() - at >= WEEK_MS
+}
+
 export interface StatementsData {
   statements: Statement[]
   transactions: Txn[]

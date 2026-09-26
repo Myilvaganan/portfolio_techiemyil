@@ -93,6 +93,17 @@ export function DashboardHome() {
   const [backingUp, setBackingUp] = useState(false)
   const [backupNote, setBackupNote] = useState('')
   const notices = pulse ? noticesFrom(pulse, signed) : []
+  // Show alerts briefly, then let them go (the bell keeps them); only show again when the set changes.
+  const noticeKey = notices.map((n) => n.id).join('|')
+  const [showNotices, setShowNotices] = useState(false)
+  useEffect(() => {
+    if (!noticeKey) return
+    try {
+      if (sessionStorage.getItem('notices_seen') === noticeKey) return
+      sessionStorage.setItem('notices_seen', noticeKey)
+    } catch { /* storage unavailable: just show */ }
+    setShowNotices(true)
+  }, [noticeKey])
 
   async function backup() {
     setBackingUp(true)
@@ -143,8 +154,8 @@ export function DashboardHome() {
       </div>
       {backupNote && <p role="status" className="-mt-3 text-xs text-text-secondary">{backupNote} Older versions of every file are also kept in the vault for 90 days.</p>}
 
-      {notices.length > 0 && (
-        <ul className="space-y-2" aria-label="Needs attention">
+      {notices.length > 0 && showNotices && (
+        <ul className="animate-[fadeout_0.5s_ease-in_6s_forwards] space-y-2" aria-label="Needs attention" onAnimationEnd={() => setShowNotices(false)}>
           {notices.map((n) => (
             <li key={n.id}>
               <button
