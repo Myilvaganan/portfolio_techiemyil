@@ -1,5 +1,5 @@
 import { clearStoredToken, getStoredToken } from './adminAuth'
-import { normalizeReport, type HealthReport, type HistoryPoint } from './health'
+import { normalizeReport, type DailyLog, type Goal, type HealthReport, type HistoryPoint } from './health'
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
 const MAX_PHOTO_SIDE = 2000
@@ -58,4 +58,29 @@ export async function scanReport(file: File): Promise<{ report: HealthReport; hi
   const image = await photoToDataUrl(file)
   const data = await call('/admin/health/scan', 'POST', { image })
   return { report: normalizeReport(data.report), history: data.history ?? [] }
+}
+
+export async function fetchGoal(): Promise<Goal | null> {
+  const data = await call('/admin/health/goal')
+  return data.goal ?? null
+}
+
+export async function saveGoal(goal: Partial<Goal>): Promise<Goal> {
+  const data = await call('/admin/health/goal', 'POST', { goal })
+  return data.goal
+}
+
+export async function fetchLogs(): Promise<DailyLog[]> {
+  const data = await call('/admin/health/logs')
+  return data.logs ?? []
+}
+
+export async function saveLog(log: DailyLog): Promise<DailyLog[]> {
+  const data = await call('/admin/health/logs', 'POST', { log })
+  return data.logs ?? []
+}
+
+export async function deleteLog(date: string): Promise<DailyLog[]> {
+  const data = await call(`/admin/health/logs?date=${encodeURIComponent(date)}`, 'DELETE')
+  return data.logs ?? []
 }

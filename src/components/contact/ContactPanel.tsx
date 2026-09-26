@@ -3,11 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ContactInfo } from './ContactInfo'
 import { TestimonialForm } from './TestimonialForm'
+import { MessageForm } from './MessageForm'
 
-type Tab = 'contact' | 'testimonial'
+type Tab = 'contact' | 'message' | 'testimonial'
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'contact', label: 'Contact' },
+  { id: 'message', label: 'Send a Message' },
   { id: 'testimonial', label: 'Give a Testimonial' },
 ]
 
@@ -16,7 +18,7 @@ export function ContactPanel() {
 
   return (
     <div className="rounded-[24px] border border-border bg-card/50 p-6 backdrop-blur-sm sm:p-8">
-      <div className="mb-7 inline-flex rounded-full border border-border bg-surface-2 p-1">
+      <div className="mb-7 inline-flex flex-wrap rounded-full border border-border bg-surface-2 p-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -48,7 +50,7 @@ export function ContactPanel() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          {active === 'contact' ? <ContactInfo /> : <TestimonialForm />}
+          {active === 'contact' ? <ContactInfo /> : active === 'message' ? <MessageForm /> : <TestimonialForm />}
         </motion.div>
       </AnimatePresence>
     </div>

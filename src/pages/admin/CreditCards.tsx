@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { CreditCard, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AiInsightsPanel, AskAi } from '@/components/statements/AiPanel'
+import { RecurringCard } from '@/components/statements/RecurringCard'
 import { StatementLibrary } from '@/components/statements/StatementLibrary'
 import { StatementUploader } from '@/components/statements/StatementUploader'
 import { TransactionsTable } from '@/components/statements/TransactionsTable'
@@ -12,6 +13,7 @@ import { Reveal, ScrollProgress } from '@/components/viz/motion'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { useStatements } from '@/hooks/useStatements'
 import { cardReport } from '@/lib/statementReports'
+import { setCategoryOverride } from '@/lib/statementsApi'
 import {
   anomalies,
   cardsSummary,
@@ -23,7 +25,6 @@ import {
   monthLabel,
   monthlyFlow,
   monthlySpendByCard,
-  recurringCharges,
   topWithOther,
 } from '@/lib/statements'
 
@@ -57,7 +58,6 @@ export function CreditCards() {
   const byCard = useMemo(() => monthlySpendByCard(txns), [txns])
   const cats = useMemo(() => categoryTotals('card', txns), [txns])
   const merchants = useMemo(() => merchantTotals('card', txns), [txns])
-  const recurring = useMemo(() => recurringCharges('card', txns), [txns])
   const odd = useMemo(() => anomalies('card', txns, 5), [txns])
   const heat = useMemo(() => dailySpend('card', txns), [txns])
   const feesByMonth = useMemo(() => {
@@ -71,6 +71,11 @@ export function CreditCards() {
   const hasData = data.transactions.length > 0
   const showUploader = uploaderOpen || (!s.loading && !hasData)
   const selectedLabel = selected === 'all' ? `All ${cards.length} cards` : (labels[selected] ?? 'Card')
+
+  async function handleRecategorize(merchant: string, category: string) {
+    await setCategoryOverride('card', merchant, category)
+    await s.reload()
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -236,18 +241,7 @@ export function CreditCards() {
                 </div>
               </Card>
               <Card title="EMIs & repeat charges" delay={0.05}>
-                {recurring.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-text-secondary">Needs 3+ months of statements to spot repeat charges.</p>
-                ) : (
-                  <ul className="divide-y divide-border/60">
-                    {recurring.slice(0, 6).map((r) => (
-                      <li key={r.merchant} className="flex items-center justify-between gap-3 py-2 text-xs">
-                        <span className="min-w-0"><span className="block truncate font-medium text-text">{r.merchant}</span><span className="text-text-secondary">{r.months} months</span></span>
-                        <span className="font-mono text-text">{inr(r.monthly)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <RecurringCard txns={txns} limit={6} />
                 {odd.length > 0 && (
                   <>
                     <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Unusual charges</p>
@@ -265,7 +259,7 @@ export function CreditCards() {
             </div>
 
             <Card title="Transactions">
-              <TransactionsTable kind="card" txns={txns} cardLabels={labels} />
+              <TransactionsTable kind="card" txns={txns} cardLabels={labels} onRecategorize={handleRecategorize} />
             </Card>
 
             <StatementLibrary statements={data.statements} onOpen={s.openFile} onDelete={s.remove} />

@@ -462,6 +462,8 @@ function accountKey(kind, meta) {
 const txnSignature = (accKey, t) =>
   [accKey, t.date, t.debit, t.credit, t.balance ?? '', t.description.slice(0, 40)].join('|')
 
+const normMerchant = (s) => String(s || '').trim().toLowerCase()
+
 // ---------- Handlers ----------
 
 function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
@@ -606,13 +608,15 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
       await store.delPrefix(store.key(kind, old.id) + '/')
     }
 
+    const overrides = data.categoryOverrides || {}
     const seen = new Set(data.transactions.filter((t) => t.accountKey === accKey).map((t) => txnSignature(accKey, t)))
     const added = []
     incoming.forEach((t, i) => {
       const sig = txnSignature(accKey, t)
       if (seen.has(sig)) return
       seen.add(sig)
-      added.push({ ...t, id: `${id}-${i}`, statementId: id, accountKey: accKey })
+      const override = overrides[normMerchant(t.merchant)]
+      added.push({ ...t, category: override || t.category, id: `${id}-${i}`, statementId: id, accountKey: accKey })
     })
     if (data.transactions.length + added.length > MAX_TXNS) return bad('Too many transactions are stored already.', 413)
 
@@ -635,6 +639,31 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     data.updatedAt = new Date().toISOString()
     await store.putJson(store.key(kind, 'data.json'), data)
     return { statusCode: 200, body: { statement, replaced: same.length } }
+  }
+
+  // Re-categorises every stored transaction from this merchant, and remembers the choice so future statements
+  // for the same merchant are categorised the same way from the start.
+  async function categoryOverride(payload) {
+    const kind = validKind(payload.kind)
+    if (!kind || kind === 'loan') return bad('A valid statement type is required.')
+    const merchantKey = normMerchant(payload.merchantKey)
+    if (!merchantKey) return bad('A merchant is required.')
+    const cats = kind === 'bank' ? BANK_CATEGORIES : CARD_CATEGORIES
+    if (!cats.includes(payload.category)) return bad('Not a valid category.')
+
+    const data = await store.getJson(store.key(kind, 'data.json'), emptyData())
+    data.categoryOverrides = data.categoryOverrides || {}
+    data.categoryOverrides[merchantKey] = payload.category
+    let updated = 0
+    for (const t of data.transactions) {
+      if (normMerchant(t.merchant) === merchantKey && t.category !== payload.category) {
+        t.category = payload.category
+        updated++
+      }
+    }
+    data.updatedAt = new Date().toISOString()
+    await store.putJson(store.key(kind, 'data.json'), data)
+    return { statusCode: 200, body: { ok: true, updated } }
   }
 
   async function getData(query) {
@@ -744,6 +773,7 @@ score.value is a 0-100 loan-health score (payment discipline incl. bounced EMIs,
       if (method === 'GET' && path === '/admin/statements/file-url') return await fileUrl(query)
       if (method === 'POST' && path === '/admin/statements/insights') return await insights(payload)
       if (method === 'POST' && path === '/admin/statements/ask') return await ask(payload)
+      if (method === 'POST' && path === '/admin/statements/category-override') return await categoryOverride(payload)
       return null
     } catch (err) {
       if (err.code && err.statusCode) return { statusCode: err.statusCode, body: { error: err.message, code: err.code } }
@@ -765,4 +795,5 @@ module.exports = {
   normalizeTxns,
   normalizeMeta,
   readPdf,
+  normMerchant,
 }

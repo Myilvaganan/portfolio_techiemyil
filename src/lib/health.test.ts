@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { blankReport, changeOf, dailyDeficit, findings, fmtDelta, fmtMetric, historyReports, normalizeReport, rangeOf, statusOf, type HealthReport } from './health'
+import {
+  blankReport,
+  changeOf,
+  dailyDeficit,
+  findings,
+  fmtDelta,
+  fmtMetric,
+  goalProgress,
+  healthReminder,
+  historyReports,
+  logAverages,
+  normalizeReport,
+  projectGoalDate,
+  rangeOf,
+  statusOf,
+  type DailyLog,
+  type Goal,
+  type HealthReport,
+} from './health'
 
 // Illustrative numbers only.
 function sample(over: Partial<HealthReport> = {}): HealthReport {
@@ -100,4 +118,81 @@ describe('normalizeReport', () => {
 it('dailyDeficit spreads the fat over the weeks', () => {
   expect(dailyDeficit(10, 26)).toBe(423)
   expect(dailyDeficit(10, 0)).toBe(0)
+})
+
+const goal = (over: Partial<Goal> = {}): Goal => ({ weightKg: 75, bodyFatPct: null, targetDate: null, notes: '', updatedAt: 'x', ...over })
+
+describe('goalProgress', () => {
+  it('measures progress from the first test to the latest towards the target', () => {
+    const a = sample({ id: 'a', testedAt: '2026-01-01', values: { ...sample().values, weight: 95 } })
+    const b = sample({ id: 'b', testedAt: '2026-03-01', values: { ...sample().values, weight: 85 } })
+    // start 95, current 85, target 75: halfway there.
+    expect(goalProgress([a, b], goal(), 'weight')).toEqual({ metric: 'weight', start: 95, current: 85, target: 75, pct: 50 })
+  })
+
+  it('clamps and handles a start already at target', () => {
+    const a = sample({ id: 'a', testedAt: '2026-01-01', values: { ...sample().values, weight: 95 } })
+    const b = sample({ id: 'b', testedAt: '2026-03-01', values: { ...sample().values, weight: 60 } })
+    expect(goalProgress([a, b], goal(), 'weight')!.pct).toBe(100)
+    expect(goalProgress([a], goal({ weightKg: 95 }), 'weight')!.pct).toBe(100)
+  })
+
+  it('returns null with no target for that metric or no data', () => {
+    expect(goalProgress([], goal(), 'weight')).toBeNull()
+    expect(goalProgress([sample()], goal(), 'percentBodyFat')).toBeNull()
+  })
+})
+
+describe('projectGoalDate', () => {
+  it('projects forward when the trend moves toward the target', () => {
+    const a = sample({ id: 'a', testedAt: '2026-01-01', values: { ...sample().values, weight: 100 } })
+    const b = sample({ id: 'b', testedAt: '2026-01-11', values: { ...sample().values, weight: 98 } }) // -0.2 kg/day
+    const p = projectGoalDate([a, b], 'weight', 90, new Date('2026-01-11T00:00:00Z'))
+    expect(p.onTrack).toBe(true)
+    expect(p.daysFromNow).toBe(40)
+    expect(p.date).toBe('2026-02-20')
+  })
+
+  it('is not on track with fewer than two points', () => {
+    expect(projectGoalDate([sample()], 'weight', 70).onTrack).toBe(false)
+    expect(projectGoalDate([], 'weight', 70).date).toBeNull()
+  })
+
+  it('flags a trend moving the wrong way', () => {
+    const a = sample({ id: 'a', testedAt: '2026-01-01', values: { ...sample().values, weight: 90 } })
+    const b = sample({ id: 'b', testedAt: '2026-01-11', values: { ...sample().values, weight: 92 } }) // gaining, target is lower
+    expect(projectGoalDate([a, b], 'weight', 80).onTrack).toBe(false)
+  })
+})
+
+describe('healthReminder', () => {
+  it('is due with no tests yet', () => {
+    expect(healthReminder([], new Date('2026-09-26'))).toEqual({ daysSince: null, due: true })
+  })
+
+  it('flags a test older than the threshold', () => {
+    const r = sample({ testedAt: '2026-08-01' })
+    expect(healthReminder([r], new Date('2026-09-26'))).toEqual({ daysSince: 56, due: true })
+    expect(healthReminder([r], new Date('2026-08-10'))).toEqual({ daysSince: 9, due: false })
+  })
+})
+
+describe('logAverages', () => {
+  const logs: DailyLog[] = [
+    { date: '2026-09-20', weight: 90, steps: 8000, waterL: 2, sleepH: 7, note: '' },
+    { date: '2026-09-24', weight: 89, steps: null, waterL: 3, sleepH: null, note: '' },
+    { date: '2026-08-01', weight: 95, steps: 5000, waterL: 1, sleepH: 6, note: '' },
+  ]
+
+  it('averages only entries within the window and with a value', () => {
+    const avg = logAverages(logs, 7, new Date('2026-09-26'))
+    expect(avg.weight).toBe(89.5)
+    expect(avg.steps).toBe(8000)
+    expect(avg.waterL).toBe(2.5)
+    expect(avg.sleepH).toBe(7)
+  })
+
+  it('returns null for a metric with no entries in range', () => {
+    expect(logAverages([], 7, new Date('2026-09-26'))).toEqual({ weight: null, steps: null, waterL: null, sleepH: null })
+  })
 })

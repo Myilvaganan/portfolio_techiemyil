@@ -32,6 +32,10 @@ export interface Trade {
   strategy: string
   emotion: string
   mistakes: string[]
+  /** Free-form setup tags, e.g. "earnings", "gap-up" — separate from the fixed mistake checklist. */
+  tags: string[]
+  /** Minutes the position was held, 0 when unknown (manual trades usually don't record it). */
+  holdMinutes: number
   followedPlan: boolean | null
   rating: number // 0 = unrated, 1–5
   notes: string
@@ -74,6 +78,8 @@ export interface JournalSettings {
   startingCapital: number // INR, 0 = unknown
   dailyLossLimit: number // INR, 0 = off
   maxTradesPerDay: number // 0 = off
+  /** Flags a day whose trades (in order) include this many losses in a row. 0 = off. */
+  maxConsecutiveLosses: number
 }
 
 /**
@@ -89,6 +95,7 @@ export const DEFAULT_SETTINGS: JournalSettings = {
   startingCapital: 0,
   dailyLossLimit: 0,
   maxTradesPerDay: 0,
+  maxConsecutiveLosses: 0,
 }
 
 // ---------- Presets (free text is always allowed; these are just suggestions) ----------
@@ -396,6 +403,8 @@ export function blankTrade(date: string, account = ''): Trade {
     strategy: '',
     emotion: '',
     mistakes: [],
+    tags: [],
+    holdMinutes: 0,
     followedPlan: null,
     rating: 0,
     notes: '',

@@ -42,7 +42,7 @@ export async function fetchJournal(from?: string, to?: string, account = ''): Pr
 
   // Trades saved before a field existed come back without it; fill the gaps so the UI can rely on the shape.
   const trades = (data.trades as Trade[])
-    .map((t) => ({ ...t, source: t.source ?? '', account: t.account ?? '' }))
+    .map((t) => ({ ...t, source: t.source ?? '', account: t.account ?? '', tags: t.tags ?? [], holdMinutes: t.holdMinutes ?? 0 }))
     .filter((t) => account === ALL_ACCOUNTS || t.account === account)
 
   // A note for an account is stored as "<date>#<account>"; the main journal's are plain dates.

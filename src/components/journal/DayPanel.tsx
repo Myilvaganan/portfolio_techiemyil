@@ -91,6 +91,11 @@ function TradeRow({ trade, onEdit, onDelete, readOnly }: { trade: Trade; onEdit:
             {x}
           </span>
         ))}
+        {trade.tags.map((x) => (
+          <span key={x} className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-accent">
+            #{x}
+          </span>
+        ))}
         <div className="ml-auto flex items-center gap-0.5">
         {confirming ? (
           <>
@@ -221,6 +226,15 @@ export function DayPanel({ date, trades, note, settings, onAdd, onEdit, onDelete
   const warnings: string[] = []
   if (settings.dailyLossLimit > 0 && totals.net <= -settings.dailyLossLimit) warnings.push(`Daily loss limit of ${m.inr(settings.dailyLossLimit)} reached.`)
   if (settings.maxTradesPerDay > 0 && totals.trades > settings.maxTradesPerDay) warnings.push(`${totals.trades} trades — over your limit of ${settings.maxTradesPerDay} a day.`)
+  if (settings.maxConsecutiveLosses > 0) {
+    let run = 0
+    let worst = 0
+    for (const tr of trades) {
+      run = netInr(tr) < 0 ? run + 1 : 0
+      worst = Math.max(worst, run)
+    }
+    if (worst >= settings.maxConsecutiveLosses) warnings.push(`${worst} losses in a row — over your limit of ${settings.maxConsecutiveLosses}. Consider stepping away.`)
+  }
 
   return (
     <>

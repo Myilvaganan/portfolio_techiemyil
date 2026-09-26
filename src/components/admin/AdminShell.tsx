@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Bell, Calculator, FolderOpen, LayoutDashboard, LogOut, Menu, PieChart, Search, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse } from 'lucide-react'
+import { AlertTriangle, Bell, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 import { clearStoredToken } from '@/lib/adminAuth'
+import { formatInr } from '@/lib/kite'
+import { noticesFrom, type Notice } from '@/lib/pulse'
+import { useAdminPulse } from '@/hooks/useAdminPulse'
+import { useIdleLock } from '@/hooks/useIdleLock'
+import { GlobalSearch } from './GlobalSearch'
 
 interface NavItem {
   label: string
@@ -17,8 +22,23 @@ interface NavSection {
   items: NavItem[]
 }
 
+const SEARCH_KEYWORDS: Record<string, string> = {
+  '/admin/loans': 'emi prepay foreclosure',
+  '/admin/trading-journal': 'mt5 forex options calendar',
+  '/admin/health-report': 'inbody weight fat body',
+  '/admin/net-worth': 'assets liabilities wealth',
+  '/admin/site': 'messages contact analytics visitors',
+  '/admin/credit-cards': 'card spend',
+  '/admin/bank-statements': 'bank spend transactions',
+}
+
 const NAV_SECTIONS: NavSection[] = [
-  { items: [{ label: 'Dashboard', to: '/admin', icon: LayoutDashboard }] },
+  {
+    items: [
+      { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
+      { label: 'Website', to: '/admin/site', icon: Globe },
+    ],
+  },
   {
     label: 'Documents',
     items: [{ label: 'Document Manager', to: '/admin/documents', icon: FolderOpen }],
@@ -29,6 +49,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
       { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
       { label: 'Loans', to: '/admin/loans', icon: HandCoins },
+      { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
     ],
   },
   {
@@ -46,6 +67,8 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
 ]
+
+const SEARCH_PAGES = NAV_SECTIONS.flatMap((s) => s.items).map((i) => ({ label: i.label, to: i.to, keywords: SEARCH_KEYWORDS[i.to] }))
 
 function useOutsideClick(onOutside: () => void) {
   const ref = useRef<HTMLDivElement>(null)
@@ -110,24 +133,103 @@ function ProfileMenu({ onLogout }: { onLogout: () => void }) {
   )
 }
 
+const signed = (n: number) => `${n < 0 ? '-' : ''}${formatInr(Math.abs(n))}`
+const ALERTED_KEY = 'admin_alerted'
+const canNotify = () => typeof window !== 'undefined' && 'Notification' in window
+
+// A desktop alert for each new warning, at most once per warning per day, while an admin tab is open.
+function useDesktopAlerts(notices: Notice[]) {
+  useEffect(() => {
+    if (!canNotify() || Notification.permission !== 'granted') return
+    const today = new Date().toISOString().slice(0, 10)
+    let sent: Record<string, string> = {}
+    try {
+      sent = JSON.parse(localStorage.getItem(ALERTED_KEY) || '{}')
+    } catch {
+      sent = {}
+    }
+    let changed = false
+    for (const n of notices) {
+      if (n.tone === 'info' || sent[n.id] === today) continue
+      new Notification(n.title, { body: n.detail, tag: n.id })
+      sent[n.id] = today
+      changed = true
+    }
+    if (changed) {
+      try {
+        localStorage.setItem(ALERTED_KEY, JSON.stringify(sent))
+      } catch {
+        // Alerts may repeat if storage is unavailable.
+      }
+    }
+  }, [notices])
+}
+
 function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useOutsideClick(() => setOpen(false))
+  const navigate = useNavigate()
+  const { pulse, refresh } = useAdminPulse()
+  const notices = useMemo(() => (pulse ? noticesFrom(pulse, signed) : []), [pulse])
+  const urgent = notices.some((n) => n.tone !== 'info')
+  const [permission, setPermission] = useState(() => (canNotify() ? Notification.permission : 'denied'))
+  useDesktopAlerts(notices)
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         data-cursor="hover"
-        aria-label="Notifications"
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
+        aria-label={notices.length ? `Notifications (${notices.length})` : 'Notifications'}
+        aria-expanded={open}
+        onClick={() => {
+          if (!open) refresh()
+          setOpen((v) => !v)
+        }}
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
       >
         <Bell className="h-4 w-4" />
+        {notices.length > 0 && (
+          <span className={cn('absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white', urgent ? 'bg-error' : 'bg-accent')}>
+            {notices.length}
+          </span>
+        )}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card p-4 text-center shadow-2xl">
-          <p className="text-sm text-text-secondary">You're all caught up. No new notifications.</p>
+        <div className="absolute right-0 top-full z-20 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+          {notices.length === 0 ? (
+            <p className="p-4 text-center text-sm text-text-secondary">You&apos;re all caught up.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {notices.map((n) => (
+                <li key={n.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false)
+                      navigate(n.to)
+                    }}
+                    className="flex w-full items-start gap-2.5 px-4 py-3 text-left hover:bg-surface-3"
+                  >
+                    <AlertTriangle className={cn('mt-0.5 h-4 w-4 shrink-0', n.tone === 'bad' ? 'text-error' : n.tone === 'warn' ? 'text-amber-500' : 'text-accent')} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-text">{n.title}</span>
+                      <span className="block text-xs text-text-secondary">{n.detail}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {permission === 'default' && (
+            <button
+              type="button"
+              onClick={() => void Notification.requestPermission().then(setPermission)}
+              className="w-full border-t border-border px-4 py-2.5 text-left text-xs font-medium text-accent hover:bg-surface-3"
+            >
+              Turn on desktop alerts for losses and due EMIs
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -136,15 +238,10 @@ function NotificationBell() {
 
 export function AdminShell({ children, onLogout }: { children: ReactNode; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const navigate = useNavigate()
-
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!search.trim()) return
-    navigate(`/admin/documents?q=${encodeURIComponent(search.trim())}`)
-    setSearch('')
-  }
+  useIdleLock(() => {
+    clearStoredToken()
+    onLogout()
+  })
 
   return (
     <div className="min-h-screen bg-bg">
@@ -227,17 +324,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
             <Menu className="h-5 w-5" />
           </button>
 
-          <form onSubmit={handleSearchSubmit} className="hidden flex-1 max-w-md sm:block">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search documents…"
-                className="w-full rounded-full border border-border bg-surface-2 py-2.5 pl-10 pr-4 text-sm text-text outline-none transition-colors focus:border-accent/50"
-              />
-            </div>
-          </form>
+<GlobalSearch pages={SEARCH_PAGES} />
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />

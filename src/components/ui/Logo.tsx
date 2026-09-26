@@ -1,5 +1,5 @@
-import tmLogo from '@/assets/images/logo.png'
-import tmLogoGold from '@/assets/images/logo-gold.png'
+import tmLogo from '@/assets/images/logo.webp'
+import tmLogoGold from '@/assets/images/logo-gold.webp'
 import { personal } from '@/data/personal'
 import { cn } from '@/lib/utils'
 

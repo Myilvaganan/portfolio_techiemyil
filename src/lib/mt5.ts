@@ -282,8 +282,13 @@ const stamp = (t: string) => {
   return Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10), +h.slice(0, 2), +h.slice(3, 5), +h.slice(6, 8))
 }
 
+/** Minutes between open and close, so a position's hold time can be bucketed and analysed. */
+export function holdMinutesOf(openTime: string, closeTime: string): number {
+  return Math.max(0, Math.round((stamp(closeTime) - stamp(openTime)) / 60_000))
+}
+
 export function holdLabel(openTime: string, closeTime: string): string {
-  const mins = Math.max(0, Math.round((stamp(closeTime) - stamp(openTime)) / 60_000))
+  const mins = holdMinutesOf(openTime, closeTime)
   if (mins < 60) return `${mins}m`
   if (mins < 1440) return `${Math.floor(mins / 60)}h ${mins % 60}m`
   return `${Math.floor(mins / 1440)}d ${Math.floor((mins % 1440) / 60)}h`
@@ -333,6 +338,7 @@ export function positionsToTrades(report: Mt5Report): Trade[] {
       manualPnl: true,
       grossPnl: gross,
       fees,
+      holdMinutes: holdMinutesOf(p.openTime, p.closeTime),
       notes,
       source: `mt5:${report.account}`,
     }

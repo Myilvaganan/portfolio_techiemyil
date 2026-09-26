@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -319,3 +319,19 @@ Implemented in [`health.js`](health.js). InBody body-composition reports are sto
 Each report keeps the normal ranges printed on its sheet, because InBody works them out from height and sex. The
 browser falls back to standard ranges for BMI, body-fat %, waist-hip ratio, visceral fat and obesity degree.
 These are new routes on the existing `$default` gateway route, so only a redeploy of the function is needed.
+
+## Backup, website contact form and page views (`platform.js`)
+
+| Route | Auth | What it does |
+| --- | --- | --- |
+| `GET /admin/backup` | admin | Every `_data/**.json` file in one JSON download (up to 5 MB) plus the list of stored documents |
+| `POST /public/contact` `{ name, email, message, website }` | none | Saves a contact-form message. `website` is a hidden honeypot field; at most 5 messages per sender per hour |
+| `GET /admin/contact` · `POST /admin/contact/read` `{ id, read }` · `DELETE /admin/contact?id=` | admin | The website inbox |
+| `POST /public/hit` `{ path, referrer }` | none | Counts a page view. Only the path (no query string) and the referring host are stored: no IP, cookie or user agent. `/admin` paths are ignored |
+| `GET /admin/analytics?month=YYYY-MM` | admin | Views per day, top pages and referrers for a month |
+
+Data: `_data/contact/messages.json` and `_data/analytics/YYYY-MM.json`. Writes use S3 conditional requests (`If-Match` on the
+ETag, `If-None-Match: *` for a new file) and retry on a conflict, so simultaneous requests don't overwrite each other.
+
+The bucket has **versioning** on with a lifecycle rule that expires old versions after 90 days (keeping the newest 20), so any
+file can be restored from the S3 console if a save goes wrong.

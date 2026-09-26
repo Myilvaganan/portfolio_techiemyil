@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { Landmark, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AiInsightsPanel, AiPeriodPicker, AskAi } from '@/components/statements/AiPanel'
+import { RecurringCard } from '@/components/statements/RecurringCard'
 import { StatementLibrary } from '@/components/statements/StatementLibrary'
 import { StatementUploader } from '@/components/statements/StatementUploader'
 import { TransactionsTable } from '@/components/statements/TransactionsTable'
@@ -12,6 +13,7 @@ import { Reveal, ScrollProgress } from '@/components/viz/motion'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { useStatements } from '@/hooks/useStatements'
 import { bankReport } from '@/lib/statementReports'
+import { setCategoryOverride } from '@/lib/statementsApi'
 import {
   anomalies,
   balanceSeries,
@@ -25,7 +27,6 @@ import {
   monthlyFlow,
   type AiPeriod,
   type AiPeriodId,
-  recurringCharges,
   topWithOther,
   weekdaySpend,
 } from '@/lib/statements'
@@ -61,7 +62,6 @@ export function BankStatements() {
   const flow = useMemo(() => monthlyFlow('bank', txns, options), [txns, options])
   const cats = useMemo(() => categoryTotals('bank', txns, options), [txns, options])
   const merchants = useMemo(() => merchantTotals('bank', txns, options), [txns, options])
-  const recurring = useMemo(() => recurringCharges('bank', txns, options), [txns, options])
   const odd = useMemo(() => anomalies('bank', txns, 5, options), [txns, options])
   const balance = useMemo(() => balanceSeries(txns), [txns])
   const heat = useMemo(() => dailySpend('bank', txns, options), [txns, options])
@@ -77,6 +77,11 @@ export function BankStatements() {
   const accountLabel = account === 'all' ? 'All accounts' : (accounts.find(([key]) => key === account)?.[1] ?? 'Account')
   const hasData = data.transactions.length > 0
   const showUploader = uploaderOpen || (!s.loading && !hasData)
+
+  async function handleRecategorize(merchant: string, category: string) {
+    await setCategoryOverride('bank', merchant, category)
+    await s.reload()
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -226,19 +231,8 @@ export function BankStatements() {
               <Card title="How you pay">
                 <HBars items={channels.slice(0, 7).map((c, i) => ({ ...c, color: vizColor(i) }))} format={inr} />
               </Card>
-              <Card title="Recurring charges" delay={0.05} aside={recurring.length > 0 && <span className="font-mono text-xs text-text">{inr(recurring.reduce((a, r) => a + r.annual, 0))} / yr</span>}>
-                {recurring.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-text-secondary">Needs 3+ months of statements to spot subscriptions and EMIs.</p>
-                ) : (
-                  <ul className="divide-y divide-border/60">
-                    {recurring.slice(0, 7).map((r) => (
-                      <li key={r.merchant} className="flex items-center justify-between gap-3 py-2 text-xs">
-                        <span className="min-w-0"><span className="block truncate font-medium text-text">{r.merchant}</span><span className="text-text-secondary">{r.category} · {r.months} months</span></span>
-                        <span className="text-right font-mono text-text">{inr(r.monthly)}<span className="block text-[10px] text-text-secondary">/ month</span></span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <Card title="Recurring charges" delay={0.05}>
+                <RecurringCard txns={txns} />
               </Card>
               <Card title="Unusual spends" delay={0.1}>
                 {odd.length === 0 ? (
@@ -257,7 +251,7 @@ export function BankStatements() {
             </div>
 
             <Card title="Transactions">
-              <TransactionsTable kind="bank" txns={txns} />
+              <TransactionsTable kind="bank" txns={txns} onRecategorize={handleRecategorize} />
             </Card>
 
             <StatementLibrary statements={data.statements} onOpen={s.openFile} onDelete={s.remove} />

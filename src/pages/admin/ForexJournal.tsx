@@ -277,7 +277,7 @@ function ForexWorkspace({
         <Mt5AccountCard account={account} usdInr={usdInr} onUpload={onUpload} compact={tab === 'dashboard'} />
 
         {tab === 'dashboard' ? (
-          <JournalDashboard settings={settings} viewedMonth={month} today={today} refreshKey={b.refreshKey} lead={tabs} account={account.account} />
+          <JournalDashboard settings={settings} viewedMonth={month} today={today} refreshKey={b.refreshKey} lead={tabs} account={account.account} balanceOps={account.balanceOps} />
         ) : (
           <CalendarView
             analytics={analytics}
@@ -294,6 +294,7 @@ function ForexWorkspace({
             dayPanel={dayPanel}
             onMonth={goToMonth}
             lead={tabs}
+            days={days}
           />
         )}
 

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MotionConfig, motion } from 'framer-motion'
-import { Camera, HeartPulse, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { AlertTriangle, Camera, HeartPulse, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Card, Chips, Kpi } from '@/components/statements/parts'
 import { BodyMap, RangeBar } from '@/components/health/parts'
 import { ReportCalendar } from '@/components/health/ReportCalendar'
 import { ReportDialog } from '@/components/health/ReportDialog'
+import { GoalCard } from '@/components/health/GoalCard'
+import { DailyLogCard } from '@/components/health/DailyLogCard'
 import { AreaChart, Legend, vizColor } from '@/components/viz/charts'
 import { Reveal, ScrollProgress } from '@/components/viz/motion'
 import { Pagination } from '@/components/viz/Pagination'
@@ -18,17 +20,20 @@ import {
   findings,
   fmtDelta,
   fmtMetric,
+  healthReminder,
   historyReports,
   rangeOf,
   reportDate,
   sortReports,
   statusOf,
   upIsGood,
+  type DailyLog,
+  type Goal,
   type HealthReport as Report,
   type HistoryPoint,
   type MetricKey,
 } from '@/lib/health'
-import { deleteReport, fetchReports, saveReports, scanReport } from '@/lib/healthApi'
+import { deleteLog, deleteReport, fetchGoal, fetchLogs, fetchReports, saveGoal as apiSaveGoal, saveLog as apiSaveLog, saveReports, scanReport } from '@/lib/healthApi'
 
 const MUSCLE_FAT: MetricKey[] = ['weight', 'skeletalMuscleMass', 'bodyFatMass']
 const OBESITY: MetricKey[] = ['bmi', 'percentBodyFat', 'waistHipRatio', 'visceralFatLevel']
@@ -72,21 +77,33 @@ const FINDING_TONE = {
   bad: 'border-error/40 bg-error/[0.08]',
 } as const
 
+interface Batch {
+  files: File[]
+  index: number
+  skipped: number
+}
+
 export function HealthReport() {
   const [reports, setReports] = useState<Report[]>([])
+  const [goal, setGoal] = useState<Goal | null>(null)
+  const [logs, setLogs] = useState<DailyLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState('')
   const [editing, setEditing] = useState<Report | null>(null)
   const [scanHistory, setScanHistory] = useState<HistoryPoint[]>([])
   const [scanning, setScanning] = useState(false)
+  const [batch, setBatch] = useState<Batch | null>(null)
   const [side, setSide] = useState<'lean' | 'fat'>('fat')
   const [page, setPage] = useState(1)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(async () => {
     try {
-      setReports(await fetchReports())
+      const [reportList, goalValue, logList] = await Promise.all([fetchReports(), fetchGoal(), fetchLogs()])
+      setReports(reportList)
+      setGoal(goalValue)
+      setLogs(logList)
       setError(null)
     } catch (e) {
       setError((e as Error).message)
@@ -107,6 +124,7 @@ export function HealthReport() {
   const upTo = useMemo(() => (report ? sorted.filter((r) => r.testedAt <= report.testedAt) : []), [sorted, report])
   const notes = useMemo(() => (report ? findings(report) : []), [report])
   const profile = latest?.profile
+  const reminder = useMemo(() => healthReminder(full), [full])
 
   const trend = useMemo(() => {
     const points = sorted.filter((r) => TREND.some((t) => r.values[t.key] !== null))
@@ -142,6 +160,58 @@ export function HealthReport() {
     }
   }
 
+  // Scans one sheet of a multi-photo batch, skipping a date already stored, then pauses on the dialog for the user
+  // to confirm before moving to the next photo (the dialog's close handler advances the batch).
+  async function processBatchAt(files: File[], index: number, skipped: number) {
+    if (index >= files.length) {
+      setBatch(null)
+      return
+    }
+    setScanning(true)
+    setError(null)
+    try {
+      const { report: scanned, history } = await scanReport(files[index])
+      if (reports.some((r) => reportDate(r) === reportDate(scanned))) {
+        setBatch({ files, index: index + 1, skipped: skipped + 1 })
+        setScanning(false)
+        await processBatchAt(files, index + 1, skipped + 1)
+        return
+      }
+      setBatch({ files, index, skipped })
+      setScanHistory(history)
+      setEditing(scanned)
+    } catch (e) {
+      setError((e as Error).message)
+      setBatch({ files, index: index + 1, skipped })
+      setScanning(false)
+      await processBatchAt(files, index + 1, skipped)
+      return
+    }
+    setScanning(false)
+  }
+
+  async function onPhotos(fileList: FileList | null) {
+    const files = fileList ? Array.from(fileList) : []
+    if (fileRef.current) fileRef.current.value = ''
+    if (files.length === 0) return
+    if (files.length === 1) {
+      await onPhoto(files[0])
+      return
+    }
+    setScanHistory([])
+    setBatch({ files, index: 0, skipped: 0 })
+    await processBatchAt(files, 0, 0)
+  }
+
+  function onDialogOpenChange(open: boolean) {
+    if (open) return
+    setEditing(null)
+    if (!batch) return
+    const nextIndex = batch.index + 1
+    if (nextIndex >= batch.files.length) setBatch(null)
+    else void processBatchAt(batch.files, nextIndex, batch.skipped)
+  }
+
   async function onSave(r: Report, includeHistory: boolean) {
     const extra = includeHistory ? historyReports(scanHistory, reports, r) : []
     const next = await saveReports([r, ...extra])
@@ -149,6 +219,18 @@ export function HealthReport() {
     // Show what was just saved: the newest report with this test date.
     const saved = sortReports(next).filter((x) => x.testedAt === r.testedAt).pop()
     if (saved) setSelected(saved.id)
+  }
+
+  async function onSaveGoal(g: Partial<Goal>) {
+    setGoal(await apiSaveGoal(g))
+  }
+
+  async function onSaveLog(log: DailyLog) {
+    setLogs(await apiSaveLog(log))
+  }
+
+  async function onDeleteLog(date: string) {
+    setLogs(await deleteLog(date))
   }
 
   async function onDelete(r: Report) {
@@ -178,15 +260,16 @@ export function HealthReport() {
             <p className="mt-1 max-w-2xl text-sm text-text-secondary">Snap your body-composition sheet. The numbers are read for you, and you can see where each one sits against its normal range and how it changes over time.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Report photo" onChange={(e) => void onPhoto(e.target.files?.[0])} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" aria-label="Report photo" onChange={(e) => void onPhotos(e.target.files)} />
             <button
               type="button"
               data-cursor="hover"
-              disabled={scanning}
+              disabled={scanning || batch !== null}
               onClick={() => fileRef.current?.click()}
               className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-60"
             >
-              {scanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {scanning ? 'Reading photo…' : 'Scan report photo'}
+              {scanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}{' '}
+              {batch ? `Reading sheet ${Math.min(batch.index + 1, batch.files.length)} of ${batch.files.length}…` : scanning ? 'Reading photo…' : 'Scan report photo(s)'}
             </button>
             <button type="button" data-cursor="hover" onClick={openNew} className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
               <Plus className="h-3.5 w-3.5" /> Enter manually
@@ -197,7 +280,35 @@ export function HealthReport() {
           </div>
         </div>
 
+        {batch && (
+          <p className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-text">
+            Sheet {Math.min(batch.index + 1, batch.files.length)} of {batch.files.length}
+            {batch.skipped > 0 && ` · ${batch.skipped} skipped (already have that date, or unreadable)`}
+          </p>
+        )}
+
+        {!loading && reminder.due && (
+          <p className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-text">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+            {reminder.daysSince === null ? "You haven't logged a test yet." : `Your last test was ${reminder.daysSince} days ago.`}
+            <button type="button" data-cursor="hover" onClick={() => fileRef.current?.click()} className="font-medium text-accent hover:underline">
+              Add test
+            </button>
+          </p>
+        )}
+
         {error && <p role="alert" className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{error}</p>}
+
+        {!loading && (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card title="Goal">
+              <GoalCard reports={full} goal={goal} onSave={onSaveGoal} />
+            </Card>
+            <Card title="Daily log">
+              <DailyLogCard logs={logs} onSave={onSaveLog} onDelete={onDeleteLog} />
+            </Card>
+          </div>
+        )}
 
         {loading ? (
           <GlassCard hover={false} className="flex items-center justify-center gap-3 py-24 text-sm text-text-secondary">
@@ -339,7 +450,7 @@ export function HealthReport() {
         )}
       </div>
 
-      <ReportDialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)} report={editing} history={editing?.id ? [] : scanHistory} onSave={onSave} />
+      <ReportDialog open={editing !== null} onOpenChange={onDialogOpenChange} report={editing} history={editing?.id ? [] : scanHistory} onSave={onSave} />
     </MotionConfig>
   )
 }

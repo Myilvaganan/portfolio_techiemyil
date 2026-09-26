@@ -10,6 +10,11 @@ vi.mock('@/lib/healthApi', () => ({
   saveReports: vi.fn(),
   deleteReport: vi.fn(),
   scanReport: vi.fn(),
+  fetchGoal: vi.fn(),
+  saveGoal: vi.fn(),
+  fetchLogs: vi.fn(),
+  saveLog: vi.fn(),
+  deleteLog: vi.fn(),
 }))
 
 // Illustrative numbers only.
@@ -23,6 +28,8 @@ function report(id: string, testedAt: string, weight: number, over: Partial<Repo
 describe('HealthReport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(api.fetchGoal).mockResolvedValue(null)
+    vi.mocked(api.fetchLogs).mockResolvedValue([])
   })
 
   it('invites a photo when there are no reports', async () => {

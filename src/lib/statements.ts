@@ -71,6 +71,17 @@ export interface StatementsData {
 
 export const emptyStatements = (): StatementsData => ({ statements: [], transactions: [], insights: null })
 
+// Mirrors the category enums the Lambda accepts (lambda/admin-vault/statements.js) — keep both lists in sync.
+export const BANK_CATEGORIES = [
+  'Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Groceries',
+  'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education',
+  'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other',
+]
+export const CARD_CATEGORIES = [
+  'Groceries', 'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health',
+  'Education', 'Entertainment', 'Insurance', 'EMI & Loans', 'Fees & Interest', 'Card Payment', 'Cashback & Rewards', 'Refund', 'Other',
+]
+
 // ---------- Helpers ----------
 
 export const monthOf = (date: string) => date.slice(0, 7)

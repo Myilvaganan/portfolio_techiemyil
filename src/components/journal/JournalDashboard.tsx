@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Loader2, RefreshCw, Sparkles } from 'lucide-react'
+import { FileClock, Loader2, RefreshCw, Sparkles } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { AreaChart } from '@/components/viz/charts'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { cn } from '@/lib/utils'
 import { ALL_ACCOUNTS, RANGES, monthLabel, rangeFor, taxCaption, taxHeading, type JournalSettings, type Range, type Trade } from '@/lib/journal'
-import { analyze, buildInsights } from '@/lib/journalAnalytics'
+import { accountDrawdown, accountEquityCurve, analyze, buildInsights, type Slice } from '@/lib/journalAnalytics'
 import { journalReport, journalTradesCsv } from '@/lib/journalReport'
 import { fetchJournal } from '@/lib/journalStore'
 import { useMoney } from '@/lib/privacy'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { PnlBars, PnlColumns } from './charts'
 import { Amount, Chip, Empty, Kpi, SectionTitle, tone } from './parts'
+import { ReviewDialog } from './ReviewDialog'
 
 const shortDate = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 const shortMonth = (month: string) => new Date(`${month}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' })
@@ -36,9 +37,82 @@ interface Props {
   account?: string
   /** INR per USD. With ALL_ACCOUNTS, MT5 (dollar) trades are converted at this rate so everything adds up in rupees. */
   usdInr?: number
+  /** A Forex account's deposits/withdrawals, so the dashboard can chart equity against money actually put in. */
+  balanceOps?: { time: string; amount: number }[]
 }
 
-export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lead, account = '', usdInr = 1 }: Props) {
+const TIME_VIEWS = ['Hour', 'Weekday', 'Hold time'] as const
+type TimeView = (typeof TIME_VIEWS)[number]
+
+/** Win rate / net P&L by hour of day, weekday or hold-time bucket, switchable so one card covers all three. */
+function TimeAnalysisCard({ byHour, byWeekday, byHoldBucket }: { byHour: Slice[]; byWeekday: Slice[]; byHoldBucket: Slice[] }) {
+  const [view, setView] = useState<TimeView>('Weekday')
+  const items = view === 'Hour' ? byHour : view === 'Weekday' ? byWeekday : byHoldBucket
+  return (
+    <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Time analysis</h2>
+        <div className="flex gap-1">
+          {TIME_VIEWS.map((v) => (
+            <button
+              key={v}
+              type="button"
+              data-cursor="hover"
+              aria-pressed={view === v}
+              onClick={() => setView(v)}
+              className={cn('rounded-full px-2 py-0.5 text-[10px] transition-colors', view === v ? 'bg-accent/15 font-semibold text-accent' : 'text-text-secondary hover:text-text')}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
+        <PnlBars items={items} emptyText="Not enough data recorded yet." />
+      </div>
+    </GlassCard>
+  )
+}
+
+/** Account equity vs money deposited, with drawdown from the equity peak — for a single Forex/MT5 account. */
+function EquityVsDepositsCard({ trades, balanceOps }: { trades: Trade[]; balanceOps: { time: string; amount: number }[] }) {
+  const m = useMoney()
+  const wide = useMediaQuery('(min-width: 1280px)')
+  const curve = useMemo(() => accountEquityCurve(trades, balanceOps), [trades, balanceOps])
+  const { max, current } = useMemo(() => accountDrawdown(curve), [curve])
+  return (
+    <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
+      <SectionTitle>Equity vs deposits</SectionTitle>
+      {curve.length === 0 ? (
+        <Empty>No deposits or trades yet.</Empty>
+      ) : (
+        <>
+          <AreaChart
+            height={wide ? 104 : 190}
+            labels={curve.map((p) => p.date.slice(5))}
+            series={[
+              { key: 'deposited', label: 'Deposited', color: 'var(--viz-2)', values: curve.map((p) => p.deposited) },
+              { key: 'equity', label: 'Equity', color: 'var(--viz-1)', values: curve.map((p) => p.equity) },
+            ]}
+            format={m.signed}
+            axisFormat={m.axis}
+          />
+          <p className="mt-1 flex flex-wrap items-center justify-center gap-3 text-[10px] text-text-secondary">
+            <span>
+              Max drawdown <span className="font-mono font-semibold text-error">{m.inr(max.amount)}</span>
+              {max.pct !== null && ` (${m.pct(max.pct)})`}
+            </span>
+            <span>
+              Current <span className="font-mono font-semibold text-text">{m.inr(current)}</span>
+            </span>
+          </p>
+        </>
+      )}
+    </GlassCard>
+  )
+}
+
+export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lead, account = '', usdInr = 1, balanceOps }: Props) {
   const m = useMoney()
   const wide = useMediaQuery('(min-width: 1280px)')
   const [range, setRange] = useState<Range>('all')
@@ -46,6 +120,8 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -67,13 +143,25 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     }
   }, [range, viewedMonth, today, refreshKey, attempt, account, usdInr])
 
-  const a = useMemo(() => analyze(trades, settings), [trades, settings])
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const tr of trades) for (const g of tr.tags) counts.set(g, (counts.get(g) ?? 0) + 1)
+    return [...counts.entries()].sort((x, y) => y[1] - x[1]).map(([g]) => g)
+  }, [trades])
+  useEffect(() => {
+    if (tagFilter && !allTags.includes(tagFilter)) setTagFilter(null)
+  }, [allTags, tagFilter])
+  const filteredTrades = useMemo(() => (tagFilter ? trades.filter((tr) => tr.tags.includes(tagFilter)) : trades), [trades, tagFilter])
+
+  const a = useMemo(() => analyze(filteredTrades, settings), [filteredTrades, settings])
   const money = (n: number) => `${n < 0 ? '-' : ''}${m.inr(Math.abs(n))}`
   const insights = useMemo(() => buildInsights(a, settings, money), [a, settings, m]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const rangeLabel = range === 'month' ? monthLabel(viewedMonth) : (RANGES.find((r) => r.id === range)?.label ?? '')
   const t = a.totals
   const hasData = t.trades > 0
+  // A single Forex/MT5 account (not the main journal, not the combined "all accounts" view).
+  const isForexAccount = Boolean(account) && account !== ALL_ACCOUNTS && Boolean(balanceOps)
 
   return (
     <div className="space-y-3 xl:space-y-3">
@@ -86,12 +174,27 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
             </Chip>
           ))}
         </div>
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by tag">
+            <Chip active={tagFilter === null} onClick={() => setTagFilter(null)}>
+              All tags
+            </Chip>
+            {allTags.slice(0, 6).map((g) => (
+              <Chip key={g} active={tagFilter === g} onClick={() => setTagFilter(tagFilter === g ? null : g)}>
+                #{g}
+              </Chip>
+            ))}
+          </div>
+        )}
+        <button type="button" data-cursor="hover" onClick={() => setReviewOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text">
+          <FileClock className="h-3.5 w-3.5" /> Review
+        </button>
         <ReportMenu
           className="ml-auto"
           filename="trading-journal-report"
           disabled={!hasData}
           report={() => journalReport(a, settings, rangeLabel, insights, m.currency)}
-          csv={() => journalTradesCsv(trades, settings, m.currency)}
+          csv={() => journalTradesCsv(filteredTrades, settings, m.currency)}
         />
       </div>
 
@@ -229,8 +332,6 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
             {[
               { title: 'By instrument', items: a.byInstrument },
               { title: 'By strategy', items: a.byStrategy },
-              { title: 'By weekday', items: a.byWeekday },
-              { title: 'By emotion', items: a.byEmotion },
             ].map((c) => (
               <GlassCard key={c.title} hover={false} className="p-3 sm:p-4 xl:p-3">
                 <SectionTitle>{c.title}</SectionTitle>
@@ -239,6 +340,19 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
                 </div>
               </GlassCard>
             ))}
+
+            <TimeAnalysisCard byHour={a.byHour} byWeekday={a.byWeekday} byHoldBucket={a.byHoldBucket} />
+
+            {isForexAccount ? (
+              <EquityVsDepositsCard trades={filteredTrades} balanceOps={balanceOps!} />
+            ) : (
+              <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
+                <SectionTitle>By emotion</SectionTitle>
+                <div className="xl:max-h-[var(--dash-list,150px)] xl:overflow-y-auto xl:pr-1">
+                  <PnlBars items={a.byEmotion} />
+                </div>
+              </GlassCard>
+            )}
 
             <GlassCard hover={false} className="p-3 sm:p-4 xl:p-3">
               <SectionTitle>Discipline</SectionTitle>
@@ -274,6 +388,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
           </div>
         </>
       )}
+      <ReviewDialog open={reviewOpen} onOpenChange={setReviewOpen} settings={settings} viewedMonth={viewedMonth} account={account} usdInr={usdInr} />
     </div>
   )
 }

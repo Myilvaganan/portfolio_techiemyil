@@ -41,6 +41,7 @@ interface FormState {
   strategy: string
   emotion: string
   mistakes: string[]
+  tags: string[]
   followedPlan: boolean | null
   rating: number
   notes: string
@@ -76,6 +77,7 @@ function toForm(t: Trade, usdInr: number): FormState {
     strategy: t.strategy,
     emotion: t.emotion,
     mistakes: t.mistakes,
+    tags: t.tags,
     followedPlan: t.followedPlan,
     rating: t.rating,
     notes: t.notes,
@@ -105,6 +107,7 @@ function toTrade(f: FormState, base: Trade, gross: number): Trade {
     strategy: f.strategy.trim(),
     emotion: f.emotion,
     mistakes: f.mistakes,
+    tags: f.tags,
     followedPlan: f.followedPlan,
     rating: f.rating,
     notes: f.notes.trim(),
@@ -126,6 +129,49 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
           {o.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+/** Free-text setup tags shown as chips, added by typing and pressing Enter/comma (e.g. "earnings", "gap-up"). */
+function TagInput({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
+  const [draft, setDraft] = useState('')
+
+  function commit() {
+    const value = draft.trim().replace(/^#/, '')
+    if (value && !tags.some((t) => t.toLowerCase() === value.toLowerCase())) onChange([...tags, value].slice(0, 12))
+    setDraft('')
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {tags.map((t) => (
+          <button
+            key={t}
+            type="button"
+            data-cursor="hover"
+            onClick={() => onChange(tags.filter((x) => x !== t))}
+            className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-xs text-accent"
+            title="Remove tag"
+          >
+            #{t} <X className="h-3 w-3 opacity-70" />
+          </button>
+        ))}
+        <input
+          value={draft}
+          placeholder="Add a tag, press Enter"
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+              e.preventDefault()
+              commit()
+            }
+          }}
+          onBlur={commit}
+          className="min-w-[8rem] flex-1 rounded-full border border-dashed border-border bg-surface-2 px-2.5 py-1 text-xs text-text outline-none placeholder:text-text-secondary/60 focus:border-accent/50"
+        />
+      </div>
     </div>
   )
 }
@@ -391,6 +437,11 @@ function TradeForm({
               </Chip>
             ))}
           </div>
+        </div>
+
+        <div className="mt-3">
+          <span className={labelClass}>Setup tags</span>
+          <TagInput tags={f.tags} onChange={(tags) => set('tags', tags)} />
         </div>
 
         <Field label="Notes" hint="why you took it, what you saw, what you'd change" className="mt-3">

@@ -13,8 +13,8 @@ import {
 } from "@/lib/experience";
 import { isRoyal, useTheme } from "@/hooks/useTheme";
 import profileImgDark from "@/assets/images/profile.jpg";
-import profileImgLight from "@/assets/images/profile_light.png";
-import profileImgGold from "@/assets/images/profile_gold.jpg";
+import profileImgLight from "@/assets/images/profile_light.webp";
+import profileImgGold from "@/assets/images/profile_gold.webp";
 
 export function GlanceHero() {
   const { theme } = useTheme();

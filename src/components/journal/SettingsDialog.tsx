@@ -36,6 +36,7 @@ function SettingsForm({
   const [capital, setCapital] = useState(settings.startingCapital ? String(settings.startingCapital) : '')
   const [lossLimit, setLossLimit] = useState(settings.dailyLossLimit ? String(settings.dailyLossLimit) : '')
   const [maxTrades, setMaxTrades] = useState(settings.maxTradesPerDay ? String(settings.maxTradesPerDay) : '')
+  const [maxLossStreak, setMaxLossStreak] = useState(settings.maxConsecutiveLosses ? String(settings.maxConsecutiveLosses) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,6 +78,7 @@ function SettingsForm({
         startingCapital: Math.max(0, Number(capital) || 0),
         dailyLossLimit: Math.max(0, Number(lossLimit) || 0),
         maxTradesPerDay: Math.max(0, Math.round(Number(maxTrades) || 0)),
+        maxConsecutiveLosses: Math.max(0, Math.round(Number(maxLossStreak) || 0)),
       })
       onClose()
     } catch (err) {
@@ -189,6 +191,9 @@ function SettingsForm({
             </Field>
             <Field label="Max trades a day" hint="flags overtrading">
               <input type="number" className={inputClass} value={maxTrades} placeholder="0 = off" onChange={(e) => setMaxTrades(e.target.value)} />
+            </Field>
+            <Field label="Max losses in a row" hint="flags tilt">
+              <input type="number" className={inputClass} value={maxLossStreak} placeholder="0 = off" onChange={(e) => setMaxLossStreak(e.target.value)} />
             </Field>
           </div>
         </div>

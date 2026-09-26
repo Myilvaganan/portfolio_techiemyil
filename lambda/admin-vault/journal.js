@@ -2,7 +2,7 @@
 //
 // Data lives under _data/journal/ in the vault bucket (hidden from the document list):
 //   <YYYY-MM>.json  { trades: Trade[], days: { [YYYY-MM-DD]: DayNote }, updatedAt }
-//   settings.json   { taxRate, taxMode, taxRules[], startingCapital, dailyLossLimit, maxTradesPerDay }
+//   settings.json   { taxRate, taxMode, taxRules[], startingCapital, dailyLossLimit, maxTradesPerDay, maxConsecutiveLosses }
 //   mt5-accounts.json  { accounts: { [accountNumber]: Mt5Account } }   MetaTrader 5 account details
 //   mt5-reports/<account>/<stamp>.html   the original uploaded report, kept for reference
 //
@@ -101,6 +101,8 @@ function sanitizeTrade(t) {
     mistakes: Array.isArray(t.mistakes)
       ? [...new Set(t.mistakes.map((m) => text(m, 40)).filter(Boolean))].slice(0, 12)
       : [],
+    tags: Array.isArray(t.tags) ? [...new Set(t.tags.map((x) => text(x, 30)).filter(Boolean))].slice(0, 12) : [],
+    holdMinutes: Math.max(0, Math.round(num(t.holdMinutes, { min: 0, max: 1e7 }))),
     followedPlan: t.followedPlan === true ? true : t.followedPlan === false ? false : null,
     rating: Math.round(num(t.rating, { min: 0, max: 5 })),
     notes: text(t.notes, 3000),
@@ -197,7 +199,7 @@ function sanitizeMt5Account(a) {
 const MAX_TAX_RULES = 30
 // Only Bitcoin is taxed by default; Options Analytics already accounts for its own tax and charges.
 const DEFAULT_TAX_RULES = [{ instrument: 'Bitcoin', rate: 30, mode: 'per-trade' }]
-const DEFAULT_SETTINGS = { taxRate: 0, taxMode: 'per-trade', taxRules: DEFAULT_TAX_RULES, startingCapital: 0, dailyLossLimit: 0, maxTradesPerDay: 0 }
+const DEFAULT_SETTINGS = { taxRate: 0, taxMode: 'per-trade', taxRules: DEFAULT_TAX_RULES, startingCapital: 0, dailyLossLimit: 0, maxTradesPerDay: 0, maxConsecutiveLosses: 0 }
 
 // One rule per instrument (matched case-insensitively); rules with no name or a bad rate are dropped.
 function sanitizeTaxRules(value) {
@@ -228,6 +230,7 @@ function sanitizeSettings(s) {
     startingCapital: num(r.startingCapital, { min: 0, max: 1e12, decimals: 2 }),
     dailyLossLimit: num(r.dailyLossLimit, { min: 0, max: 1e12, decimals: 2 }),
     maxTradesPerDay: Math.round(num(r.maxTradesPerDay, { min: 0, max: 1000 })),
+    maxConsecutiveLosses: Math.round(num(r.maxConsecutiveLosses, { min: 0, max: 1000 })),
   }
 }
 

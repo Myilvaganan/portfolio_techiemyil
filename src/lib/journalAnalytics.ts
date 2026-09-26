@@ -69,8 +69,8 @@ export interface MonthRow {
 
 export interface Breach {
   date: string
-  kind: 'loss' | 'trades'
-  /** The day's net loss (loss breach) or trade count (trades breach). */
+  kind: 'loss' | 'trades' | 'streak'
+  /** The day's net loss (loss breach), trade count (trades breach) or longest losing run (streak breach). */
   amount: number
 }
 
@@ -99,7 +99,10 @@ export interface Analytics {
   byStrategy: Slice[]
   byEmotion: Slice[]
   byWeekday: Slice[]
+  byHour: Slice[]
+  byHoldBucket: Slice[]
   mistakes: { label: string; count: number; net: number }[]
+  tags: { label: string; count: number; net: number }[]
   discipline: { followed: Slice; broke: Slice; unrecorded: Slice }
   monthly: MonthRow[]
   breaches: Breach[]
@@ -122,6 +125,25 @@ export function sliceOf(label: string, trades: Trade[], settings: JournalSetting
     winRate: trades.length ? (wins / trades.length) * 100 : 0,
     avgNet: trades.length ? net / trades.length : 0,
   }
+}
+
+/** "09:00–10:00" style label for the hour a trade was taken, or null when no time was recorded. */
+export function hourBucket(time: string): string | null {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return null
+  const h = Number(time.slice(0, 2))
+  return `${String(h).padStart(2, '0')}:00`
+}
+
+export const HOLD_BUCKETS = ['< 15m', '15–60m', '1–4h', '4–24h', '1d+'] as const
+
+/** Which hold-time bucket a position falls in, or null when the hold time is unknown (0 = not recorded). */
+export function holdBucket(minutes: number): (typeof HOLD_BUCKETS)[number] | null {
+  if (!(minutes > 0)) return null
+  if (minutes < 15) return '< 15m'
+  if (minutes < 60) return '15–60m'
+  if (minutes < 240) return '1–4h'
+  if (minutes < 1440) return '4–24h'
+  return '1d+'
 }
 
 function groupSlices(trades: Trade[], keyOf: (t: Trade) => string, settings: JournalSettings): Slice[] {
@@ -219,6 +241,14 @@ export function analyze(input: Trade[], settings: JournalSettings): Analytics {
     }
   }
 
+  const tagMap = new Map<string, { count: number; net: number }>()
+  for (const t of trades) {
+    for (const g of t.tags) {
+      const cur = tagMap.get(g) ?? { count: 0, net: 0 }
+      tagMap.set(g, { count: cur.count + 1, net: cur.net + netInr(t) })
+    }
+  }
+
   const monthGroups = new Map<string, Trade[]>()
   for (const t of trades) {
     const m = monthOf(t.date)
@@ -237,6 +267,15 @@ export function analyze(input: Trade[], settings: JournalSettings): Analytics {
   for (const d of days) {
     if (settings.dailyLossLimit > 0 && d.net <= -settings.dailyLossLimit) breaches.push({ date: d.date, kind: 'loss', amount: -d.net })
     if (settings.maxTradesPerDay > 0 && d.trades > settings.maxTradesPerDay) breaches.push({ date: d.date, kind: 'trades', amount: d.trades })
+    if (settings.maxConsecutiveLosses > 0) {
+      let run = 0
+      let worst = 0
+      for (const tr of byDate.get(d.date) ?? []) {
+        run = netInr(tr) < 0 ? run + 1 : 0
+        worst = Math.max(worst, run)
+      }
+      if (worst >= settings.maxConsecutiveLosses) breaches.push({ date: d.date, kind: 'streak', amount: worst })
+    }
   }
 
   const last = nets.length ? nets[nets.length - 1] : 0
@@ -270,7 +309,18 @@ export function analyze(input: Trade[], settings: JournalSettings): Analytics {
     byStrategy: groupSlices(trades, (t) => t.strategy || 'Unspecified', settings),
     byEmotion: groupSlices(trades, (t) => t.emotion || 'Unspecified', settings),
     byWeekday: groupSlices(trades, (t) => WEEKDAYS[weekdayIndex(t.date)], settings).sort((a, b) => WEEKDAYS.indexOf(a.label) - WEEKDAYS.indexOf(b.label)),
+    byHour: groupSlices(
+      trades.filter((t) => hourBucket(t.time) !== null),
+      (t) => hourBucket(t.time) as string,
+      settings,
+    ).sort((a, b) => a.label.localeCompare(b.label)),
+    byHoldBucket: groupSlices(
+      trades.filter((t) => holdBucket(t.holdMinutes) !== null),
+      (t) => holdBucket(t.holdMinutes) as string,
+      settings,
+    ).sort((a, b) => HOLD_BUCKETS.indexOf(a.label as (typeof HOLD_BUCKETS)[number]) - HOLD_BUCKETS.indexOf(b.label as (typeof HOLD_BUCKETS)[number])),
     mistakes: [...mistakeMap].map(([label, v]) => ({ label, ...v })).sort((a, b) => a.net - b.net),
+    tags: [...tagMap].map(([label, v]) => ({ label, ...v })).sort((a, b) => b.count - a.count),
     discipline: {
       followed: sliceOf('Followed plan', trades.filter((t) => t.followedPlan === true), settings),
       broke: sliceOf('Broke plan', trades.filter((t) => t.followedPlan === false), settings),
@@ -356,6 +406,11 @@ export function buildInsights(a: Analytics, settings: JournalSettings, money: (n
     if (over > 0) out.push({ tone: 'bad', text: `You breached your ${money(settings.dailyLossLimit)} daily loss limit on ${over} day${over === 1 ? '' : 's'}.` })
   }
 
+  if (settings.maxConsecutiveLosses > 0) {
+    const over = a.breaches.filter((b) => b.kind === 'streak').length
+    if (over > 0) out.push({ tone: 'bad', text: `You hit ${settings.maxConsecutiveLosses}+ losses in a row on ${over} day${over === 1 ? '' : 's'} — your rule says to stop and reset.` })
+  }
+
   if (t.gross > 0 && t.fees / t.gross > 0.1) {
     out.push({ tone: 'warn', text: `Fees and charges take ${((t.fees / t.gross) * 100).toFixed(0)}% of your gross profit (${money(t.fees)}). Fewer, higher-quality trades would help.` })
   }
@@ -365,5 +420,62 @@ export function buildInsights(a: Analytics, settings: JournalSettings, money: (n
   }
 
   return out.slice(0, MAX_INSIGHTS)
+}
+
+// ---------- Account equity vs deposits (Forex/MT5) ----------
+
+export interface AccountEquityPoint {
+  date: string
+  /** Cumulative money paid into the account (deposits minus withdrawals). */
+  deposited: number
+  /** Cumulative deposits + trading P&L — the account's actual equity on this day. */
+  equity: number
+}
+
+/**
+ * One point per day that saw a deposit/withdrawal or a closed trade: cumulative deposits and the account's actual
+ * equity (deposits + trading P&L), so an equity curve can be drawn against what was really put in.
+ */
+export function accountEquityCurve(trades: Trade[], balanceOps: { time: string; amount: number }[]): AccountEquityPoint[] {
+  const byDate = new Map<string, { deposited: number; net: number }>()
+  for (const op of balanceOps) {
+    const date = op.time.slice(0, 10)
+    const e = byDate.get(date) ?? { deposited: 0, net: 0 }
+    e.deposited += op.amount
+    byDate.set(date, e)
+  }
+  for (const t of trades) {
+    const e = byDate.get(t.date) ?? { deposited: 0, net: 0 }
+    e.net += netInr(t)
+    byDate.set(t.date, e)
+  }
+
+  let deposited = 0
+  let equity = 0
+  return [...byDate.keys()]
+    .sort()
+    .map((date) => {
+      const e = byDate.get(date)!
+      deposited += e.deposited
+      equity += e.deposited + e.net
+      return { date, deposited, equity }
+    })
+}
+
+/** Drawdown of the account's equity from its own running peak (not from a fixed starting capital). */
+export function accountDrawdown(curve: AccountEquityPoint[]): { max: Drawdown; current: number } {
+  let peak = 0
+  let peakDate = ''
+  let max: Drawdown = { amount: 0, pct: null, peakDate: '', troughDate: '' }
+  let current = 0
+  for (const p of curve) {
+    if (p.equity > peak) {
+      peak = p.equity
+      peakDate = p.date
+    }
+    current = peak - p.equity
+    if (current > max.amount) max = { amount: current, pct: peak > 0 ? (current / peak) * 100 : null, peakDate, troughDate: p.date }
+  }
+  return { max, current }
 }
 

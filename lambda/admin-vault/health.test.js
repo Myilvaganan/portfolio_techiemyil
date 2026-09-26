@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const { createHealthApi, sanitizeReport, sanitizeHistory } = require('./health.js')
+const { createHealthApi, sanitizeReport, sanitizeHistory, sanitizeGoal, sanitizeLog } = require('./health.js')
 
 // In-memory stand-in for S3: enough of Get/Put for the health store.
 function fakeS3() {
@@ -131,5 +131,69 @@ describe('health api', () => {
   it('ignores other paths', async () => {
     const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
     expect(await api({ method: 'GET', path: '/admin/health/other', query: {} })).toBeNull()
+  })
+})
+
+describe('sanitizeGoal', () => {
+  it('keeps a valid goal with an optional date', () => {
+    const g = sanitizeGoal({ weightKg: 78, bodyFatPct: 18, targetDate: '2026-12-31', notes: 'lean out' })
+    expect(g).toMatchObject({ weightKg: 78, bodyFatPct: 18, targetDate: '2026-12-31', notes: 'lean out' })
+  })
+
+  it('rejects a goal with neither target and drops a bad date', () => {
+    expect(sanitizeGoal({ weightKg: null, bodyFatPct: null })).toBeNull()
+    expect(sanitizeGoal({ weightKg: 78, targetDate: 'nope' })).toMatchObject({ weightKg: 78, targetDate: null })
+  })
+})
+
+describe('sanitizeLog', () => {
+  it('keeps a log with at least one value', () => {
+    const l = sanitizeLog({ date: '2026-09-20', weight: 91.4, steps: 8123.6, waterL: 2.5, sleepH: 7.5, note: 'ran 5k' })
+    expect(l).toEqual({ date: '2026-09-20', weight: 91.4, steps: 8124, waterL: 2.5, sleepH: 7.5, note: 'ran 5k' })
+  })
+
+  it('rejects a bad date or an entry with nothing in it', () => {
+    expect(sanitizeLog({ date: 'nope', weight: 90 })).toBeNull()
+    expect(sanitizeLog({ date: '2026-09-20' })).toBeNull()
+  })
+})
+
+describe('health api: goal', () => {
+  it('saves and fetches a goal, rejecting an empty one', async () => {
+    const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
+    expect((await api({ method: 'GET', path: '/admin/health/goal', query: {} })).body.goal).toBeNull()
+
+    const bad = await api({ method: 'POST', path: '/admin/health/goal', payload: { goal: {} } })
+    expect(bad.statusCode).toBe(400)
+
+    const saved = await api({ method: 'POST', path: '/admin/health/goal', payload: { goal: { weightKg: 75, targetDate: '2027-01-01' } } })
+    expect(saved.statusCode).toBe(200)
+    expect(saved.body.goal).toMatchObject({ weightKg: 75, targetDate: '2027-01-01' })
+
+    const fetched = await api({ method: 'GET', path: '/admin/health/goal', query: {} })
+    expect(fetched.body.goal).toMatchObject({ weightKg: 75 })
+  })
+})
+
+describe('health api: logs', () => {
+  it('upserts by date, lists sorted and deletes', async () => {
+    const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-20', weight: 91 } } })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-18', steps: 9000 } } })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-20', weight: 90.5, note: 'updated' } } })
+
+    const listed = await api({ method: 'GET', path: '/admin/health/logs', query: {} })
+    expect(listed.body.logs.map((l) => l.date)).toEqual(['2026-09-18', '2026-09-20'])
+    expect(listed.body.logs[1]).toMatchObject({ weight: 90.5, note: 'updated' })
+
+    const removed = await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: '2026-09-18' } })
+    expect(removed.body.logs).toHaveLength(1)
+    expect((await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: '2026-09-18' } })).statusCode).toBe(404)
+  })
+
+  it('rejects an invalid log', async () => {
+    const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
+    const res = await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: 'nope' } } })
+    expect(res.statusCode).toBe(400)
   })
 })

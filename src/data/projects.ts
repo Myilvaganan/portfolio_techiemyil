@@ -1,7 +1,7 @@
 import type { Project } from '@/types'
 import devconnector from '@/assets/images/project-devconnector.jpg'
-import greenEvents from '@/assets/images/project-green-events.jpg'
-import floraShop from '@/assets/images/project-flora-shop.jpg'
+import greenEvents from '@/assets/images/project-green-events.webp'
+import floraShop from '@/assets/images/project-flora-shop.webp'
 import netflixClone from '@/assets/images/project-netflix-clone.jpg'
 
 export const projects: Project[] = [

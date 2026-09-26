@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS, blankTrade, type JournalSettings, type Trade } from './journal'
-import { analyze, buildInsights } from './journalAnalytics'
+import { accountDrawdown, accountEquityCurve, analyze, buildInsights, holdBucket, hourBucket } from './journalAnalytics'
 
 let seq = 0
 function t(date: string, pnl: number, over: Partial<Trade> = {}): Trade {
@@ -170,6 +170,93 @@ describe('buildInsights', () => {
     const text = buildInsights(analyze(trades, settings()), settings(), () => '****').map((i) => i.text).join('\n')
     expect(text).not.toMatch(/\d{3}/)
     expect(text).toContain('****')
+  })
+})
+
+describe('hourBucket / holdBucket', () => {
+  it('labels the hour of day, or null with no time', () => {
+    expect(hourBucket('09:15')).toBe('09:00')
+    expect(hourBucket('23:59')).toBe('23:00')
+    expect(hourBucket('')).toBeNull()
+  })
+
+  it('buckets hold time, or null when unknown (0)', () => {
+    expect(holdBucket(0)).toBeNull()
+    expect(holdBucket(10)).toBe('< 15m')
+    expect(holdBucket(45)).toBe('15–60m')
+    expect(holdBucket(120)).toBe('1–4h')
+    expect(holdBucket(600)).toBe('4–24h')
+    expect(holdBucket(2000)).toBe('1d+')
+  })
+})
+
+describe('analyze — time-of-day, hold time and tags', () => {
+  const trades = [
+    t('2026-09-14', 500, { time: '09:15', holdMinutes: 10 }),
+    t('2026-09-14', -100, { time: '09:45', holdMinutes: 30 }),
+    t('2026-09-15', 200, { time: '14:00', holdMinutes: 500, tags: ['gap-up', 'earnings'] }),
+    t('2026-09-16', -50, { tags: ['earnings'] }), // no time, no hold info
+  ]
+  const a = analyze(trades, settings())
+
+  it('groups by hour of day, leaving out trades with no time', () => {
+    expect(a.byHour.map((s) => s.label)).toEqual(['09:00', '14:00'])
+    expect(a.byHour.find((s) => s.label === '09:00')?.trades).toBe(2)
+  })
+
+  it('groups by hold-time bucket, leaving out trades with no recorded hold time', () => {
+    expect(a.byHoldBucket.map((s) => s.label)).toEqual(['< 15m', '15–60m', '4–24h'])
+  })
+
+  it('tallies tags across trades by count', () => {
+    const byLabel = Object.fromEntries(a.tags.map((x) => [x.label, x]))
+    expect(byLabel.earnings).toMatchObject({ count: 2, net: 150 })
+    expect(byLabel['gap-up']).toMatchObject({ count: 1, net: 200 })
+  })
+})
+
+describe('analyze — consecutive-loss streak breach', () => {
+  it('flags a day whose trades include enough losses in a row', () => {
+    const trades = [
+      t('2026-09-14', 10, { time: '09:00' }),
+      t('2026-09-14', -10, { time: '09:05' }),
+      t('2026-09-14', -10, { time: '09:10' }),
+      t('2026-09-14', -10, { time: '09:15' }),
+    ]
+    const a = analyze(trades, settings({ maxConsecutiveLosses: 3 }))
+    expect(a.breaches).toEqual([{ date: '2026-09-14', kind: 'streak', amount: 3 }])
+  })
+
+  it('does nothing when the rule is off or not met', () => {
+    const trades = [t('2026-09-14', -10), t('2026-09-14', -10)]
+    expect(analyze(trades, settings()).breaches).toEqual([])
+    expect(analyze(trades, settings({ maxConsecutiveLosses: 3 })).breaches).toEqual([])
+  })
+})
+
+describe('accountEquityCurve / accountDrawdown', () => {
+  it('combines deposits and trading P&L into a running equity curve', () => {
+    const trades = [t('2026-09-02', 100), t('2026-09-03', -300)]
+    const curve = accountEquityCurve(trades, [{ time: '2026-09-01 10:00:00', amount: 1000 }])
+    expect(curve).toEqual([
+      { date: '2026-09-01', deposited: 1000, equity: 1000 },
+      { date: '2026-09-02', deposited: 1000, equity: 1100 },
+      { date: '2026-09-03', deposited: 1000, equity: 800 },
+    ])
+  })
+
+  it('measures drawdown from the equity peak, not from the deposit total', () => {
+    const trades = [t('2026-09-02', 500), t('2026-09-03', -800), t('2026-09-04', 100)]
+    const curve = accountEquityCurve(trades, [{ time: '2026-09-01 10:00:00', amount: 1000 }])
+    const { max, current } = accountDrawdown(curve)
+    expect(max).toMatchObject({ amount: 800, peakDate: '2026-09-02', troughDate: '2026-09-03' })
+    expect(max.pct).toBeCloseTo((800 / 1500) * 100)
+    expect(current).toBe(700)
+  })
+
+  it('is empty with no deposits or trades', () => {
+    expect(accountEquityCurve([], [])).toEqual([])
+    expect(accountDrawdown([]).max.amount).toBe(0)
   })
 })
 

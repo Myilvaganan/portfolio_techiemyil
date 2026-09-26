@@ -21,6 +21,7 @@ import { demoFills } from '@/lib/optionsDemo'
 import { clearStoredFills, fetchStoredBrokers, fetchStoredFills, saveFills } from '@/lib/optionsStore'
 import { BROKERS, SAMPLE_BROKER, brokerHint, brokerLabel, slugifyBroker } from '@/lib/brokers'
 import { ReportMenu } from '@/components/viz/ReportMenu'
+import { fyList, fyReportDoc, fySummary, fyTradesCsv } from '@/lib/fyReport'
 import { FitValue } from '@/components/viz/FitValue'
 import { optionsReport, optionsTradesCsv } from '@/lib/moduleReports'
 import { FIELDS, analyseRows, autoMapping, cellText, mappingProblems, readTradeFile, rowsToFills, type Cell, type Mapping } from '@/lib/tradeImport'
@@ -495,9 +496,13 @@ export function OptionsAnalytics() {
         charges: estimateCharges(f, ratesByBroker[id] ?? DEFAULT_CHARGE_RATES),
       }
     })
-    const trips = per.flatMap((p) => p.trips).filter((x) => inRange(x.closeDate))
+    const allTrips = per.flatMap((p) => p.trips)
+    const allCharges = per.flatMap((p) => p.charges)
+    const trips = allTrips.filter((x) => inRange(x.closeDate))
     return {
       trips,
+      allTrips,
+      allCharges,
       open: per.flatMap((p) => p.open),
       allFills: per.flatMap((p) => p.fills).sort((x, y) => x.ts - y.ts),
       fills: per.flatMap((p) => p.fills.filter((f) => inRange(f.date)).map((f) => ({ ...f, broker: p.id }))),
@@ -507,6 +512,9 @@ export function OptionsAnalytics() {
   }, [demo, active, data, viewData, ratesByBroker, range, today])
 
   const a = model.analytics
+  const fys = useMemo(() => fyList(model.allTrips), [model.allTrips])
+  const [fyChoice, setFyChoice] = useState('')
+  const fy = fys.includes(fyChoice) ? fyChoice : (fys[0] ?? '')
   const insights = useMemo(() => buildInsights(a), [a])
 
   const orders = useMemo(() => {
@@ -745,6 +753,28 @@ export function OptionsAnalytics() {
               report={() => optionsReport(a, model.trips, insights, activeLabel, RANGES.find((r) => r.id === range)?.label ?? 'All time')}
               csv={() => optionsTradesCsv(model.trips)}
             />
+          )}
+          {hasData && fy && (
+            <span className="inline-flex items-center gap-1.5">
+              <select
+                aria-label="Financial year for the tax report"
+                value={fy}
+                onChange={(e) => setFyChoice(e.target.value)}
+                className="rounded-full border border-border bg-surface-2 px-3 py-2 text-xs text-text outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                {fys.map((f) => (
+                  <option key={f} value={f} className="bg-card">
+                    {f}
+                  </option>
+                ))}
+              </select>
+              <ReportMenu
+                label="Tax report"
+                filename={`options-tax-${fy.replace(' ', '-')}`}
+                report={() => fyReportDoc(fySummary(model.allTrips, model.allCharges, fy))}
+                csv={() => fyTradesCsv(model.allTrips, fy)}
+              />
+            </span>
           )}
           {(demo || hasStoredForActive) && (
             <button

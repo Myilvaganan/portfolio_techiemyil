@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
@@ -14,6 +15,10 @@ interface ComingSoonPageProps {
 export function ComingSoonPage({ icon: Icon, title, description }: ComingSoonPageProps) {
   return (
     <section className="relative flex min-h-screen items-center py-32">
+      <Helmet>
+        <title>{`${title} — Techie Myil`}</title>
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <Container className="flex flex-col items-center text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

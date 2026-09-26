@@ -13,6 +13,8 @@ interface Props {
   today: string
   /** Dates that broke the daily loss limit or trade cap. */
   breachDates: Set<string>
+  /** Dates that have a saved day note, shown as a small dot. */
+  noteDates?: Set<string>
   onSelect: (date: string) => void
   /** Add a trade on this date (the hover “+”, or double-clicking the date). */
   onAdd?: (date: string) => void
@@ -25,7 +27,7 @@ function wash(net: number, maxAbs: number) {
   return `color-mix(in srgb, var(${net > 0 ? '--color-positive' : '--color-error'}) ${pct}%, transparent)`
 }
 
-export function JournalCalendar({ month, byDate, settings, selected, today, breachDates, onSelect, onAdd }: Props) {
+export function JournalCalendar({ month, byDate, settings, selected, today, breachDates, noteDates, onSelect, onAdd }: Props) {
   const m = useMoney()
   const weeks = useMemo(() => monthGrid(month), [month])
 
@@ -86,6 +88,9 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                       </span>
                       {breachDates.has(cell.date) && (
                         <span title="Risk rule broken" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-error" aria-label="Risk rule broken" />
+                      )}
+                      {noteDates?.has(cell.date) && !breachDates.has(cell.date) && (
+                        <span title="Day note saved" className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" aria-label="Day note saved" />
                       )}
                       {d && (
                         <>

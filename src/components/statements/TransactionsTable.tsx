@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowDown, ArrowUp, FileSpreadsheet, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatInr } from '@/lib/kite'
-import { dayLabel, filterTxns, type StatementKind, type Txn } from '@/lib/statements'
+import { BANK_CATEGORIES, CARD_CATEGORIES, dayLabel, filterTxns, type StatementKind, type Txn } from '@/lib/statements'
 import { downloadCsv, fileStamp } from '@/lib/report'
 import { Pagination } from '@/components/viz/Pagination'
 
@@ -11,7 +11,18 @@ type SortKey = 'date' | 'amount'
 
 const amountOf = (t: Txn) => (t.debit ? -t.debit : t.credit)
 
-export function TransactionsTable({ kind, txns, cardLabels }: { kind: StatementKind; txns: Txn[]; cardLabels?: Record<string, string> }) {
+export function TransactionsTable({
+  kind,
+  txns,
+  cardLabels,
+  onRecategorize,
+}: {
+  kind: StatementKind
+  txns: Txn[]
+  cardLabels?: Record<string, string>
+  // Applies the new category to every transaction sharing this merchant (normalised), not just the one clicked.
+  onRecategorize?: (merchant: string, category: string) => void
+}) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [direction, setDirection] = useState<'all' | 'debit' | 'credit'>('all')
@@ -93,7 +104,22 @@ export function TransactionsTable({ kind, txns, cardLabels }: { kind: StatementK
                   <p className="truncate font-medium text-text">{t.merchant}</p>
                   <p className="truncate text-[11px] text-text-secondary/80">{t.description}</p>
                 </td>
-                <td className="py-2.5 pr-3"><span className="rounded-full bg-surface-10 px-2 py-0.5 text-[10px] text-text-secondary">{t.category}</span></td>
+                <td className="py-2.5 pr-3">
+                  {onRecategorize ? (
+                    <select
+                      value={t.category}
+                      aria-label={`Category for ${t.merchant}`}
+                      onChange={(e) => onRecategorize(t.merchant, e.target.value)}
+                      className="rounded-full border-none bg-surface-10 px-2 py-0.5 text-[10px] text-text-secondary outline-none focus:ring-1 focus:ring-accent/50"
+                    >
+                      {(kind === 'bank' ? BANK_CATEGORIES : CARD_CATEGORIES).map((c) => (
+                        <option key={c} value={c} className="bg-card">{c}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="rounded-full bg-surface-10 px-2 py-0.5 text-[10px] text-text-secondary">{t.category}</span>
+                  )}
+                </td>
                 <td className="whitespace-nowrap py-2.5 pr-3 text-text-secondary">{kind === 'bank' ? t.channel : (cardLabels?.[t.accountKey] ?? t.type)}</td>
                 <td className={cn('whitespace-nowrap py-2.5 pr-3 text-right font-mono font-semibold', t.credit ? 'text-accent' : 'text-text')}>{t.credit ? `+${formatInr(t.credit, 2)}` : `-${formatInr(t.debit, 2)}`}</td>
                 {kind === 'bank' && <td className="whitespace-nowrap py-2.5 text-right font-mono text-text-secondary">{typeof t.balance === 'number' ? formatInr(t.balance) : '—'}</td>}

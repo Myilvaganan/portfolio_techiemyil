@@ -63,6 +63,11 @@ export async function generateInsights(kind: VaultKind, context: unknown, finger
   }
 }
 
+// Re-categorises every transaction with this merchant (and remembers the choice for future statements).
+export async function setCategoryOverride(kind: StatementKind, merchant: string, category: string): Promise<{ ok: boolean; updated: number }> {
+  return post('/admin/statements/category-override', { kind, merchantKey: merchant, category })
+}
+
 export async function askAi(kind: VaultKind, question: string, context: unknown): Promise<string> {
   try {
     return (await post('/admin/statements/ask', { kind, question, context })).answer

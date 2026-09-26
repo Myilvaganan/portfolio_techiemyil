@@ -1,10 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { DatabaseZap, Plus, RefreshCw, Settings as SettingsIcon } from 'lucide-react'
+import { Calculator, DatabaseZap, Plus, RefreshCw, Settings as SettingsIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { BackfillDialog, type ImportSummary } from '@/components/journal/BackfillDialog'
 import { CalendarView } from '@/components/journal/CalendarView'
 import { DayPanel } from '@/components/journal/DayPanel'
 import { JournalDashboard } from '@/components/journal/JournalDashboard'
+import { PositionSizeDialog } from '@/components/journal/PositionSizeDialog'
 import { SettingsDialog } from '@/components/journal/SettingsDialog'
 import { TradeDialog } from '@/components/journal/TradeDialog'
 import { ZerodhaSyncDialog } from '@/components/journal/ZerodhaSyncDialog'
@@ -58,6 +59,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
   const [backfillOpen, setBackfillOpen] = useState(false)
   const [backfillCheck, setBackfillCheck] = useState(0)
   const [zerodhaOpen, setZerodhaOpen] = useState(false)
+  const [sizerOpen, setSizerOpen] = useState(false)
 
   // Once the month has loaded, quietly see whether Options Analytics has trades the journal is missing.
   const backfill = useBackfillStatus(today, !b.loading && !b.error, backfillCheck)
@@ -138,6 +140,9 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
           <button type="button" data-cursor="hover" aria-label="Journal settings" onClick={() => setSettingsOpen(true)} className={pillClass}>
             <SettingsIcon className="h-3.5 w-3.5" /> Settings
           </button>
+          <button type="button" data-cursor="hover" title="Size a trade to a risk %" onClick={() => setSizerOpen(true)} className={pillClass}>
+            <Calculator className="h-3.5 w-3.5" /> Position size
+          </button>
           <Button size="sm" magnetic={false} onClick={() => openAdd()} className="!h-9 !px-4 !text-xs">
             <Plus className="h-3.5 w-3.5" /> Add trade
           </Button>
@@ -162,6 +167,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
           dayPanel={dayPanel}
             onMonth={goToMonth}
             lead={tabs}
+            days={days}
         />
       )}
 
@@ -187,6 +193,7 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
         onImported={handleImported}
       />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} knownInstruments={knownInstruments} onSave={b.handleSaveSettings} />
+      <PositionSizeDialog open={sizerOpen} onOpenChange={setSizerOpen} />
     </div>
   )
 }

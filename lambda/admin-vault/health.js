@@ -13,7 +13,10 @@ const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const { callOpenAI, fail, EXTRACT_MODEL } = require('./statements')
 
 const REPORTS_KEY = '_data/health/reports.json'
+const GOAL_KEY = '_data/health/goal.json'
+const LOGS_KEY = '_data/health/logs.json'
 const MAX_REPORTS = 500
+const MAX_LOGS = 2000
 const MAX_IMAGE_CHARS = 4_500_000
 const VISION_MODEL = () => process.env.OPENAI_MODEL_VISION || EXTRACT_MODEL()
 
@@ -118,6 +121,31 @@ function sanitizeReport(r) {
     createdAt: typeof r.createdAt === 'string' && r.createdAt ? r.createdAt.slice(0, 30) : now,
     updatedAt: now,
   }
+}
+
+// ---------- Goal ----------
+
+function sanitizeGoal(g) {
+  if (!g || typeof g !== 'object') return null
+  const weightKg = reading(g.weightKg, 20, 400)
+  const bodyFatPct = reading(g.bodyFatPct, 1, 80)
+  if (weightKg === null && bodyFatPct === null) return null
+  const targetDate = isRealDate(g.targetDate) ? g.targetDate : null
+  return { weightKg, bodyFatPct, targetDate, notes: text(g.notes, 500), updatedAt: new Date().toISOString() }
+}
+
+// ---------- Daily logs ----------
+
+function sanitizeLog(l) {
+  if (!l || typeof l !== 'object') return null
+  if (!isRealDate(l.date)) return null
+  const weight = reading(l.weight, 20, 400)
+  const steps = reading(l.steps, 0, 100000)
+  const waterL = reading(l.waterL, 0, 20)
+  const sleepH = reading(l.sleepH, 0, 24)
+  const note = text(l.note, 300)
+  if (weight === null && steps === null && waterL === null && sleepH === null && !note) return null
+  return { date: l.date, weight, steps: steps === null ? null : Math.round(steps), waterL, sleepH, note }
 }
 
 // ---------- Photo scan ----------
@@ -227,6 +255,72 @@ function createHealthApi({ s3, bucket, ai = callOpenAI }) {
     return { statusCode: 200, body: { reports: await store(next) } }
   }
 
+  // ---------- Goal ----------
+
+  async function loadGoal() {
+    try {
+      const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: GOAL_KEY }))
+      const data = JSON.parse(await res.Body.transformToString())
+      return data && typeof data === 'object' ? data : null
+    } catch (err) {
+      if (err.name === 'NoSuchKey') return null
+      throw err
+    }
+  }
+
+  async function getGoal() {
+    return { statusCode: 200, body: { goal: await loadGoal() } }
+  }
+
+  async function saveGoal(payload) {
+    const clean = sanitizeGoal(payload.goal)
+    if (!clean) return { statusCode: 400, body: { error: 'Set a target weight and/or a target body fat %.' } }
+    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: GOAL_KEY, ContentType: 'application/json', Body: JSON.stringify(clean) }))
+    return { statusCode: 200, body: { goal: clean } }
+  }
+
+  // ---------- Daily logs ----------
+
+  async function loadLogs() {
+    try {
+      const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: LOGS_KEY }))
+      const data = JSON.parse(await res.Body.transformToString())
+      return Array.isArray(data.logs) ? data.logs : []
+    } catch (err) {
+      if (err.name === 'NoSuchKey') return []
+      throw err
+    }
+  }
+
+  async function storeLogs(logs) {
+    const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date))
+    await s3.send(new PutObjectCommand({ Bucket: bucket, Key: LOGS_KEY, ContentType: 'application/json', Body: JSON.stringify({ logs: sorted, updatedAt: new Date().toISOString() }) }))
+    return sorted
+  }
+
+  async function listLogs() {
+    return { statusCode: 200, body: { logs: await loadLogs() } }
+  }
+
+  async function saveLog(payload) {
+    const clean = sanitizeLog(payload.log)
+    if (!clean) return { statusCode: 400, body: { error: 'A date and at least one value are required.' } }
+    const logs = await loadLogs()
+    const i = logs.findIndex((l) => l.date === clean.date)
+    if (i >= 0) logs[i] = clean
+    else logs.push(clean)
+    if (logs.length > MAX_LOGS) return { statusCode: 400, body: { error: `You can keep up to ${MAX_LOGS} daily logs.` } }
+    return { statusCode: 200, body: { logs: await storeLogs(logs) } }
+  }
+
+  async function removeLog(query) {
+    const date = typeof query.date === 'string' ? query.date : ''
+    const logs = await loadLogs()
+    const next = logs.filter((l) => l.date !== date)
+    if (next.length === logs.length) return { statusCode: 404, body: { error: 'That log was not found.' } }
+    return { statusCode: 200, body: { logs: await storeLogs(next) } }
+  }
+
   async function scan(payload) {
     const image = typeof payload.image === 'string' ? payload.image : ''
     if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image)) {
@@ -265,6 +359,11 @@ function createHealthApi({ s3, bucket, ai = callOpenAI }) {
       if (method === 'POST' && path === '/admin/health/reports') return await save(payload)
       if (method === 'DELETE' && path === '/admin/health/reports') return await remove(query)
       if (method === 'POST' && path === '/admin/health/scan') return await scan(payload)
+      if (method === 'GET' && path === '/admin/health/goal') return await getGoal()
+      if (method === 'POST' && path === '/admin/health/goal') return await saveGoal(payload)
+      if (method === 'GET' && path === '/admin/health/logs') return await listLogs()
+      if (method === 'POST' && path === '/admin/health/logs') return await saveLog(payload)
+      if (method === 'DELETE' && path === '/admin/health/logs') return await removeLog(query)
       return null
     } catch (err) {
       if (err.code && err.statusCode) return { statusCode: err.statusCode, body: { error: err.message, code: err.code } }
@@ -273,4 +372,4 @@ function createHealthApi({ s3, bucket, ai = callOpenAI }) {
   }
 }
 
-module.exports = { createHealthApi, sanitizeReport, sanitizeHistory, METRICS, RANGED, SEGMENTS }
+module.exports = { createHealthApi, sanitizeReport, sanitizeHistory, sanitizeGoal, sanitizeLog, METRICS, RANGED, SEGMENTS }

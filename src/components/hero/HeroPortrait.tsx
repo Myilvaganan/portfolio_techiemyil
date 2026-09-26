@@ -1,10 +1,11 @@
 import { Suspense, lazy } from 'react'
 import { motion } from 'framer-motion'
 import profileImgDark from '@/assets/images/profile.jpg'
-import profileImgLight from '@/assets/images/profile_light.png'
-import profileImgGold from '@/assets/images/profile_gold.jpg'
+import profileImgLight from '@/assets/images/profile_light.webp'
+import profileImgGold from '@/assets/images/profile_gold.webp'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { isRoyal, useTheme } from '@/hooks/useTheme'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { FloatingIcons } from './FloatingIcons'
 
 const HeroCanvas = lazy(() => import('./HeroCanvas').then((m) => ({ default: m.HeroCanvas })))
@@ -12,14 +13,18 @@ const HeroCanvas = lazy(() => import('./HeroCanvas').then((m) => ({ default: m.H
 export function HeroPortrait() {
   const { theme } = useTheme()
   const profileImg = theme === 'light' ? profileImgLight : isRoyal(theme) ? profileImgGold : profileImgDark
+  // The 3D particle field is decoration worth ~900 KB of script: skip it on phones and for people who prefer less motion.
+  const showCanvas = useMediaQuery('(min-width: 768px) and (prefers-reduced-motion: no-preference)')
 
   return (
     <div className="relative mx-auto flex h-[380px] w-[300px] items-center justify-center sm:h-[440px] sm:w-[340px]">
-      <ErrorBoundary>
-        <Suspense fallback={null}>
-          <HeroCanvas />
-        </Suspense>
-      </ErrorBoundary>
+      {showCanvas && (
+        <ErrorBoundary>
+          <Suspense fallback={null}>
+            <HeroCanvas />
+          </Suspense>
+        </ErrorBoundary>
+      )}
 
       <motion.div
         className="absolute inset-0 rounded-full border border-accent/20"

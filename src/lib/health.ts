@@ -61,6 +61,25 @@ export interface HistoryPoint {
   percentBodyFat: number | null
 }
 
+export interface Goal {
+  weightKg: number | null
+  bodyFatPct: number | null
+  /** YYYY-MM-DD */
+  targetDate: string | null
+  notes: string
+  updatedAt: string
+}
+
+export interface DailyLog {
+  /** YYYY-MM-DD */
+  date: string
+  weight: number | null
+  steps: number | null
+  waterL: number | null
+  sleepH: number | null
+  note: string
+}
+
 export interface MetricDef {
   key: MetricKey
   label: string
@@ -311,4 +330,121 @@ export function findings(r: HealthReport): Finding[] {
 export function dailyDeficit(fatKg: number, weeks: number): number {
   // ~7,700 kcal per kg of body fat.
   return weeks > 0 ? Math.round((fatKg * 7700) / (weeks * 7)) : 0
+}
+
+// ---------- Goal tracking ----------
+
+export type GoalMetric = 'weight' | 'percentBodyFat'
+
+export interface GoalProgress {
+  metric: GoalMetric
+  start: number
+  current: number
+  target: number
+  /** 0-100, clamped. How far from the first test to the target the latest test has come. */
+  pct: number
+}
+
+const goalTarget = (goal: Goal, metric: GoalMetric): number | null => (metric === 'weight' ? goal.weightKg : goal.bodyFatPct)
+
+/** Progress from the first test that has this metric to the latest one, towards the goal's target. */
+export function goalProgress(reports: HealthReport[], goal: Goal, metric: GoalMetric): GoalProgress | null {
+  const target = goalTarget(goal, metric)
+  if (target === null) return null
+  const points = sortReports(reports).filter((r) => r.values[metric] !== null)
+  if (points.length === 0) return null
+  const start = points[0].values[metric] as number
+  const current = points[points.length - 1].values[metric] as number
+  const span = start - target
+  const pct = span === 0 ? 100 : Math.max(0, Math.min(100, ((start - current) / span) * 100))
+  return { metric, start, current, target, pct }
+}
+
+export interface GoalProjection {
+  /** YYYY-MM-DD the trend reaches the target, or null when it can't be projected. */
+  date: string | null
+  daysFromNow: number | null
+  /** False when there are too few points, the trend is flat, or it's moving away from the target. */
+  onTrack: boolean
+}
+
+/** Projects the date the linear trend of past tests reaches a target value. Needs at least two data points. */
+export function projectGoalDate(reports: HealthReport[], metric: GoalMetric, target: number, today: Date = new Date()): GoalProjection {
+  const points = sortReports(reports)
+    .filter((r) => r.values[metric] !== null)
+    .map((r) => ({ t: new Date(`${reportDate(r)}T00:00:00Z`).getTime(), v: r.values[metric] as number }))
+  if (points.length < 2) return { date: null, daysFromNow: null, onTrack: false }
+
+  const t0 = points[0].t
+  const xs = points.map((p) => (p.t - t0) / 86_400_000)
+  const ys = points.map((p) => p.v)
+  const n = xs.length
+  const sumX = xs.reduce((a, b) => a + b, 0)
+  const sumY = ys.reduce((a, b) => a + b, 0)
+  const sumXY = xs.reduce((a, x, i) => a + x * ys[i], 0)
+  const sumXX = xs.reduce((a, x) => a + x * x, 0)
+  const denom = n * sumXX - sumX * sumX
+  if (denom === 0) return { date: null, daysFromNow: null, onTrack: false }
+  const slope = (n * sumXY - sumX * sumY) / denom // change per day
+
+  const current = ys[ys.length - 1]
+  const remaining = target - current
+  if (remaining === 0) return { date: today.toISOString().slice(0, 10), daysFromNow: 0, onTrack: true }
+  if (slope === 0) return { date: null, daysFromNow: null, onTrack: false }
+
+  const daysNeeded = remaining / slope
+  if (daysNeeded < 0) return { date: null, daysFromNow: null, onTrack: false } // trend is moving away from the target
+
+  const days = Math.round(daysNeeded)
+  const date = new Date(today.getTime() + days * 86_400_000)
+  return { date: date.toISOString().slice(0, 10), daysFromNow: days, onTrack: true }
+}
+
+// ---------- Reminder ----------
+
+export interface Reminder {
+  /** Days since the last test, or null when there's no test yet. */
+  daysSince: number | null
+  /** True when a fresh test is due. */
+  due: boolean
+}
+
+/** Whether it's time to prompt for a fresh InBody test — the last one is null (never tested) or older than `thresholdDays`. */
+export function healthReminder(reports: HealthReport[], today: Date = new Date(), thresholdDays = 30): Reminder {
+  const sorted = sortReports(reports)
+  const latest = sorted[sorted.length - 1]
+  if (!latest) return { daysSince: null, due: true }
+  const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const daysSince = Math.round((start - Date.parse(`${reportDate(latest)}T00:00:00Z`)) / 86_400_000)
+  return { daysSince, due: daysSince >= thresholdDays }
+}
+
+// ---------- Daily logs ----------
+
+export function blankLog(date: string): DailyLog {
+  return { date, weight: null, steps: null, waterL: null, sleepH: null, note: '' }
+}
+
+export const sortLogs = (logs: DailyLog[]) => [...logs].sort((a, b) => a.date.localeCompare(b.date))
+
+export interface LogAverages {
+  weight: number | null
+  steps: number | null
+  waterL: number | null
+  sleepH: number | null
+}
+
+/** Averages each metric over the last `days` days (today inclusive), ignoring entries where it's missing. */
+export function logAverages(logs: DailyLog[], days: number, today: Date = new Date()): LogAverages {
+  const end = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const start = end - (days - 1) * 86_400_000
+  const inRange = logs.filter((l) => {
+    const t = Date.parse(`${l.date}T00:00:00Z`)
+    return t >= start && t <= end
+  })
+  const avg = (key: keyof LogAverages) => {
+    const vals = inRange.map((l) => l[key]).filter((v): v is number => v !== null)
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+  }
+  return { weight: avg('weight'), steps: avg('steps'), waterL: avg('waterL'), sleepH: avg('sleepH') }
 }

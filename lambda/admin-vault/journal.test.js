@@ -76,6 +76,18 @@ describe('sanitizeTrade', () => {
     expect(t.mistakes).toEqual(['FOMO', 'Moved stop'])
     expect(t.rating).toBe(0)
   })
+
+  it('dedupes and caps tags, and defaults them to an empty list', () => {
+    expect(sanitizeTrade(trade()).tags).toEqual([])
+    const many = Array.from({ length: 20 }, (_, i) => `tag${i}`)
+    expect(sanitizeTrade(trade({ tags: ['gap-up', 'gap-up', '', ...many] })).tags).toHaveLength(12)
+  })
+
+  it('stores hold time as a non-negative whole number of minutes', () => {
+    expect(sanitizeTrade(trade({ holdMinutes: 45.6 })).holdMinutes).toBe(46)
+    expect(sanitizeTrade(trade({ holdMinutes: -5 })).holdMinutes).toBe(0)
+    expect(sanitizeTrade(trade()).holdMinutes).toBe(0)
+  })
 })
 
 describe('sanitizeDay / sanitizeSettings', () => {
@@ -85,8 +97,13 @@ describe('sanitizeDay / sanitizeSettings', () => {
   })
 
   it('applies defaults and bounds to settings', () => {
-    expect(sanitizeSettings(undefined)).toEqual({ taxRate: 0, taxMode: 'per-trade', taxRules: [{ instrument: 'Bitcoin', rate: 30, mode: 'per-trade' }], startingCapital: 0, dailyLossLimit: 0, maxTradesPerDay: 0 })
+    expect(sanitizeSettings(undefined)).toEqual({ taxRate: 0, taxMode: 'per-trade', taxRules: [{ instrument: 'Bitcoin', rate: 30, mode: 'per-trade' }], startingCapital: 0, dailyLossLimit: 0, maxTradesPerDay: 0, maxConsecutiveLosses: 0 })
     expect(sanitizeSettings({ taxRate: 500, taxMode: 'weird', startingCapital: -5 })).toMatchObject({ taxRate: 0, taxMode: 'per-trade', startingCapital: 0 })
+  })
+
+  it('bounds the max-consecutive-losses risk rule', () => {
+    expect(sanitizeSettings({ maxConsecutiveLosses: 3.7 }).maxConsecutiveLosses).toBe(4)
+    expect(sanitizeSettings({ maxConsecutiveLosses: -1 }).maxConsecutiveLosses).toBe(0)
   })
 })
 

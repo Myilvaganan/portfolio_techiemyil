@@ -5,6 +5,7 @@ import { formatInr, formatSignedInr, formatSignedPct, holdingRows, marginSummary
 import type { Analytics, Insight, RoundTrip } from './optionsAnalytics'
 import type { BucketRow, Holding } from './portfolio'
 import { BUCKETS } from './portfolio'
+import type { NetWorthSummary } from './netWorth'
 
 const inr = (n: number, d = 0) => formatInr(n, d)
 const usd = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -99,6 +100,26 @@ export function rebalanceReport(rows: BucketRow[], holdings: Holding[], total: n
       { title: 'Rebalance plan', table: { columns: ['Bucket', 'Now', 'Now %', 'Target %', 'Target', 'Buy / sell'], rows: rows.map((r) => [BUCKETS[r.id].label, inr(r.current), `${r.currentPct.toFixed(1)}%`, `${r.targetPct}%`, inr(r.target), formatSignedInr(r.delta)]), rightAlign: [1, 2, 3, 4, 5] } },
       { title: 'Holdings', table: { columns: ['Holding', 'Role', 'Value', 'Weight'], rows: [...holdings].sort((a, b) => b.value - a.value).map((h) => [h.symbol, h.role, inr(h.value), `${((h.value / total) * 100).toFixed(1)}%`]), rightAlign: [2, 3] } },
       { title: 'Note', text: 'An educational framework, not personalised investment advice. Verify prices, taxes, exit loads, liquidity and tracking difference before acting.' },
+    ],
+  }
+}
+
+export function netWorthReport(s: NetWorthSummary): ReportDoc {
+  const allItems = [...s.assetGroups, ...s.liabilityGroups].flatMap((g) => g.items.map((i) => ({ group: g.label, ...i })))
+  return {
+    title: 'Net worth summary',
+    sections: [
+      {
+        title: 'Summary',
+        kpis: [
+          { label: 'Net worth', value: inr(s.netWorth), tone: s.netWorth >= 0 ? 'good' : 'bad' },
+          { label: 'Total assets', value: inr(s.totalAssets), tone: 'good' },
+          { label: 'Total liabilities', value: inr(s.totalLiabilities), tone: s.totalLiabilities > 0 ? 'bad' : undefined },
+        ],
+      },
+      { title: 'Assets', bars: s.assetGroups.flatMap((g) => g.items).map((i) => ({ label: i.label, value: i.value, display: inr(i.value) })) },
+      { title: 'Liabilities', bars: s.liabilityGroups.flatMap((g) => g.items).map((i) => ({ label: i.label, value: i.value, display: inr(i.value) })) },
+      { title: 'All items', table: { columns: ['Group', 'Item', 'Value'], rows: allItems.map((i) => [i.group, i.label, inr(i.value)]), rightAlign: [2] } },
     ],
   }
 }

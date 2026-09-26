@@ -10,7 +10,7 @@ export interface CsvExport {
 }
 
 // Report downloads (HTML, print/PDF) and CSV export, offered the same way in every module.
-export function ReportMenu({ report, csv, filename, disabled, className }: { report: () => ReportDoc; csv?: () => CsvExport; filename: string; disabled?: boolean; className?: string }) {
+export function ReportMenu({ report, csv, filename, disabled, className, label = 'Reports' }: { report: () => ReportDoc; csv?: () => CsvExport; filename: string; disabled?: boolean; className?: string; label?: string }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -35,7 +35,7 @@ export function ReportMenu({ report, csv, filename, disabled, className }: { rep
         className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text disabled:opacity-50"
       >
         <Download className="h-3.5 w-3.5" />
-        Reports
+        {label}
       </button>
       {open && (
         <div role="menu" className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">

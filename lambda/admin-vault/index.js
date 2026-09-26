@@ -9,6 +9,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
 const { createStatementsApi } = require('./statements')
 const { createJournalApi } = require('./journal')
 const { createHealthApi } = require('./health')
+const { createPlatformApi } = require('./platform')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -35,6 +36,7 @@ const s3 = new S3Client({})
 const statementsApi = createStatementsApi({ s3, bucket: S3_BUCKET })
 const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 const healthApi = createHealthApi({ s3, bucket: S3_BUCKET })
+const platformApi = createPlatformApi({ s3, bucket: S3_BUCKET })
 
 // ---------- CORS / request helpers ----------
 
@@ -555,6 +557,12 @@ exports.handler = async (event) => {
       return respond(result.statusCode, result.body)
     }
 
+    if (path.startsWith('/public/')) {
+      const result = await platformApi.publicRoute({ method, path, payload, ip: event.requestContext?.http?.sourceIp })
+      if (result) return respond(result.statusCode, result.body)
+      return respond(404, { error: 'Not found.' })
+    }
+
     // Every other route requires a valid session token.
     const session = requireAuth(event)
     if (!session) {
@@ -593,6 +601,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/health')) {
       const result = await healthApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    {
+      const result = await platformApi.adminRoute({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 
