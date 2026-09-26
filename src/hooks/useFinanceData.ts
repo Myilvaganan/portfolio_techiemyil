@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchStatements } from '@/lib/statementsApi'
+import { fetchLoanDocs, fetchStatements } from '@/lib/statementsApi'
+import { buildLoans } from '@/lib/loans'
 import { fetchFinance, type FinanceSettings } from '@/lib/financeApi'
-import { applyRules } from '@/lib/rules'
+import { applyRules, applySmartRules } from '@/lib/rules'
 import type { Txn } from '@/lib/statements'
 
 const EMPTY: FinanceSettings = { budgets: {}, rules: [], tags: {} }
@@ -10,6 +11,7 @@ const EMPTY: FinanceSettings = { budgets: {}, rules: [], tags: {} }
 export function useFinanceData() {
   const [raw, setRaw] = useState<{ bank: Txn[]; card: Txn[] } | null>(null)
   const [settings, setSettings] = useState<FinanceSettings>(EMPTY)
+  const [emis, setEmis] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
   const [settingsError, setSettingsError] = useState<string | null>(null)
 
@@ -18,6 +20,10 @@ export function useFinanceData() {
     Promise.all([fetchStatements('bank'), fetchStatements('card')])
       .then(([b, c]) => !cancelled && setRaw({ bank: b.transactions, card: c.transactions }))
       .catch((e) => !cancelled && setError(e instanceof Error ? e.message : 'Could not load your statements.'))
+    // The EMI of each running loan lets its monthly debit be filed correctly. Optional: without loans nothing changes.
+    fetchLoanDocs()
+      .then((d) => !cancelled && setEmis(buildLoans(d.statements).map((l) => l.details?.emi ?? 0).filter((e) => e > 0)))
+      .catch(() => {})
     fetchFinance()
       .then((s) => !cancelled && setSettings(s))
       .catch((e) => !cancelled && setSettingsError(e instanceof Error ? e.message : 'Could not load budgets.'))
@@ -26,8 +32,8 @@ export function useFinanceData() {
     }
   }, [])
 
-  const bank = useMemo(() => (raw ? applyRules(raw.bank, settings.rules) : []), [raw, settings.rules])
-  const card = useMemo(() => (raw ? applyRules(raw.card, settings.rules) : []), [raw, settings.rules])
+  const bank = useMemo(() => (raw ? applyRules(applySmartRules(raw.bank, emis), settings.rules) : []), [raw, settings.rules, emis])
+  const card = useMemo(() => (raw ? applyRules(applySmartRules(raw.card), settings.rules) : []), [raw, settings.rules])
   const all = useMemo(() => [...bank, ...card], [bank, card])
   const patch = useCallback((p: Partial<FinanceSettings>) => setSettings((s) => ({ ...s, ...p })), [])
 

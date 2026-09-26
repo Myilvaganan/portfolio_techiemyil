@@ -37,7 +37,7 @@ const FAST_MODEL = () => process.env.OPENAI_MODEL_FAST || DEFAULT_MODEL
 // ---------- Categories ----------
 
 const BANK_CATEGORIES = [
-  'Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Groceries',
+  'Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Gold Savings', 'Groceries',
   'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education',
   'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other',
 ]

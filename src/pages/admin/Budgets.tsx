@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { PiggyBank } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Avatar } from '@/components/ui/Avatar'
+import { CategoryPicker } from '@/components/statements/CategoryPicker'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { AlertTriangle, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -18,11 +20,11 @@ import { useFinanceData } from '@/hooks/useFinanceData'
 
 const NON_BUDGET = new Set(['Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Card Payment', 'Cashback & Rewards'])
 const PICK_CATEGORIES = BANK_CATEGORIES.filter((c) => !NON_BUDGET.has(c))
-const TAG_OPTIONS: { id: TxnTag | ''; label: string }[] = [
-  { id: '', label: 'Normal' },
-  { id: 'household', label: 'Household' },
-  { id: 'family', label: 'Family' },
-  { id: 'ignore', label: 'Ignore' },
+const TAG_OPTIONS: { id: TxnTag | ''; label: string; hint: string }[] = [
+  { id: '', label: 'Spending', hint: 'Counts in your budgets' },
+  { id: 'household', label: 'Household', hint: 'Counts even if it looks like a transfer' },
+  { id: 'family', label: 'Family', hint: 'Money to family: left out of spending' },
+  { id: 'ignore', label: 'Ignore', hint: 'Left out of spending' },
 ]
 
 const shiftMonth = (month: string, n: number) => {
@@ -39,8 +41,8 @@ function Ring({ pct, over, near }: { pct: number; over: boolean; near: boolean }
     <svg width="52" height="52" viewBox="0 0 52 52" className="shrink-0" role="img" aria-label={`${Math.round(pct)}% used`}>
       <circle cx="26" cy="26" r={r} fill="none" stroke="var(--color-border)" strokeWidth="5" />
       <circle cx="26" cy="26" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(pct, 100) / 100)} transform="rotate(-90 26 26)" className="transition-[stroke-dashoffset] duration-500" />
-      <text x="26" y="30" textAnchor="middle" className="fill-text font-mono text-2xs font-semibold">
-        {Math.round(pct)}%
+      <text x="26" y="30" textAnchor="middle" fontSize={pct >= 1000 ? 9 : pct >= 100 ? 10 : 12} className="fill-text font-semibold">
+        {pct >= 1000 ? '999+' : `${Math.round(pct)}%`}
       </text>
     </svg>
   )
@@ -241,9 +243,11 @@ export function Budgets() {
             <Kpi label="On pace for" value={projected} format={m.inr} sub={overCount ? `${overCount} over budget` : 'By month end'} tone={totalLimit && projected > totalLimit ? 'warn' : undefined} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="grid content-start grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {rows.length === 0 && <EmptyState icon={PiggyBank} title="No spending this month yet" hint="Upload a bank or card statement to see budgets by category." className="sm:col-span-2 2xl:col-span-3" />}
+          <div className="space-y-5">
+            <div>
+              <h2 className="mb-3 label-caps">Budgets by category</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {rows.length === 0 && <EmptyState icon={PiggyBank} title="No spending this month yet" hint="Upload a bank or card statement to see budgets by category." className="sm:col-span-2 lg:col-span-3 2xl:col-span-4" />}
               {rows.map((s) => (
                 <CategoryCard key={s.category} s={s} onSave={saveLimit} />
               ))}
@@ -252,9 +256,12 @@ export function Budgets() {
                 <Select label="Category" value="" onChange={(c) => c && void saveLimit(c, 1000).catch(() => {})} className="mt-2 w-full" options={[{ id: '', label: 'Pick a category…' }, ...PICK_CATEGORIES.filter((c) => !settings.budgets[c]).map((c) => ({ id: c, label: c }))]} />
                 <p className="mt-1.5 text-2xs text-text-secondary">Starts at ₹1,000; use Edit to change it.</p>
               </GlassCard>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div>
+              <h2 className="mb-3 label-caps">Review and rules</h2>
+              <div className="gap-4 lg:columns-2 2xl:columns-3 [&>*]:mb-4 [&>*]:break-inside-avoid">
               <Card title="Spend alerts" aside={<AlertTriangle className="h-4 w-4 text-amber-500" />}>
                 {alerts.length === 0 ? (
                   <p className="text-sm text-text-secondary">Nothing unusual in the last few weeks.</p>
@@ -272,38 +279,63 @@ export function Budgets() {
 
               <Card title="Needs a category">
                 {queue.length === 0 ? (
-                  <p className="text-sm text-text-secondary">Everything is filed.</p>
+                  <EmptyState icon={PiggyBank} title="Everything is filed" className="py-4" />
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {queue.map((t) => (
-                      <li key={t.id} className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm text-text">{t.merchant || t.description}</p>
-                          <p className="font-mono text-2xs text-text-secondary">
+                      <li key={t.id} className="flex items-center gap-3">
+                        <Avatar name={t.merchant || t.description} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-text">{t.merchant || t.description}</p>
+                          <p className="text-2xs text-text-secondary">
                             {t.date} · {m.inr(t.debit)}
                           </p>
                         </div>
-                        <Select label={`File ${t.merchant} as`} value="" onChange={(c) => c && void fileAs(suggestMatch(t), c)} className="w-28 shrink-0" options={[{ id: '', label: busy === `rule-${suggestMatch(t)}` ? 'Saving…' : 'File as…' }, ...PICK_CATEGORIES.filter((c) => c !== 'Other').map((c) => ({ id: c, label: c }))]} />
+                        <CategoryPicker value={t.category} categories={PICK_CATEGORIES} title={t.merchant || t.description} busy={busy === `rule-${suggestMatch(t)}`} onPick={(c) => void fileAs(suggestMatch(t), c)} />
                       </li>
                     ))}
                   </ul>
                 )}
               </Card>
 
-              <Card title="Family and ignored" aside={<span className="text-2xs text-text-secondary">top merchants this month</span>}>
-                <ul className="space-y-1.5">
-                  {merchants.map(({ sample, total }) => (
-                    <li key={sample.merchant} className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm text-text">{sample.merchant}</p>
-                        <p className="font-mono text-2xs text-text-secondary">{m.inr(total)}</p>
-                      </div>
-                      <Select label={`Tag ${sample.merchant}`} value={settings.tags[tagKeyForMerchant(sample)] ?? txnTag(sample, settings.tags) ?? ''} onChange={(v) => void tagMerchant(sample, v)} className="w-24 shrink-0" options={TAG_OPTIONS} />
-                    </li>
-                  ))}
+              <Card title="Sort your spending" aside={<span className="text-2xs text-text-secondary">top merchants this month</span>}>
+                <ul className="space-y-4">
+                  {merchants.map(({ sample, total }) => {
+                    const tag = settings.tags[tagKeyForMerchant(sample)] ?? txnTag(sample, settings.tags) ?? ''
+                    return (
+                      <li key={sample.merchant} className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={sample.merchant} size="md" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-text">{sample.merchant}</p>
+                            <p className="text-2xs text-text-secondary">{m.inr(total)}</p>
+                          </div>
+                          <CategoryPicker value={sample.category} categories={PICK_CATEGORIES} title={sample.merchant} busy={busy === `rule-${suggestMatch(sample)}`} onPick={(c) => void fileAs(suggestMatch(sample), c)} />
+                        </div>
+                        <div role="radiogroup" aria-label={`How ${sample.merchant} counts`} className="grid grid-cols-4 gap-1 rounded-xl bg-surface-3 p-1">
+                          {TAG_OPTIONS.map((o) => (
+                            <button
+                              key={o.id || 'spend'}
+                              type="button"
+                              role="radio"
+                              aria-checked={tag === o.id}
+                              title={o.hint}
+                              disabled={busy === `tag-${sample.merchant}`}
+                              onClick={() => void tagMerchant(sample, o.id)}
+                              className={cn('rounded-lg px-1 py-1.5 text-2xs font-semibold transition-colors', tag === o.id ? 'bg-accent text-black shadow' : 'text-text-secondary hover:text-text')}
+                            >
+                              {o.label}
+                            </button>
+                          ))}
+                        </div>
+                      </li>
+                    )
+                  })}
                   {merchants.length === 0 && <li className="text-sm text-text-secondary">No spending this month.</li>}
                 </ul>
-                <p className="mt-2 text-2xs text-text-secondary">Family and Ignore keep a merchant out of spending; Household counts it even if it is a transfer.</p>
+                <p className="mt-3 text-2xs leading-relaxed text-text-secondary">
+                  <strong className="text-text">Spending</strong> counts in budgets. <strong className="text-text">Household</strong> counts even if it is a transfer. <strong className="text-text">Family</strong> and <strong className="text-text">Ignore</strong> keep it out.
+                </p>
               </Card>
 
               <Card title="Category rules">
@@ -337,6 +369,7 @@ export function Budgets() {
                   {settings.rules.length === 0 && <li className="text-2xs text-text-secondary">No rules yet.</li>}
                 </ul>
               </Card>
+              </div>
             </div>
           </div>
         </>

@@ -23,6 +23,8 @@ const RULES = [
   // Food, groceries, shopping.
   [/zomato|swiggy(?! ?ins)|eatsure|hungerbox|dominos|domino's|kfc|mcdonald|pizza|burger|biryani|cafe|coffee|starbucks|restaurant|hotel|mess\b|bakery|\btea\b|juice|foods?\b|dhaba|kitchen|sweets|sagar|udupi|saravana/, 'Food & dining', 'Food & Dining'],
   [/instamart|swiggy ins|blinkit|zepto|bigbasket|bb ?now|dunzo|jiomart|dmart|d-mart|reliance retail|reliance fresh|more retail|supermarket|super market|provision|grocer|vegetable|fruits|milk|dairy|nilgiris|spencer|ratnadeep|wholesale mart|kirana|store\b|mart\b/, 'Groceries', 'Groceries'],
+  // Gold savings schemes and digital gold, before the jewellery/shopping rule below.
+  [/khaz?ana|avr ?gold|augmont|safegold|digigold|digital gold|gold (savings|scheme|plan|coin)|mmtc/, 'Gold Savings', 'Gold Savings'],
   [/amazon|amzn|flipkart|myntra|ajio|meesho|nykaa|croma|reliance digital|lenskart|decathlon|tata cliq|shoppers stop|lifestyle|pantaloons|max fashion|westside|zudio|jewel|khazana|thangamayil|tanishq|malabar|joyalukkas|silks|textile|readymade|garments|footwear|bata|khadim|electronics|mobile|ecommerce|shop\b|shopping/, 'Shopping', 'Shopping'],
   // Bills and subscriptions.
   [/bescom|bangalore electricity|tangedco|tnpdcl|tneb|electricity|eb bill|power bill|cesc|msedcl|bses/, 'Electricity', 'Bills & Utilities'],
@@ -46,7 +48,7 @@ const RULES = [
   [/salary|sal\/|payroll|motherson|cms\/|cgi|infosys|wipro|tcs\b|solium|hsbc|neft.*(ltd|limited|pvt|technolog)|\bnre\b/, 'Salary / employer', 'Salary'],
 ]
 
-const CATEGORIES = new Set(['Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Groceries', 'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education', 'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other'])
+const CATEGORIES = new Set(['Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Gold Savings', 'Groceries', 'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education', 'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other'])
 
 function channelOf(desc) {
   const d = desc.toUpperCase()

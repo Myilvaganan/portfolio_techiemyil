@@ -28,10 +28,10 @@ const SIZES = {
 
 const initials = (name: string) =>
   name
-    .trim()
-    .split(/\s+/)
+    .split(/[\s()/_.-]+/)
+    .filter((w) => /[\p{L}\p{N}]/u.test(w))
     .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
+    .map((w) => (w.match(/[\p{L}\p{N}]/u)?.[0] ?? '').toUpperCase())
     .join('') || '?'
 
 /** A round avatar: a photo when there is one, otherwise coloured initials. */

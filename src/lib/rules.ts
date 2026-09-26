@@ -47,3 +47,21 @@ export function suggestMatch(t: Pick<Txn, 'merchant' | 'description'>): string {
   if (m.length >= 2) return m.slice(0, 80)
   return t.description.trim().split(/\s+/).slice(0, 3).join(' ').slice(0, 80)
 }
+
+// Built-in smart tagging, applied under the saved rules so anything you file by hand always wins.
+export const GOLD_SAVINGS = 'Gold Savings'
+const GOLD_RE = /khaz?ana|avr ?gold|augmont|safegold|digigold|digital gold|gold (savings|scheme|plan|coin)|mmtc/i
+
+/**
+ * Files gold-savings schemes under Gold Savings, and any bank debit that matches an EMI of one of the running loans
+ * (to the rupee, and not a transfer or card bill) under EMI & Loans.
+ */
+export function applySmartRules(txns: Txn[], emis: number[] = []): Txn[] {
+  const emiSet = emis.filter((e) => e >= 1000)
+  return txns.map((t) => {
+    if (LOCKED.has(t.category) || t.credit > 0) return t
+    if (GOLD_RE.test(`${t.merchant} ${t.description}`)) return t.category === GOLD_SAVINGS ? t : { ...t, category: GOLD_SAVINGS }
+    if (t.debit > 0 && t.category !== 'EMI & Loans' && emiSet.some((e) => Math.abs(t.debit - e) < 1) && !/ICICI BANK CREDIT CA/i.test(t.description)) return { ...t, category: 'EMI & Loans' }
+    return t
+  })
+}

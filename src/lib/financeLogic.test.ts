@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Txn } from './statements'
-import { applyRules, reviewQueue, ruleMatches } from './rules'
+import { applyRules, applySmartRules, reviewQueue, ruleMatches } from './rules'
 import { budgetNotices, budgetStatus, countsAsSpend, spentByCategory, tagKeyForMerchant } from './budget'
 import { cashFlow, latestBalance, monthlyFlow } from './cashflow'
 import { spendAlerts } from './anomalies'
@@ -84,5 +84,21 @@ describe('anomalies', () => {
     expect(titles).toContain('Unusually large spend at Cafe')
     expect(titles).toContain('Possible double debit at Shop')
     expect(titles).toContain('Netflix costs more now')
+  })
+})
+
+describe('applySmartRules', () => {
+  const tx = (merchant: string, debit: number, category = 'Shopping', description = merchant) => ({ id: merchant + debit, statementId: 's', accountKey: 'a', date: '2026-09-01', description, merchant, debit, credit: 0, category })
+  it('files Khazana and AVR Gold under Gold Savings', () => {
+    const out = applySmartRules([tx('Khazana Je', 15000), tx('AVR Gold', 5000, 'Other'), tx('Amazon', 300)])
+    expect(out.map((t) => t.category)).toEqual(['Gold Savings', 'Gold Savings', 'Shopping'])
+  })
+  it('files a debit equal to a loan EMI under EMI & Loans, but not a card bill', () => {
+    const out = applySmartRules([tx('Icici Bank', 27782, 'Other'), tx('X', 27782, 'Other', 'ICICI BANK CREDIT CARD'), tx('Zomato', 27000, 'Food & Dining')], [27782, 45000])
+    expect(out.map((t) => t.category)).toEqual(['EMI & Loans', 'Other', 'Food & Dining'])
+  })
+  it('lets a saved rule override the built-in ones', () => {
+    const out = applyRules(applySmartRules([tx('Khazana Je', 15000)]), [{ id: '1', match: 'khazana', category: 'Shopping' }])
+    expect(out[0].category).toBe('Shopping')
   })
 })
