@@ -47,7 +47,7 @@ export function Admin() {
   return (
     <>
       <Helmet>
-        <title>Admin — Techie Myil Studio</title>
+        <title>techiemyil.com</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen bg-bg text-text">

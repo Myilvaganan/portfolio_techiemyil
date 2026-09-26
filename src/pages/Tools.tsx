@@ -8,7 +8,7 @@ export function Tools() {
   return (
     <section className="relative py-28 sm:py-32">
       <Helmet>
-        <title>Free Margin &amp; Position Size Calculator — Techie Myil</title>
+        <title>Free Margin &amp; Position Size Calculator — techiemyil.com</title>
         <meta name="description" content="Free margin calculator for gold (XAUUSD), US30, Bitcoin and forex: live prices, leverage per instrument, margin needed, profit and loss in USD and INR." />
         <link rel="canonical" href="https://portfolio.techiemyil.com/tools" />
         <meta property="og:title" content="Free Margin & Position Size Calculator" />

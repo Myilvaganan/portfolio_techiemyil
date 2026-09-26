@@ -16,7 +16,7 @@ export function ComingSoonPage({ icon: Icon, title, description }: ComingSoonPag
   return (
     <section className="relative flex min-h-screen items-center py-32">
       <Helmet>
-        <title>{`${title} — Techie Myil`}</title>
+        <title>{`${title} — techiemyil.com`}</title>
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <Container className="flex flex-col items-center text-center">
