@@ -10,6 +10,7 @@ import { formatInr } from '@/lib/kite'
 import { noticesFrom, type Notice } from '@/lib/pulse'
 import { useAdminPulse } from '@/hooks/useAdminPulse'
 import { useIdleLock } from '@/hooks/useIdleLock'
+import { UI_SCALES, useUiScale, type UiScaleId } from '@/hooks/useUiScale'
 import { GlobalSearch } from './GlobalSearch'
 
 interface NavItem {
@@ -101,7 +102,36 @@ function useOutsideClick(onOutside: () => void) {
   return ref
 }
 
-function ProfileMenu({ onLogout }: { onLogout: () => void }) {
+interface ScaleProps {
+  scale: UiScaleId
+  onScale: (id: UiScaleId) => void
+}
+
+function SizePicker({ scale, onScale }: ScaleProps) {
+  return (
+    <div>
+      <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-text-secondary/70">Display size</p>
+      <div role="radiogroup" aria-label="Display size" className="grid grid-cols-4 gap-1.5">
+        {UI_SCALES.map((s, i) => (
+          <button
+            key={s.id}
+            type="button"
+            role="radio"
+            aria-checked={scale === s.id}
+            aria-label={s.label}
+            onClick={() => onScale(s.id)}
+            className={cn('flex h-11 items-center justify-center rounded-xl border font-semibold transition-colors', scale === s.id ? 'border-accent/40 bg-accent/15 text-accent' : 'border-border bg-surface-2 text-text')}
+            style={{ fontSize: `${12 + i * 2.5}px` }}
+          >
+            A
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ProfileMenu({ onLogout, scale, onScale }: { onLogout: () => void } & ScaleProps) {
   const [open, setOpen] = useState(false)
   const ref = useOutsideClick(() => setOpen(false))
   const navigate = useNavigate()
@@ -123,6 +153,9 @@ function ProfileMenu({ onLogout }: { onLogout: () => void }) {
           <div className="border-b border-border px-4 py-3">
             <p className="text-sm font-medium text-text">Admin</p>
             <p className="text-xs text-text-secondary">Administrator</p>
+          </div>
+          <div className="border-b border-border p-3">
+            <SizePicker scale={scale} onScale={onScale} />
           </div>
           <button
             type="button"
@@ -267,7 +300,7 @@ const tap = () => {
 }
 
 /** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
-function MobileTabBar({ onLogout }: { onLogout: () => void }) {
+function MobileTabBar({ onLogout, scale, onScale }: { onLogout: () => void } & ScaleProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [sheet, setSheet] = useState<null | 'finance' | 'more'>(null)
@@ -326,6 +359,11 @@ function MobileTabBar({ onLogout }: { onLogout: () => void }) {
                 </div>
               ))}
               {sheet === 'more' && (
+                <div className="mb-4">
+                  <SizePicker scale={scale} onScale={onScale} />
+                </div>
+              )}
+              {sheet === 'more' && (
                 <div className="grid grid-cols-2 gap-2.5">
                   <button type="button" onClick={() => navigate('/')} className="rounded-2xl border border-border bg-surface-2 py-3 text-xs font-medium text-text">
                     Visit Website
@@ -374,6 +412,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   // After a few idle minutes the numbers turn to stars. Signing in lasts 30 days, so this never signs out.
   useIdleLock(() => {}, { lockAfter: Infinity })
   const { pathname } = useLocation()
+  const { scale, setScale } = useUiScale()
 
   return (
     <div className="touch-app min-h-screen bg-bg">
@@ -437,7 +476,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <NotificationBell />
-            <ProfileMenu onLogout={onLogout} />
+            <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} />
           </div>
         </header>
 
@@ -445,7 +484,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           {children}
         </motion.main>
       </div>
-      <MobileTabBar onLogout={onLogout} />
+      <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} />
     </div>
   )
 }
