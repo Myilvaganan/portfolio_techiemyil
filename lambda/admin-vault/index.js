@@ -6,7 +6,7 @@
 const crypto = require('crypto')
 const { S3Client, ListObjectsV2Command, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
-const { createStatementsApi } = require('./statements')
+const { createStatementsApi, readPdf: statementsReadPdf, detectBank: statementsDetectBank } = require('./statements')
 const { createJournalApi } = require('./journal')
 const { createHealthApi } = require('./health')
 const { createTaxApi } = require('./tax')
@@ -15,6 +15,7 @@ const { createSecurityApi } = require('./security')
 const { createFinanceApi } = require('./finance')
 const { createWealthApi } = require('./wealth')
 const { createInvestApi } = require('./invest')
+const { createInboxApi } = require('./inbox')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -43,6 +44,15 @@ const journalApi = createJournalApi({ s3, bucket: S3_BUCKET })
 const healthApi = createHealthApi({ s3, bucket: S3_BUCKET })
 const taxApi = createTaxApi({ s3, bucket: S3_BUCKET })
 const platformApi = createPlatformApi({ s3, bucket: S3_BUCKET })
+const inboxApi = createInboxApi({
+  s3,
+  bucket: S3_BUCKET,
+  ingestKey: process.env.ADMIN_INGEST_KEY,
+  secretKey: process.env.ADMIN_2FA_KEY || JWT_SECRET,
+  statementsApi,
+  readPdf: statementsReadPdf,
+  detectBank: statementsDetectBank,
+})
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
 const investApi = createInvestApi({ s3, bucket: S3_BUCKET })
@@ -579,6 +589,11 @@ exports.handler = async (event) => {
       return respond(result.statusCode, result.body)
     }
 
+    if (method === 'POST' && path === '/ingest/statement') {
+      const result = await inboxApi.ingest(event.headers || {}, payload)
+      return respond(result.statusCode, result.body)
+    }
+
     if (path.startsWith('/public/')) {
       const result = await platformApi.publicRoute({ method, path, payload, ip: event.requestContext?.http?.sourceIp })
       if (result) return respond(result.statusCode, result.body)
@@ -618,6 +633,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/journal')) {
       const result = await journalApi({ method, path, payload, query: queryParams })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path.startsWith('/admin/inbox')) {
+      const result = await inboxApi.adminRoute({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 

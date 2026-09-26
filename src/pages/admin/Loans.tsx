@@ -4,6 +4,7 @@ import { HandCoins, Plus, RefreshCw } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { AiInsightsPanel, AskAi } from '@/components/statements/AiPanel'
 import { StatementUploader } from '@/components/statements/StatementUploader'
+import { EmailInbox } from '@/components/statements/EmailInbox'
 import { Card, Chips, Kpi } from '@/components/statements/parts'
 import { AdvicePanel } from '@/components/loans/AdvicePanel'
 import { Calculators } from '@/components/loans/Calculators'
@@ -89,6 +90,7 @@ export function Loans() {
 
         {s.error && <p role="alert" className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{s.error}</p>}
 
+        <EmailInbox kind="loan" onProcessed={() => void s.reload()} />
         <AnimatePresence initial={false}>
           {showUploader && (
             <motion.div key="uploader" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">

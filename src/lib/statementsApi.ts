@@ -207,3 +207,57 @@ async function processBankOrCardFile({ kind, file, password, resumeId, prepared,
   const saved = await post('/admin/statements/commit', { kind, id, filename: file.name, meta, transactions: transactions.flat() })
   return { statement: saved.statement, replaced: saved.replaced }
 }
+
+// ---------- Statements that arrived by email ----------
+
+export interface InboxItem {
+  id: string
+  filename: string
+  subject: string
+  from: string
+  receivedAt: string
+  size: number
+  guess: VaultKind
+  status: 'new' | 'ready' | 'done' | 'failed' | 'skipped'
+  kind?: VaultKind
+  error?: string
+}
+
+export interface InboxData {
+  items: InboxItem[]
+  passwords: { id: string; label: string }[]
+  configured: boolean
+}
+
+export const fetchInbox = (): Promise<InboxData> => api('/admin/inbox')
+export const addInboxPassword = (label: string, password: string) => post('/admin/inbox/passwords', { label, password })
+export const removeInboxPassword = (id: string) => api(`/admin/inbox/passwords?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+export const skipInboxItem = (id: string) => post('/admin/inbox/skip', { id })
+
+/**
+ * Reads one emailed statement with the same steps as an upload: the server unlocks it with a saved password and hands
+ * it to the statement pipeline, then it is read and saved here. Returns what was saved.
+ */
+export async function processInboxItem(item: InboxItem, onProgress: (p: Progress) => void): Promise<{ kind: VaultKind; label: string }> {
+  onProgress({ stage: 'unlocking' })
+  const prep = await post('/admin/inbox/prepare', { id: item.id })
+  const kind = prep.kind as VaultKind
+  let statementId = prep.statementId as string
+  let label = ''
+  if (kind === 'loan') {
+    onProgress({ stage: 'reading', done: 0, total: 1 })
+    const parsed = parseLoanDocument(prep.lines as string[])
+    if (!parsed.ok) throw new StatementError(parsed.error)
+    onProgress({ stage: 'saving' })
+    const saved = await post('/admin/statements/commit', { kind: 'loan', id: statementId, filename: item.filename, pages: prep.pages, parsed: parsed.doc })
+    statementId = saved.statement.id
+    label = parsed.doc.docType === 'schedule' ? 'Loan schedule' : 'Loan statement'
+  } else {
+    const file = new File([], item.filename, { type: 'application/pdf' })
+    const saved = await processStatementFile({ kind, file, prepared: { id: prep.id as string, chunks: prep.chunks as number }, onProgress })
+    statementId = saved.statement.id
+    label = `${kind === 'card' ? 'Card' : 'Bank'} statement · ${saved.statement.txnCount} transactions`
+  }
+  await post('/admin/inbox/done', { id: item.id, statementId })
+  return { kind, label }
+}

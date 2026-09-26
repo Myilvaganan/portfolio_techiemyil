@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -386,3 +386,21 @@ If you rotate `ADMIN_JWT_SECRET` (or `ADMIN_2FA_KEY`), the stored secret can no 
 | `GET/POST/DELETE /admin/invest/reminders` | `_data/invest/reminders.json` | Custom reminders |
 
 All writes use S3 conditional requests and retry on a conflict.
+
+## Statements by email (`inbox.js`, `gmail-forwarder.gs`)
+
+A small Google Apps Script running inside my own Gmail (`gmail-forwarder.gs`, pasted into script.google.com) looks for statement
+emails from the banks (`icici.bank.in`, `icicibank.com`, `axis.bank.in`, `axisbank.com`) that have a PDF, and posts each one to
+`POST /ingest/statement` with the header `x-ingest-key`. AWS never reads Gmail, and the key can only add PDFs to the inbox.
+
+| Route | What it does |
+| --- | --- |
+| `POST /ingest/statement` | No login; needs `x-ingest-key` (the `ADMIN_INGEST_KEY` environment variable). Checks the sender domain, that it is a real PDF, and a 4 MB cap; a re-send is ignored (matched by file hash) |
+| `GET /admin/inbox` | Waiting items and the labels of the saved PDF passwords |
+| `POST /admin/inbox/prepare` `{ id }` | Unlocks the PDF with a saved password, works out whether it is a bank, card or loan statement, and hands it to the normal statement pipeline; the browser then reads and saves it |
+| `POST /admin/inbox/done` · `/skip` | Mark an item finished or dismiss it |
+| `POST /admin/inbox/passwords` · `DELETE ...?id=` | Manage the PDF passwords (AES-256-GCM in `_data/inbox/passwords.json`, never sent back) |
+
+The Bank Statements, Credit Cards and Loans pages show what is waiting, with a "Read it" button and an optional
+"Read automatically when I open this page" switch. To rotate the ingest key, change `ADMIN_INGEST_KEY` on the function and the
+`INGEST_KEY` script property in Google.

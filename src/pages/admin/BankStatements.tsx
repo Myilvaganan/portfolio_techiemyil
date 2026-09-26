@@ -6,6 +6,7 @@ import { AiInsightsPanel, AiPeriodPicker, AskAi } from '@/components/statements/
 import { RecurringCard } from '@/components/statements/RecurringCard'
 import { StatementLibrary } from '@/components/statements/StatementLibrary'
 import { StatementUploader } from '@/components/statements/StatementUploader'
+import { EmailInbox } from '@/components/statements/EmailInbox'
 import { TransactionsTable } from '@/components/statements/TransactionsTable'
 import { Card, Chips, Kpi, RANGE_OPTIONS, inr, pct, rangeFrom, signedInr, type RangeId } from '@/components/statements/parts'
 import { AreaChart, BarChart, CalendarHeatmap, Donut, HBars, Legend, vizColor } from '@/components/viz/charts'
@@ -111,6 +112,7 @@ export function BankStatements() {
 
         {s.error && <p role="alert" className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{s.error}</p>}
 
+        <EmailInbox kind="bank" onProcessed={() => void s.reload()} />
         <AnimatePresence initial={false}>
           {showUploader && (
             <motion.div key="uploader" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">

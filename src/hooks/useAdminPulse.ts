@@ -8,7 +8,7 @@ import { fetchLoanDocs } from '@/lib/statementsApi'
 import { fetchReports } from '@/lib/healthApi'
 import { fetchAnalytics, fetchMessages } from '@/lib/platformApi'
 import { buildPulse, type Notice, type Pulse } from '@/lib/pulse'
-import { fetchStatements } from '@/lib/statementsApi'
+import { fetchInbox, fetchStatements } from '@/lib/statementsApi'
 import { fetchFinance } from '@/lib/financeApi'
 import { fetchReminders } from '@/lib/investApi'
 import { applyRules } from '@/lib/rules'
@@ -24,11 +24,12 @@ const settle = <T,>(p: Promise<T>) => p.catch(() => null)
 
 /** Warnings from the money features. Any source that fails to load is skipped rather than blocking the rest. */
 async function moneyNotices(today: string): Promise<Notice[]> {
-  const [bank, card, settings, custom] = await Promise.all([
+  const [bank, card, settings, custom, inbox] = await Promise.all([
     settle(fetchStatements('bank')),
     settle(fetchStatements('card')),
     settle(fetchFinance()),
     settle(fetchReminders()),
+    settle(fetchInbox()),
   ])
   const out: Notice[] = []
   const rules = settings?.rules ?? []
@@ -39,6 +40,11 @@ async function moneyNotices(today: string): Promise<Notice[]> {
   if (card) for (const n of cardDueNotices(buildCardDues(card.transactions, card.statements, today), today)) out.push({ ...n, tone: 'warn', to: '/admin/credit-cards' })
   for (const n of dueReminders(buildReminders(bankTxns, today, custom ?? []), today, 14)) out.push({ ...n, tone: 'info', to: '/admin/investments' })
   for (const n of spendAlerts(all, today).slice(0, 3)) out.push({ ...n, tone: 'info', to: '/admin/budgets' })
+  const waiting = (inbox?.items ?? []).filter((i) => ['new', 'ready', 'failed'].includes(i.status))
+  if (waiting.length) {
+    const to = { bank: '/admin/bank-statements', card: '/admin/credit-cards', loan: '/admin/loans' }[waiting[0].kind ?? waiting[0].guess] ?? '/admin/bank-statements'
+    out.push({ id: `inbox-${waiting.length}`, tone: 'info', title: `${waiting.length} statement${waiting.length === 1 ? '' : 's'} arrived by email`, detail: 'Open the page to read them into your accounts.', to })
+  }
   return out
 }
 
