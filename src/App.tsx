@@ -19,13 +19,14 @@ import { useVisitNotify } from '@/hooks/useVisitNotify'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { ResumeDownloadProvider } from '@/hooks/useResumeDownload'
 import { Home } from '@/pages/Home'
+import { retryImport } from '@/lib/lazyRetry'
 
-const AtAGlance = lazy(() => import('@/pages/AtAGlance').then((m) => ({ default: m.AtAGlance })))
-const Blog = lazy(() => import('@/pages/Blog').then((m) => ({ default: m.Blog })))
-const Pricing = lazy(() => import('@/pages/Pricing').then((m) => ({ default: m.Pricing })))
-const Tools = lazy(() => import('@/pages/Tools').then((m) => ({ default: m.Tools })))
-const Admin = lazy(() => import('@/pages/Admin').then((m) => ({ default: m.Admin })))
-const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
+const AtAGlance = lazy(() => retryImport(() => import('@/pages/AtAGlance')).then((m) => ({ default: m.AtAGlance })))
+const Blog = lazy(() => retryImport(() => import('@/pages/Blog')).then((m) => ({ default: m.Blog })))
+const Pricing = lazy(() => retryImport(() => import('@/pages/Pricing')).then((m) => ({ default: m.Pricing })))
+const Tools = lazy(() => retryImport(() => import('@/pages/Tools')).then((m) => ({ default: m.Tools })))
+const Admin = lazy(() => retryImport(() => import('@/pages/Admin')).then((m) => ({ default: m.Admin })))
+const NotFound = lazy(() => retryImport(() => import('@/pages/NotFound')).then((m) => ({ default: m.NotFound })))
 
 function AppShell() {
   const location = useLocation()

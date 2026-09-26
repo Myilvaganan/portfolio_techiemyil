@@ -3,12 +3,13 @@ import { Helmet } from 'react-helmet-async'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { getStoredToken } from '@/lib/adminAuth'
+import { retryImport } from '@/lib/lazyRetry'
 import { AdminLogin } from '@/components/admin/AdminLogin'
 import { AdminShell } from '@/components/admin/AdminShell'
 import { DashboardHome } from '@/pages/admin/DashboardHome'
 
 // Each page is its own chunk, so opening the admin only downloads the page you're on.
-const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => lazy(async () => ({ default: (await load())[name] }))
+const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => lazy(async () => ({ default: (await retryImport(load))[name] }))
 
 const DocumentManager = page(() => import('@/components/admin/DocumentManager'), 'DocumentManager')
 const MarginCalculator = page(() => import('@/pages/admin/MarginCalculator'), 'MarginCalculator')

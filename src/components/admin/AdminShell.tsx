@@ -252,10 +252,8 @@ function NotificationBell() {
 
 export function AdminShell({ children, onLogout }: { children: ReactNode; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  useIdleLock(() => {
-    clearStoredToken()
-    onLogout()
-  })
+  // After a few idle minutes the numbers turn to stars. Signing in lasts 30 days, so this never signs out.
+  useIdleLock(() => {}, { lockAfter: Infinity })
 
   return (
     <div className="min-h-screen bg-bg">

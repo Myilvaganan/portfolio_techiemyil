@@ -30,7 +30,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
   .map((o) => o.trim())
   .filter(Boolean)
 
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 const UPLOAD_URL_TTL_SECONDS = 300 // 5 min
 const DOWNLOAD_URL_TTL_SECONDS = 120 // 2 min
 const MAX_FILENAME_LENGTH = 150
