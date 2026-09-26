@@ -3,7 +3,7 @@
 // by alias and contract names are normalised to the NSE symbol style the
 // analytics engine understands (e.g. NIFTY2592524500CE).
 
-import { parseOptionSymbol, type Fill } from './optionsAnalytics'
+import { DEFAULT_CHARGE_RATES, parseOptionSymbol, type Fill } from './optionsAnalytics'
 
 export type Cell = string | number | boolean | Date | null | undefined
 
@@ -398,6 +398,20 @@ function hash(s: string) {
   return (h >>> 0).toString(16).padStart(8, '0')
 }
 
+// Some registers (GoPocket) print only the brokerage. The other levies follow standard rates, so they are estimated per fill
+// while the brokerage stays the real figure from the file.
+function completeCharges(brokerage: number, side: 'BUY' | 'SELL', turnover: number): NonNullable<Fill['chg']> {
+  const r = DEFAULT_CHARGE_RATES
+  const stt = side === 'SELL' ? (turnover * r.sttSellPct) / 100 : 0
+  const exchange = (turnover * r.exchangePct) / 100
+  const sebi = (turnover / 1e7) * r.sebiPerCrore
+  const gst = ((brokerage + exchange + sebi) * r.gstPct) / 100
+  const stamp = side === 'BUY' ? (turnover * r.stampBuyPct) / 100 : 0
+  const round = (n: number) => Math.round(n * 100) / 100
+  const parts = { stt: round(stt), exchange: round(exchange), stamp: round(stamp), sebi: round(sebi), brokerage: round(brokerage), gst: round(gst) }
+  return { ...parts, total: round(parts.stt + parts.exchange + parts.stamp + parts.sebi + parts.brokerage + parts.gst) }
+}
+
 export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping): ImportResult {
   // Excel sometimes hands back dates/times as raw serial numbers instead of date cells.
   const get = (row: Cell[], key: FieldKey) => {
@@ -417,6 +431,8 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
   const unrecognised = new Set<string>()
   const notes: string[] = []
   const summaryMode = mapping.side === undefined && hasSummaryColumns(mapping)
+  const brokerageOnly = mapping.chgBrokerage !== undefined && !(['chgStt', 'chgExchange', 'chgStamp', 'chgSebi', 'chgGst', 'chgOther', 'chgTotal'] as const).some((k) => mapping[k] !== undefined)
+  let estimatedRest = false
   const parsed: { fill: Omit<Fill, 'ts'> & { ts: number }; hasTime: boolean }[] = []
   let ignoredRows = 0
 
@@ -495,7 +511,11 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
       continue
     }
     let chg: Fill['chg']
-    if (chargeCols.length) {
+    const isBuy = /^(b|buy|purchase|bought)/.test(sideText)
+    if (brokerageOnly && !summaryMode) {
+      chg = completeCharges(money(row, 'chgBrokerage'), isBuy ? 'BUY' : 'SELL', qty * price)
+      estimatedRest = true
+    } else if (chargeCols.length) {
       const parts = { stt: money(row, 'chgStt'), exchange: money(row, 'chgExchange'), stamp: money(row, 'chgStamp'), sebi: money(row, 'chgSebi'), brokerage: money(row, 'chgBrokerage'), gst: money(row, 'chgGst') }
       const sum = parts.stt + parts.exchange + parts.stamp + parts.sebi + parts.brokerage + parts.gst + money(row, 'chgOther')
       chg = { ...parts, total: money(row, 'chgTotal') || sum }
@@ -536,6 +556,7 @@ export function rowsToFills(rows: Cell[][], headerIdx: number, mapping: Mapping)
     const id = fill.id || `h${hash(base)}-${n}`
     return { ...fill, id, orderId: fill.orderId || `o${id}` }
   })
+  if (estimatedRest && fills.length) notes.push('This file lists only brokerage. STT, exchange, SEBI, GST and stamp duty were estimated at standard rates; brokerage is the real figure from the file.')
   return { fills, optionRows: fills.length, ignoredRows, unrecognised: [...unrecognised], notes }
 }
 
@@ -559,7 +580,53 @@ export function analyseRows(rows: Cell[][]): FileParse {
   return { rows, headerIdx: idx, mapping, problems: mappingProblems(mapping) }
 }
 
+// ---------- HTML reports ----------
+
+const cleanText = (el: Element) => (el.textContent ?? '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+
+// Back-office "Trade Register" pages (GoPocket and other Stansoft-based brokers) list the date once as a
+// "Trade Date : 15/09/26" line above that day's rows, and give purchase and sale quantity in separate columns.
+export function htmlToRows(html: string): Cell[][] {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const tables = Array.from(doc.querySelectorAll('table'))
+  const table = doc.querySelector<HTMLTableElement>('#ReportTable') ?? tables.sort((a, b) => b.rows.length - a.rows.length)[0]
+  if (!table) return []
+  const rows = Array.from(table.rows).map((tr) => Array.from(tr.cells).map(cleanText))
+
+  const headerAt = rows.findIndex((r) => r.length >= 8 && r.some((c) => /purchase/i.test(c)) && r.some((c) => /sale/i.test(c)))
+  if (headerAt < 0) return rows.filter((r) => r.some(Boolean))
+
+  const header = rows[headerAt].map(norm)
+  // Earlier names win: the register's Net Rate carries four decimals, while Market Rate is rounded to two.
+  const col = (...names: string[]) => names.map((n) => header.indexOf(n)).find((i) => i >= 0) ?? -1
+  const iName = col('shareinstrument', 'instrument', 'scrip')
+  const iBuy = col('yourpurchase', 'purchase')
+  const iSell = col('yoursale', 'sale')
+  const iRate = col('netrate', 'marketrate', 'rate')
+  const iBrk = col('brokerage')
+  const out: Cell[][] = [['Trade Date', 'Instrument', 'Buy/Sell', 'Quantity', 'Price', 'Brokerage']]
+  let date = ''
+  for (const r of rows.slice(headerAt + 1)) {
+    const nonEmpty = r.filter(Boolean)
+    const section = /trade\s*date\s*:\s*(.+)$/i.exec(nonEmpty[0] ?? '')
+    if (nonEmpty.length === 1 && section) {
+      date = section[1].trim()
+      continue
+    }
+    // Data rows have the segment filled in; totals rows leave it blank.
+    if (!date || r.length !== header.length || !r[0] || !r[iName]) continue
+    const buy = toNumber(r[iBuy])
+    const sell = toNumber(r[iSell])
+    const price = toNumber(r[iRate])
+    const brk = iBrk >= 0 ? toNumber(r[iBrk]) : 0
+    if (buy > 0) out.push([date, r[iName], 'BUY', buy, price, brk])
+    else if (sell > 0) out.push([date, r[iName], 'SELL', sell, price, brk])
+  }
+  return out
+}
+
 export async function readTradeFile(file: File): Promise<Cell[][]> {
+  if (/\.html?$/i.test(file.name)) return htmlToRows(await file.text())
   if (/\.xlsx$/i.test(file.name)) {
     const { default: readExcelFile } = await import('read-excel-file/browser')
     const sheets = (await readExcelFile(file)) as unknown as { data: Cell[][] }[]

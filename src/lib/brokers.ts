@@ -16,7 +16,11 @@ export const BROKERS: Broker[] = [
   { id: 'dhan', label: 'Dhan', exportHint: GENERIC_HINT },
   { id: 'icici', label: 'ICICI Direct', exportHint: GENERIC_HINT },
   { id: 'groww', label: 'Groww', exportHint: GENERIC_HINT },
-  { id: 'pocketful', label: 'Pocketful (GoPocket)', exportHint: GENERIC_HINT },
+  {
+    id: 'pocketful',
+    label: 'Pocketful (GoPocket)',
+    exportHint: 'Back office → Reports → Trade Register (date-wise, party-wise) → pick the dates → save the page as .htm (or download CSV/Excel). The register lists brokerage only, so other charges are estimated.',
+  },
   { id: 'indmoney', label: 'INDmoney', exportHint: GENERIC_HINT },
 ]
 

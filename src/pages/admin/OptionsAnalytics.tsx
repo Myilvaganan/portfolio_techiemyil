@@ -701,7 +701,7 @@ export function OptionsAnalytics() {
           <div className="rounded-3xl border-2 border-dashed border-accent bg-card/90 px-10 py-8 text-center shadow-2xl">
             <FileUp className="mx-auto mb-2 h-8 w-8 text-accent" />
             <p className="text-sm font-semibold text-text">Drop your {brokerLabel(active)} tradebooks here</p>
-            <p className="mt-1 text-xs text-text-secondary">Any number of CSV or Excel files</p>
+            <p className="mt-1 text-xs text-text-secondary">Any number of CSV, Excel or HTML report files</p>
           </div>
         </div>
       )}
@@ -720,7 +720,7 @@ export function OptionsAnalytics() {
           <input
             ref={fileRef}
             type="file"
-            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            accept=".csv,.xlsx,.htm,.html,text/csv,text/html,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             multiple
             className="hidden"
             onChange={handleFiles}
@@ -819,7 +819,7 @@ export function OptionsAnalytics() {
             <>
               <h2 className="font-display text-xl font-semibold text-text">Import your options trade history</h2>
               <p className="text-sm text-text-secondary">
-                Choose your broker above, then import its F&amp;O trade book as CSV or Excel. Each broker is stored and analysed separately; this tab combines them.
+                Choose your broker above, then import its F&amp;O trade book as CSV, Excel or HTML. Each broker is stored and analysed separately; this tab combines them.
               </p>
             </>
           ) : (
