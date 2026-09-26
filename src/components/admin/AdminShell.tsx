@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, Menu, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { AlertTriangle, Bell, Handshake, MessagesSquare, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -254,27 +255,129 @@ function NotificationBell() {
   )
 }
 
-export function AdminShell({ children, onLogout }: { children: ReactNode; onLogout: () => void }) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  // After a few idle minutes the numbers turn to stars. Signing in lasts 30 days, so this never signs out.
-  useIdleLock(() => {}, { lockAfter: Infinity })
+const FINANCE_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Finance')!
+const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Finance')
+
+const tap = () => {
+  try {
+    navigator.vibrate?.(8)
+  } catch {
+    /* haptics are optional */
+  }
+}
+
+/** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
+function MobileTabBar({ onLogout }: { onLogout: () => void }) {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const [sheet, setSheet] = useState<null | 'finance' | 'more'>(null)
+  useEffect(() => setSheet(null), [pathname])
+
+  const inFinance = FINANCE_SECTION.items.some((i) => pathname.startsWith(i.to))
+  const tab = (active: boolean) =>
+    cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
+  const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
+    <NavLink to={to} end={end} onClick={tap} className={({ isActive }) => tab(isActive && !sheet)}>
+      <Icon className="h-5 w-5" />
+      {label}
+    </NavLink>
+  )
+  const sections = sheet === 'finance' ? [FINANCE_SECTION] : MORE_SECTIONS
 
   return (
-    <div className="min-h-screen bg-bg">
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-card transition-transform duration-300 lg:translate-x-0',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+    <div className="lg:hidden">
+      <AnimatePresence>
+        {sheet && (
+          <>
+            <motion.div key="scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/60" onClick={() => setSheet(null)} />
+            <motion.div
+              key="sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.6 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 90 || info.velocity.y > 500) setSheet(null)
+              }}
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-3xl border-t border-border bg-card px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3"
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-15" />
+              {sections.map((section, idx) => (
+                <div key={section.label ?? idx} className="mb-4">
+                  {section.label && sheet === 'more' && <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {section.items.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.to === '/admin'}
+                        className={({ isActive }) =>
+                          cn('flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
+                        }
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span className="leading-tight">{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {sheet === 'more' && (
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button type="button" onClick={() => navigate('/')} className="rounded-2xl border border-border bg-surface-2 py-3 text-xs font-medium text-text">
+                    Visit Website
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearStoredToken()
+                      onLogout()
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface-2 py-3 text-xs font-medium text-error"
+                  >
+                    <LogOut className="h-4 w-4" /> Sign out
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
         )}
-      >
+      </AnimatePresence>
+
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[60] flex border-t border-border bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+        {link('/admin', 'Home', LayoutDashboard, true)}
+        {link('/admin/chat', 'Ask', MessagesSquare)}
+        <button type="button" onClick={() => {
+            tap()
+            setSheet(sheet === 'finance' ? null : 'finance')
+          }} className={tab(sheet === 'finance' || (!sheet && inFinance))}>
+          <Wallet className="h-5 w-5" />
+          Finance
+        </button>
+        {link('/admin/documents', 'Docs', FolderOpen)}
+        <button type="button" onClick={() => {
+            tap()
+            setSheet(sheet === 'more' ? null : 'more')
+          }} className={tab(sheet === 'more')}>
+          <LayoutGrid className="h-5 w-5" />
+          More
+        </button>
+      </nav>
+    </div>
+  )
+}
+
+export function AdminShell({ children, onLogout }: { children: ReactNode; onLogout: () => void }) {
+  // After a few idle minutes the numbers turn to stars. Signing in lasts 30 days, so this never signs out.
+  useIdleLock(() => {}, { lockAfter: Infinity })
+  const { pathname } = useLocation()
+
+  return (
+    <div className="touch-app min-h-screen bg-bg">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
           <Logo />
         </div>
@@ -293,7 +396,6 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
                     key={item.to}
                     to={item.to}
                     end={item.to === '/admin'}
-                    onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       cn(
                         'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
@@ -330,16 +432,6 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/80 px-4 backdrop-blur-md sm:px-6">
-          <button
-            type="button"
-            data-cursor="hover"
-            aria-label="Toggle sidebar"
-            onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-3 hover:text-text lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-
 <GlobalSearch pages={SEARCH_PAGES} />
 
           <div className="ml-auto flex items-center gap-2">
@@ -349,8 +441,11 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </div>
         </header>
 
-        <main className="px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        <motion.main key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
+          {children}
+        </motion.main>
       </div>
+      <MobileTabBar onLogout={onLogout} />
     </div>
   )
 }

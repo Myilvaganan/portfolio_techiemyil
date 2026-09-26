@@ -639,3 +639,23 @@ html.has-custom-cursor [data-native-cursor] label {
     transform: translateY(-8px);
   }
 }
+
+/* Touch feel for the admin app: instant press feedback, no double-tap zoom or grey tap flash, smooth momentum scroll. */
+@media (pointer: coarse) {
+  .touch-app {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+  .touch-app button,
+  .touch-app a,
+  .touch-app [role='button'] {
+    touch-action: manipulation;
+    transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+    transition-duration: 120ms;
+  }
+  .touch-app button:not(:disabled):active,
+  .touch-app a:active,
+  .touch-app [role='button']:active {
+    transform: scale(0.97);
+  }
+}

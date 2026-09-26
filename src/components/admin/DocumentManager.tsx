@@ -73,11 +73,11 @@ function formatDateTime(iso: string | null): string {
   return `${d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}, ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
 }
 
-function FileIcon({ filename }: { filename: string }) {
+function FileIcon({ filename, small }: { filename: string; small?: boolean }) {
   const ext = getExtension(filename)
   const colorClass = EXTENSION_COLORS[ext] || 'bg-surface-3 text-text-secondary'
   return (
-    <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold uppercase', colorClass)}>
+    <span className={cn('flex shrink-0 items-center justify-center rounded-lg font-bold uppercase', small ? 'h-7 w-7 text-[9px]' : 'h-9 w-9 text-[10px]', colorClass)}>
       {ext ? ext.slice(0, 3) : <FileWarning className="h-4 w-4" />}
     </span>
   )
@@ -436,7 +436,25 @@ export function DocumentManager() {
             No documents match your filters. {documents.length === 0 && 'Upload one to get started.'}
           </div>
         ) : view === 'list' ? (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one compact line per file, tap to preview */}
+          <ul className="divide-y divide-border sm:hidden">
+            {pageItems.map((doc) => (
+              <li key={doc.key} className="flex items-center gap-2.5 py-1.5 pl-3 pr-1">
+                <button type="button" onClick={() => setPreviewDoc(doc)} aria-label={`Preview ${doc.filename}`} className="flex min-w-0 flex-1 items-center gap-2.5 py-1 text-left">
+                  <FileIcon filename={doc.filename} small />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium leading-tight text-text">{doc.filename}</span>
+                    <span className="block truncate text-[11px] leading-tight text-text-secondary">
+                      {tagLabel(doc.tag)} · {formatBytes(doc.size)} · {formatDateTime(doc.lastModified)}
+                    </span>
+                  </span>
+                </button>
+                <RowMenu doc={doc} onDownload={() => handleDownload(doc)} onDelete={() => setDeleteTarget(doc)} />
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-wide text-text-secondary">
@@ -490,6 +508,7 @@ export function DocumentManager() {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
             {pageItems.map((doc) => (

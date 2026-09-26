@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, type ComponentType } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { getStoredToken } from '@/lib/adminAuth'
 import { retryImport } from '@/lib/lazyRetry'
@@ -43,6 +43,7 @@ function PageLoading() {
 
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
+  const navigate = useNavigate()
 
   return (
     <>
@@ -82,7 +83,12 @@ export function Admin() {
             </Suspense>
           </AdminShell>
         ) : (
-          <AdminLogin onSuccess={() => setAuthed(true)} />
+          <AdminLogin
+            onSuccess={() => {
+              setAuthed(true)
+              navigate('/admin', { replace: true })
+            }}
+          />
         )}
       </div>
     </>
