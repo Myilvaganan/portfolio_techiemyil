@@ -1,5 +1,5 @@
 import { clearStoredToken, getStoredToken } from './adminAuth'
-import { ALL_ACCOUNTS, DEFAULT_SETTINGS, type DayNote, type JournalSettings, type Trade } from './journal'
+import { ALL_ACCOUNTS, FOREX_ALL, DEFAULT_SETTINGS, type DayNote, type JournalSettings, type Trade } from './journal'
 import type { Mt5AccountMeta } from './mt5'
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
@@ -43,13 +43,13 @@ export async function fetchJournal(from?: string, to?: string, account = ''): Pr
   // Trades saved before a field existed come back without it; fill the gaps so the UI can rely on the shape.
   const trades = (data.trades as Trade[])
     .map((t) => ({ ...t, source: t.source ?? '', account: t.account ?? '', tags: t.tags ?? [], holdMinutes: t.holdMinutes ?? 0 }))
-    .filter((t) => account === ALL_ACCOUNTS || t.account === account)
+    .filter((t) => account === ALL_ACCOUNTS || (account === FOREX_ALL ? Boolean(t.account) : t.account === account))
 
   // A note for an account is stored as "<date>#<account>"; the main journal's are plain dates.
   const days: Record<string, DayNote> = {}
   for (const [key, note] of Object.entries((data.days ?? {}) as Record<string, DayNote>)) {
     const [date, owner = ''] = key.split('#')
-    if (account === ALL_ACCOUNTS) days[key] = { ...note, account: owner }
+    if (account === ALL_ACCOUNTS || (account === FOREX_ALL && owner)) days[key] = { ...note, account: owner }
     else if (owner === account) days[date] = { ...note, account: owner }
   }
   return { ...data, trades, days }

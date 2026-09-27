@@ -158,6 +158,10 @@ export function grossFromPrices(t: Pick<Trade, 'direction' | 'entry' | 'exit' | 
 
 /** Pass as the `account` when loading to get every trade from every journal (options and all MT5 accounts). */
 export const ALL_ACCOUNTS = '*'
+/** Every MetaTrader 5 account together (no options trades), shown in rupees. */
+export const FOREX_ALL = 'mt5:*'
+/** A view that adds up several journals, so it is read-only and in rupees. */
+export const isCombined = (account: string) => account === ALL_ACCOUNTS || account === FOREX_ALL
 
 export const fxOf = (t: Pick<Trade, 'currency' | 'fxRate'>) => (t.currency === 'USD' ? t.fxRate : 1)
 export const grossInr = (t: Trade) => t.grossPnl * fxOf(t)

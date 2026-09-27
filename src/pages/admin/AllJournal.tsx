@@ -11,8 +11,8 @@ const noop = () => {}
 const noopAsync = async () => {}
 
 /** Options and every Forex account together: one big calendar and one dashboard, all in rupees. Read-only. */
-export function AllJournal({ switcher }: { switcher: ReactNode }) {
-  const b = useJournalBook(ALL_ACCOUNTS)
+export function AllJournal({ switcher, account = ALL_ACCOUNTS, scope = 'Options and Forex together', chips }: { switcher: ReactNode; account?: string; scope?: string; chips?: ReactNode }) {
+  const b = useJournalBook(account)
   const { today, month, selected, setSelected, goToMonth, stepDay, trades, byDate, settings, usdInr } = b
   const [tab, setTab] = useState<Tab>('calendar')
   const analytics = useMemo(() => analyze(trades, settings), [trades, settings])
@@ -30,13 +30,15 @@ export function AllJournal({ switcher }: { switcher: ReactNode }) {
             <h1 className="page-title">Trading Journal</h1>
             {switcher}
           </div>
-          <p className="mt-0.5 text-sm text-text-secondary">Options and Forex together. Dollar trades are converted at ₹{usdInr.toFixed(2)} per $1. Add or edit trades in their own journal.</p>
+          <p className="mt-0.5 text-sm text-text-secondary">{scope}. Dollar trades are converted at ₹{usdInr.toFixed(2)} per $1. Add or edit trades in their own journal.</p>
         </div>
         <HideNumbersButton />
       </div>
 
+      {chips}
+
       {tab === 'dashboard' ? (
-        <JournalDashboard settings={settings} viewedMonth={month} today={today} refreshKey={b.refreshKey} account={ALL_ACCOUNTS} usdInr={usdInr} lead={tabs} />
+        <JournalDashboard settings={settings} viewedMonth={month} today={today} refreshKey={b.refreshKey} account={account} usdInr={usdInr} lead={tabs} />
       ) : (
         <CalendarView
           single

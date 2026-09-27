@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ALL_ACCOUNTS,
+  isCombined,
   DEFAULT_SETTINGS,
   byWhen,
   groupByDate,
@@ -70,7 +70,7 @@ export function useJournalBook(account: string) {
   }, [month, attempt, account])
 
   // In the combined view every trade is shown in rupees, so dollar (MT5) trades are converted at today's rate.
-  const shown = useMemo(() => (account === ALL_ACCOUNTS ? trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : trades), [trades, account, usdInr])
+  const shown = useMemo(() => (isCombined(account) ? trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : trades), [trades, account, usdInr])
   const byDate = useMemo(() => groupByDate(shown), [shown])
 
   const goToMonth = useCallback(

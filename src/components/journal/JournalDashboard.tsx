@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { AreaChart } from '@/components/viz/charts'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { cn } from '@/lib/utils'
-import { ALL_ACCOUNTS, RANGES, monthLabel, rangeFor, taxCaption, taxHeading, type JournalSettings, type Range, type Trade } from '@/lib/journal'
+import { isCombined, RANGES, monthLabel, rangeFor, taxCaption, taxHeading, type JournalSettings, type Range, type Trade } from '@/lib/journal'
 import { accountDrawdown, accountEquityCurve, analyze, buildInsights, type Slice } from '@/lib/journalAnalytics'
 import { journalReport, journalTradesCsv } from '@/lib/journalReport'
 import { fetchJournal } from '@/lib/journalStore'
@@ -129,13 +129,13 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
     const { from, to } = rangeFor(range, viewedMonth, today)
     setLoading(true)
     setError(null)
-    const fullAccount = Boolean(account) && account !== ALL_ACCOUNTS && Boolean(balanceOps)
+    const fullAccount = Boolean(account) && !isCombined(account) && Boolean(balanceOps)
     fetchJournal(fullAccount ? undefined : from, fullAccount ? undefined : to, account)
       .then((data) => {
         if (cancelled) return
         setEquityTrades(data.trades)
         if (fullAccount) data = { ...data, trades: data.trades.filter((t) => (!from || t.date.slice(0, 7) >= from) && (!to || t.date.slice(0, 7) <= to)) }
-        if (!cancelled) setTrades(account === ALL_ACCOUNTS ? data.trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : data.trades)
+        if (!cancelled) setTrades(isCombined(account) ? data.trades.map((t) => (t.account ? { ...t, fxRate: usdInr } : t)) : data.trades)
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load the journal.')
@@ -166,7 +166,7 @@ export function JournalDashboard({ settings, viewedMonth, today, refreshKey, lea
   const t = a.totals
   const hasData = t.trades > 0
   // A single Forex/MT5 account (not the main journal, not the combined "all accounts" view).
-  const isForexAccount = Boolean(account) && account !== ALL_ACCOUNTS && Boolean(balanceOps)
+  const isForexAccount = Boolean(account) && !isCombined(account) && Boolean(balanceOps)
 
   return (
     <div className="space-y-3 xl:space-y-3">

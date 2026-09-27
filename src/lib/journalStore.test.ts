@@ -162,6 +162,13 @@ describe('journalStore', () => {
       expect(result.days['2026-09-22'].plan).toBe('options plan')
     })
 
+    it('adds up every MT5 account for the all-accounts Forex view, leaving the options journal out', async () => {
+      mockFetch(data)
+      const r = await fetchJournal(undefined, undefined, 'mt5:*')
+      expect(r.trades.map((t) => t.id)).toEqual(['mt5-62280161-1'])
+      expect(Object.keys(r.days).sort()).toEqual(['2026-09-22#62280161', '2026-09-23#99999999'])
+    })
+
     it('does not leak another account’s data', async () => {
       mockFetch(data)
       expect(Object.values((await fetchJournal(undefined, undefined, '99999999')).days).map((d) => d.plan)).toEqual(['other account'])

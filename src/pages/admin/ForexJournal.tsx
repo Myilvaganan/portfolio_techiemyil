@@ -15,10 +15,11 @@ import { TradeDialog } from '@/components/journal/TradeDialog'
 import { HideNumbersButton, JournalTabs, pillClass, type Tab } from '@/components/journal/chrome'
 import { Chip } from '@/components/journal/parts'
 import { useJournalBook } from '@/hooks/useJournalBook'
-import { blankTrade, monthOf, type JournalSettings, type Trade } from '@/lib/journal'
+import { FOREX_ALL, blankTrade, monthOf, type JournalSettings, type Trade } from '@/lib/journal'
 import { analyze } from '@/lib/journalAnalytics'
 import { fetchAccounts, type Mt5Account } from '@/lib/journalStore'
 import { CurrencyProvider } from '@/lib/privacy'
+import { AllJournal } from './AllJournal'
 
 const ACTIVE_KEY = 'journal_mt5_account'
 
@@ -49,6 +50,27 @@ function Header({ switcher, actions, slim = false }: { switcher: ReactNode; acti
         {!slim && <p className="mt-0.5 text-sm text-text-secondary">Your MetaTrader 5 trades, day by day — separate from the options journal.</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+  )
+}
+
+/** The MT5 account chips, with an "All accounts" view first when there is more than one account. */
+function AccountChips({ accounts, activeId, onSelect, onUpload }: { accounts: Mt5Account[]; activeId: string; onSelect: (id: string) => void; onUpload: () => void }) {
+  if (accounts.length < 2) return null
+  return (
+    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="MT5 account">
+      <Chip active={activeId === FOREX_ALL} onClick={() => onSelect(FOREX_ALL)}>
+        All accounts
+      </Chip>
+      {accounts.map((a) => (
+        <Chip key={a.account} active={a.account === activeId} onClick={() => onSelect(a.account)}>
+          {a.name ? `${a.name} · ` : ''}
+          {a.account}
+        </Chip>
+      ))}
+      <Chip active={false} onClick={onUpload}>
+        + Add account
+      </Chip>
     </div>
   )
 }
@@ -169,6 +191,15 @@ function ForexBooks({ switcher, revision }: { switcher: ReactNode; revision: num
     )
   }
 
+  if (activeId === FOREX_ALL && accounts.length > 1) {
+    return (
+      <>
+        <AllJournal key={`all-${revision}`} switcher={switcher} account={FOREX_ALL} scope="All your MetaTrader 5 accounts together" chips={<AccountChips accounts={accounts} activeId={FOREX_ALL} onSelect={choose} onUpload={() => setUploadOpen(true)} />} />
+        {dialog}
+      </>
+    )
+  }
+
   const active = accounts.find((a) => a.account === activeId) ?? accounts[0]
   return (
     <>
@@ -281,19 +312,7 @@ function ForexWorkspace({
           }
         />
 
-        {accounts.length > 1 && (
-          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="MT5 account">
-            {accounts.map((a) => (
-              <Chip key={a.account} active={a.account === account.account} onClick={() => onSelectAccount(a.account)}>
-                {a.name ? `${a.name} · ` : ''}
-                {a.account}
-              </Chip>
-            ))}
-            <Chip active={false} onClick={onUpload}>
-              + Add account
-            </Chip>
-          </div>
-        )}
+        <AccountChips accounts={accounts} activeId={account.account} onSelect={onSelectAccount} onUpload={onUpload} />
 
         <Mt5AccountCard account={account} usdInr={usdInr} onUpload={onUpload} compact={tab === 'dashboard'} />
 
