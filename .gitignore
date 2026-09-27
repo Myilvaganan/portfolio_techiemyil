@@ -24,3 +24,4 @@ lambda/**/*.zip
 *.njsproj
 *.sln
 *.sw?
+src/ContractNotes/

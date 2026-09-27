@@ -76,7 +76,8 @@ export function tradesFromFills(broker: string, fills: Fill[], rates: ChargeRate
       id: backfillId(broker, trip),
       // A trade belongs to the day its profit or loss was realised.
       date: trip.closeDate,
-      time: overnight ? '' : trip.openTime.slice(0, 5),
+      // An import with no time column is stamped 00:00:00, which means "unknown", not midnight.
+      time: overnight || trip.openTime === '00:00:00' ? '' : trip.openTime.slice(0, 5),
       instrument: 'Options',
       symbol: `${trip.underlying} ${trip.strike} ${trip.type} · ${trip.expiry}`,
       direction: trip.direction === 'LONG' ? 'BUY' : 'SELL',
