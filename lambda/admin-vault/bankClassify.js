@@ -10,7 +10,9 @@ const GENERIC_TAGS = /^(bil payment|fund transfer|credit trxn|debit trxn|idirect
 const RULES = [
   // Money moving between my own accounts and to family is never spending.
   [/s ?myilvag|myilvaganan|self\b|own account|a\/c transfer to self/, 'Own account', 'Transfer'],
-  [/zerodha|nse clearing|nsdl|cdsl|mfss|groww|upstox|angel one|icici ?direct|idirect|iccl|indian clearing|kotak securities|coin by|smallcase|kuvera|brokentusk|demat|raise secu/, 'Investments', 'Investments'],
+  [/zerodha|iccl|indian clearing/, 'Zerodha', 'Trading'],
+  [/octa ?(fx|broker|markets)?|\bmt5\b|metaquotes/, 'Octa (MT5)', 'Trading'],
+  [/nse clearing|nsdl|cdsl|mfss|groww|upstox|angel one|icici ?direct|idirect|iccl|indian clearing|kotak securities|coin by|smallcase|kuvera|brokentusk|demat|raise secu/, 'Investments', 'Investments'],
   [/closure proceeds|rev sweep|sweep|fixed dep|\bfd\b|\brd\b|recurring dep|flexi/, 'Deposit / sweep', 'Transfer'],
   [/\brent\b|house rent|room rent|pg rent|rent for|home rent|appu ?samy|vis?h?alak|visalakshi/, 'Rent', 'Rent'],
   [/icici prudential|hdfc life|lic of india|life insur|licofindia|max life|sbi life|star health|policybazaar|acko|digit insur|niva bupa|tata aia|bajaj allianz|insurance/, 'Insurance', 'Insurance'],
@@ -48,7 +50,7 @@ const RULES = [
   [/salary|sal\/|payroll|motherson|cms\/|cgi|infosys|wipro|tcs\b|solium|hsbc|neft.*(ltd|limited|pvt|technolog)|\bnre\b/, 'Salary / employer', 'Salary'],
 ]
 
-const CATEGORIES = new Set(['Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Insurance', 'Gold Savings', 'Groceries', 'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education', 'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other'])
+const CATEGORIES = new Set(['Salary', 'Other Income', 'Interest', 'Refund', 'Transfer', 'Rent', 'EMI & Loans', 'Investments', 'Trading', 'Insurance', 'Gold Savings', 'Groceries', 'Food & Dining', 'Shopping', 'Transport', 'Fuel', 'Travel', 'Bills & Utilities', 'Subscriptions', 'Health', 'Education', 'Entertainment', 'Cash Withdrawal', 'Fees & Charges', 'Taxes', 'Other'])
 
 function channelOf(desc) {
   const d = desc.toUpperCase()

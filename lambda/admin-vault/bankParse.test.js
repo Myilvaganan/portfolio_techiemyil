@@ -66,7 +66,7 @@ describe('bank statement parsers', () => {
     const parsed = parseBankStatement('axis', AXIS)
     expect(parsed.rows.map((r) => [r.debit, r.credit])).toEqual([[400, 0], [1500, 0], [0, 9000]])
     expect(parsed.breaks).toBe(0)
-    expect(classifyBankRow(parsed.rows[1]).category).toBe('Investments')
+    expect(classifyBankRow(parsed.rows[1]).category).toBe('Trading')
   })
 
   it('does not depend on parseIcici being handed anything but lines', () => {

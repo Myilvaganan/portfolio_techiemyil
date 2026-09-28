@@ -4,7 +4,7 @@
 //   POST /admin/finance/budgets   { category, limit }  (limit 0 or null removes it)
 //   GET  /admin/finance/rules     -> { rules: [{ id, match, category }] }
 //   POST /admin/finance/rules     { add: { match, category } } or { remove: id }
-//   GET  /admin/finance/tags      -> { tags: { [key]: 'family' | 'household' | 'ignore' } }
+//   GET  /admin/finance/tags      -> { tags: { [key]: 'needs' | 'wants' | 'savings' | 'trading' | 'family' | 'household' | 'ignore' } }
 //   POST /admin/finance/tags      { key, tag }  (key is "id:<txnId>" or "m:<merchant>"; tag null removes it)
 //
 // Stored as _data/finance/{budgets,rules,tags}.json. Writes use the object's ETag and retry on a conflict.
@@ -17,7 +17,7 @@ const MAX_BUDGETS = 60
 const MAX_RULES = 300
 const MAX_TAGS = 5000
 const MAX_LIMIT = 100_000_000
-const TAGS = ['family', 'household', 'ignore']
+const TAGS = ['needs', 'wants', 'savings', 'trading', 'family', 'household', 'ignore']
 
 const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
 const bad = (error) => ({ statusCode: 400, body: { error } })
@@ -46,7 +46,7 @@ function sanitizeTag(p) {
   const key = text(p.key, 200)
   if (!/^(id|m):.+/.test(key)) return { error: 'Invalid tag key.' }
   if (p.tag === null || p.tag === undefined) return { value: { key, tag: null } }
-  if (!TAGS.includes(p.tag)) return { error: 'Tag must be family, household or ignore.' }
+  if (!TAGS.includes(p.tag)) return { error: 'Tag must be needs, wants, savings, trading, family or ignore.' }
   return { value: { key, tag: p.tag } }
 }
 

@@ -23,12 +23,17 @@ export function ruleMatches(match: string, t: Pick<Txn, 'merchant' | 'descriptio
   return m.length > 0 && hay.toLowerCase().includes(m.toLowerCase())
 }
 
-/** The first rule that matches wins; transfers and card-bill payments are never re-filed. */
+/**
+ * The newest matching rule wins, so re-filing something always takes effect. Card-bill payments are never re-filed;
+ * a transfer only by a rule that names its exact merchant (what the category picker saves), not by broad text.
+ */
 export function applyRules(txns: Txn[], rules: CategoryRule[]): Txn[] {
   if (!rules.length) return txns
+  const newestFirst = [...rules].reverse()
   return txns.map((t) => {
-    if (LOCKED.has(t.category)) return t
-    const rule = rules.find((r) => ruleMatches(r.match, t))
+    if (t.category === 'Card Payment') return t
+    const exact = t.merchant.trim().toLowerCase()
+    const rule = newestFirst.find((r) => ruleMatches(r.match, t) && (t.category !== 'Transfer' || r.match.trim().toLowerCase() === exact))
     return rule && rule.category !== t.category ? { ...t, category: rule.category } : t
   })
 }
@@ -50,6 +55,8 @@ export function suggestMatch(t: Pick<Txn, 'merchant' | 'description'>): string {
 
 // Built-in smart tagging, applied under the saved rules so anything you file by hand always wins.
 export const GOLD_SAVINGS = 'Gold Savings'
+export const TRADING = 'Trading'
+const TRADING_RE = /zerodha|iccl|indian clearing|octa ?(fx|broker|markets)?|\bmt5\b|metaquotes/i
 const GOLD_RE = /khaz?ana|avr ?gold|augmont|safegold|digigold|digital gold|gold (savings|scheme|plan|coin)|mmtc/i
 
 /**
@@ -59,7 +66,9 @@ const GOLD_RE = /khaz?ana|avr ?gold|augmont|safegold|digigold|digital gold|gold 
 export function applySmartRules(txns: Txn[], emis: number[] = []): Txn[] {
   const emiSet = emis.filter((e) => e >= 1000)
   return txns.map((t) => {
-    if (LOCKED.has(t.category) || t.credit > 0) return t
+    if (LOCKED.has(t.category)) return t
+    if (TRADING_RE.test(`${t.merchant} ${t.description}`)) return t.category === TRADING ? t : { ...t, category: TRADING }
+    if (t.credit > 0) return t
     if (GOLD_RE.test(`${t.merchant} ${t.description}`)) return t.category === GOLD_SAVINGS ? t : { ...t, category: GOLD_SAVINGS }
     if (t.debit > 0 && t.category !== 'EMI & Loans' && emiSet.some((e) => Math.abs(t.debit - e) < 1) && !/ICICI BANK CREDIT CA/i.test(t.description)) return { ...t, category: 'EMI & Loans' }
     return t

@@ -18,8 +18,13 @@ describe('rules', () => {
     expect(ruleMatches('/(/', t('2026-09-01', 'Swiggy', 10))).toBe(false)
   })
   it('applies rules but never re-files transfers', () => {
-    const out = applyRules([t('2026-09-01', 'Zomato', 100, 'Other'), t('2026-09-01', 'Zomato', 100, 'Transfer')], [{ id: '1', match: 'zomato', category: 'Food & Dining' }])
+    const out = applyRules([t('2026-09-01', 'Zomato', 100, 'Other'), t('2026-09-01', 'Zomato', 100, 'Transfer')], [{ id: '1', match: 'zomat', category: 'Food & Dining' }])
     expect(out.map((x) => x.category)).toEqual(['Food & Dining', 'Transfer'])
+  })
+  it('lets a rule naming the exact merchant re-file a transfer, and the newest rule wins', () => {
+    const rows = [t('2026-09-01', 'Airtel', 100, 'Investments'), t('2026-09-01', 'Gourambika', 186, 'Transfer')]
+    const out = applyRules(rows, [{ id: '1', match: 'airtel', category: 'Shopping' }, { id: '2', match: 'Airtel', category: 'Bills & Utilities' }, { id: '3', match: 'Gourambika', category: 'Groceries' }])
+    expect(out.map((x) => x.category)).toEqual(['Bills & Utilities', 'Groceries'])
   })
   it('queues the biggest Other debits', () => {
     const q = reviewQueue([t('2026-09-01', 'A', 10, 'Other'), t('2026-09-01', 'B', 500, 'Other'), t('2026-09-01', 'C', 900, 'Food')], 5)

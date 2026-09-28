@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { Banknote, Bus, CircleHelp, ChevronDown, Clapperboard, Coins, Fuel, GraduationCap, HandCoins, HeartPulse, Home, Landmark, LineChart, Plane, ReceiptText, Repeat, ShieldCheck, ShoppingBag, ShoppingBasket, UtensilsCrossed, Zap, X, type LucideIcon } from 'lucide-react'
+import { Banknote, Bus, CircleHelp, ChevronDown, Clapperboard, Coins, Fuel, GraduationCap, HandCoins, HeartPulse, Home, Landmark, LineChart, Plane, TrendingUp, ReceiptText, Repeat, ShieldCheck, ShoppingBag, ShoppingBasket, UtensilsCrossed, Zap, X, type LucideIcon } from 'lucide-react'
 import { IconBadge, assignColors } from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +18,7 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Rent: Home,
   'EMI & Loans': HandCoins,
   Investments: LineChart,
+  Trading: TrendingUp,
   Insurance: ShieldCheck,
   'Gold Savings': Coins,
   'Cash Withdrawal': Banknote,
