@@ -277,7 +277,16 @@ describe('TradingJournal', () => {
 
   it('shows a retry when the journal cannot be loaded', async () => {
     const user = userEvent.setup()
-    vi.mocked(fetchJournal).mockRejectedValueOnce(new Error('Could not reach the trading journal. Please try again.'))
+    // Only the options journal's own load fails (the Today tile reads all journals with account '*').
+    const normal = vi.mocked(fetchJournal).getMockImplementation()!
+    let failed = false
+    vi.mocked(fetchJournal).mockImplementation((from, to, account) => {
+      if (account === '' && !failed) {
+        failed = true
+        return Promise.reject(new Error('Could not reach the trading journal. Please try again.'))
+      }
+      return normal(from, to, account)
+    })
     render(<MemoryRouter><TradingJournal /></MemoryRouter>)
 
     expect(await screen.findByText(/could not reach the trading journal/i)).toBeInTheDocument()
@@ -571,7 +580,15 @@ describe('TradingJournal', () => {
 
     it('waits for the month to load before doing the heavier check', async () => {
       let release: (v: { trades: Trade[]; days: Record<string, never>; months: string[] }) => void = () => {}
-      vi.mocked(fetchJournal).mockImplementationOnce(() => new Promise((res) => (release = res)))
+      const normal = vi.mocked(fetchJournal).getMockImplementation()!
+      let held = false
+      vi.mocked(fetchJournal).mockImplementation((from, to, account) => {
+        if (account === '' && !held) {
+          held = true
+          return new Promise((res) => (release = res))
+        }
+        return normal(from, to, account)
+      })
       render(<MemoryRouter><TradingJournal /></MemoryRouter>)
 
       await new Promise((r) => setTimeout(r, 30))

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useTodayAll } from '@/hooks/useTodayAll'
 import { dateLabel, monthOf, taxHeading, type DayNote, type JournalSettings, type Trade } from '@/lib/journal'
 import type { Analytics } from '@/lib/journalAnalytics'
 import { useMoney } from '@/lib/privacy'
@@ -113,6 +114,8 @@ export function CalendarView({ analytics, settings, month, byDate, selected, tod
   const breachDates = useMemo(() => new Set(analytics.breaches.map((b) => b.date)), [analytics.breaches])
   const noteDates = useMemo(() => new Set(Object.keys(days).filter((d) => monthOf(d) === month)), [days, month])
   const t = analytics.totals
+  // Today across every journal (not just the open one); refreshed whenever the open month reloads.
+  const todayAll = useTodayAll(today, loading)
 
   const select = (date: string) => {
     onSelect(date)
@@ -134,7 +137,11 @@ export function CalendarView({ analytics, settings, month, byDate, selected, tod
     <>
       <div className={cn('grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]', !single && '2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]')}>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+            <SummaryTile label="Today · all journals">
+              {todayAll.ready ? <Amount value={todayAll.net} /> : <span className="font-mono text-text-secondary">—</span>}
+              {todayAll.ready && <span className="ml-1.5 text-2xs text-text-secondary">{todayAll.trades} {todayAll.trades === 1 ? 'trade' : 'trades'}</span>}
+            </SummaryTile>
             <SummaryTile label="Before tax">
               <Amount value={t.net} />
             </SummaryTile>
