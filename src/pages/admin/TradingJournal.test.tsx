@@ -295,6 +295,14 @@ describe('TradingJournal', () => {
     expect(await screen.findByText('NIFTY 25000 CE')).toBeInTheDocument()
   })
 
+  it('shows the month total for Options in rupees, Forex in dollars and All in rupees', async () => {
+    render(<MemoryRouter><TradingJournal /></MemoryRouter>)
+    expect(await screen.findByText('Options · ₹')).toBeInTheDocument()
+    expect(screen.getByText('Forex · $')).toBeInTheDocument()
+    expect(screen.getByText('All · ₹')).toBeInTheDocument()
+    expect(screen.queryByText(/today · all journals/i)).not.toBeInTheDocument()
+  })
+
   describe('default tax (Bitcoin only)', () => {
     it('taxes just the Bitcoin trade and leaves options untaxed', async () => {
       vi.mocked(fetchSettings).mockResolvedValue({ ...DEFAULT_SETTINGS })

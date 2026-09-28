@@ -95,7 +95,7 @@ export function JournalCalendar({ month, byDate, settings, selected, today, brea
                       {d && (
                         <>
                           <span className={cn('mt-auto font-mono text-2xs font-semibold leading-tight sm:text-sm', tone(d.net))}>{m.compact(d.net)}</span>
-                          <span className="text-2xs leading-tight text-text-secondary sm:text-2xs">
+                          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[0.62rem] leading-tight text-text-secondary">
                             {d.trades} trade{d.trades === 1 ? '' : 's'}
                           </span>
                         </>

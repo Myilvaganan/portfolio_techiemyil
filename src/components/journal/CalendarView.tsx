@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { useTodayAll } from '@/hooks/useTodayAll'
-import { dateLabel, monthOf, taxHeading, type DayNote, type JournalSettings, type Trade } from '@/lib/journal'
+import { useMonthTotals } from '@/hooks/useMonthTotals'
+import { dateLabel, monthLabel, monthOf, taxHeading, type DayNote, type JournalSettings, type Trade } from '@/lib/journal'
 import type { Analytics } from '@/lib/journalAnalytics'
-import { useMoney } from '@/lib/privacy'
+import { makeMoney, useMoney, usePrivacy } from '@/lib/privacy'
 import { DayDialog } from './DayDialog'
 import { JournalCalendar } from './JournalCalendar'
 import { MonthNav, SummaryTile } from './chrome'
@@ -55,6 +55,14 @@ function searchHits(query: string, byDate: Map<string, Trade[]>, days: Record<st
     if (hay.includes(q)) dates.add(date)
   }
   return [...dates].sort().map((date) => ({ date, label: dateLabel(date) }))
+}
+
+const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 'text-text-secondary')
+const Dash = () => <span className="font-mono text-text-secondary">—</span>
+
+/** A signed amount in its own currency, whatever journal is open. */
+function MonthValue({ value, currency, hidden }: { value: number; currency: 'INR' | 'USD'; hidden: boolean }) {
+  return <span className={`whitespace-nowrap font-mono ${tone(value)}`}>{makeMoney(hidden, currency).signed(value, currency === 'USD' ? 2 : 0)}</span>
 }
 
 function CalendarSearch({ byDate, days, onJump }: { byDate: Map<string, Trade[]>; days: Record<string, DayNote>; onJump: (date: string) => void }) {
@@ -114,8 +122,9 @@ export function CalendarView({ analytics, settings, month, byDate, selected, tod
   const breachDates = useMemo(() => new Set(analytics.breaches.map((b) => b.date)), [analytics.breaches])
   const noteDates = useMemo(() => new Set(Object.keys(days).filter((d) => monthOf(d) === month)), [days, month])
   const t = analytics.totals
-  // Today across every journal (not just the open one); refreshed whenever the open month reloads.
-  const todayAll = useTodayAll(today, loading)
+  // The month across every journal (not just the open one): Options in rupees, Forex in dollars, All in rupees.
+  const totals = useMonthTotals(month, loading)
+  const { hidden } = usePrivacy()
 
   const select = (date: string) => {
     onSelect(date)
@@ -137,11 +146,22 @@ export function CalendarView({ analytics, settings, month, byDate, selected, tod
     <>
       <div className={cn('grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]', !single && '2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]')}>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-            <SummaryTile label="Today · all journals">
-              {todayAll.ready ? <Amount value={todayAll.net} /> : <span className="font-mono text-text-secondary">—</span>}
-              {todayAll.ready && <span className="ml-1.5 text-2xs text-text-secondary">{todayAll.trades} {todayAll.trades === 1 ? 'trade' : 'trades'}</span>}
-            </SummaryTile>
+          <div>
+            <p className="label-caps mb-1 px-0.5">{monthLabel(month)} · net of fees</p>
+            <div className="grid grid-cols-3 gap-2">
+              <SummaryTile label="Options · ₹">
+                {totals.ready ? <MonthValue value={totals.optionsInr} currency="INR" hidden={hidden} /> : <Dash />}
+              </SummaryTile>
+              <SummaryTile label="Forex · $">
+                {totals.ready ? <MonthValue value={totals.forexUsd} currency="USD" hidden={hidden} /> : <Dash />}
+              </SummaryTile>
+              <SummaryTile label="All · ₹" title={`Dollar trades converted at ₹${totals.usdInr.toFixed(2)} per $1`}>
+                {totals.ready ? <MonthValue value={totals.allInr} currency="INR" hidden={hidden} /> : <Dash />}
+              </SummaryTile>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             <SummaryTile label="Before tax">
               <Amount value={t.net} />
             </SummaryTile>

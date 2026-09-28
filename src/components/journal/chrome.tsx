@@ -108,10 +108,11 @@ export function MonthNav({ month, today, onMonth }: { month: string; today: stri
 
 // @container lets the value size itself to the tile (cqw), so "-$1,179.75" shrinks to fit rather than being clipped, and
 // pushing it to the bottom keeps the values level when one label wraps onto two lines.
-export function SummaryTile({ label, children }: { label: string; children: ReactNode }) {
+export function SummaryTile({ label, children, title }: { label: string; children: ReactNode; title?: string }) {
   return (
-    <div className="@container flex min-w-0 flex-col rounded-xl border border-border bg-surface-2 px-3 py-2">
-      <p className={labelClass}>{label}</p>
+    <div title={title} className="@container flex min-w-0 flex-col rounded-xl border border-border bg-surface-2 px-3 py-2">
+      {/* Smaller, tighter labels so long ones ("Tax · by instrument") wrap inside the tile instead of spilling out of it. */}
+      <p className={cn(labelClass, '!text-[0.62rem] !tracking-[0.05em] leading-tight [overflow-wrap:anywhere]')}>{label}</p>
       <p className="mt-auto whitespace-nowrap pt-0.5 text-[length:min(1rem,15cqw)] font-semibold leading-tight">{children}</p>
     </div>
   )
