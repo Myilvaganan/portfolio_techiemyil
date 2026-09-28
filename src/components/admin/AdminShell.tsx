@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Wrench, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -48,33 +48,44 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/bank-statements': 'bank spend transactions',
 }
 
+// Ordered by how often each is used: the daily pair first, then trading (the busiest area), day-to-day money, periodic wealth
+// and debt, and the rarely-touched admin last.
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
       { label: 'Ask My Data', to: '/admin/chat', icon: Sparkles },
-      { label: 'Website', to: '/admin/site', icon: Globe },
-      { label: 'Security', to: '/admin/security', icon: ShieldCheck },
     ],
   },
   {
-    label: 'Documents',
-    items: [{ label: 'Document Manager', to: '/admin/documents', icon: FolderOpen }],
+    label: 'Trading',
+    items: [
+      { label: 'Trading Journal', to: '/admin/trading-journal', icon: NotebookPen },
+      { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
+      { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
+      { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
+    ],
   },
   {
-    label: 'Finance',
+    label: 'Money',
     items: [
       { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
       { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
-      { label: 'Loans', to: '/admin/loans', icon: HandCoins },
-      { label: 'Household', to: '/admin/household', icon: Home },
-      { label: 'Tax Information', to: '/admin/tax', icon: ReceiptText },
       { label: 'Budgets', to: '/admin/budgets', icon: PiggyBank },
       { label: 'Cash Flow', to: '/admin/cash-flow', icon: Waves },
+      { label: 'Household', to: '/admin/household', icon: Home },
+    ],
+  },
+  {
+    label: 'Wealth & debt',
+    items: [
       { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
-      { label: 'Lending', to: '/admin/lending', icon: Handshake },
-      { label: 'Goals', to: '/admin/goals', icon: Target },
       { label: 'Investments', to: '/admin/investments', icon: LineChart },
+      { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
+      { label: 'Goals', to: '/admin/goals', icon: Target },
+      { label: 'Loans', to: '/admin/loans', icon: HandCoins },
+      { label: 'Lending', to: '/admin/lending', icon: Handshake },
+      { label: 'Tax Information', to: '/admin/tax', icon: ReceiptText },
     ],
   },
   {
@@ -82,13 +93,11 @@ const NAV_SECTIONS: NavSection[] = [
     items: [{ label: 'Health Report', to: '/admin/health-report', icon: HeartPulse }],
   },
   {
-    label: 'Tools',
+    label: 'Manage',
     items: [
-      { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
-      { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
-      { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
-      { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
-      { label: 'Trading Journal', to: '/admin/trading-journal', icon: NotebookPen },
+      { label: 'Document Manager', to: '/admin/documents', icon: FolderOpen },
+      { label: 'Website', to: '/admin/site', icon: Globe },
+      { label: 'Security', to: '/admin/security', icon: ShieldCheck },
     ],
   },
 ]
@@ -346,9 +355,10 @@ function NotificationBell() {
 // Every menu item gets its own colour, so no two tiles in a sheet look alike.
 assignColors(NAV_SECTIONS.flatMap((sec) => sec.items).map((i) => i.to))
 
-const FINANCE_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Finance')!
-const TOOLS_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Tools')!
-const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Finance' && sec.label !== 'Tools')
+// Phone tabs: Finance opens Money + Wealth & debt, Trading opens the trading tools, More holds everything else.
+const FINANCE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label === 'Money' || sec.label === 'Wealth & debt')
+const TRADING_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Trading')!
+const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Money' && sec.label !== 'Wealth & debt' && sec.label !== 'Trading')
 
 const tap = () => {
   try {
@@ -362,13 +372,13 @@ const tap = () => {
 function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const [sheet, setSheet] = useState<null | 'finance' | 'tools' | 'more'>(null)
+  const [sheet, setSheet] = useState<null | 'finance' | 'trading' | 'more'>(null)
   // Only the grab handle drags the sheet closed, so swiping inside it scrolls the list as normal.
   const dragControls = useDragControls()
   useEffect(() => setSheet(null), [pathname])
 
-  const inFinance = FINANCE_SECTION.items.some((i) => pathname.startsWith(i.to))
-  const inTools = TOOLS_SECTION.items.some((i) => pathname.startsWith(i.to))
+  const inFinance = FINANCE_SECTIONS.some((sec) => sec.items.some((i) => pathname.startsWith(i.to)))
+  const inTrading = TRADING_SECTION.items.some((i) => pathname.startsWith(i.to))
   const tab = (active: boolean) =>
     cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
   const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
@@ -377,7 +387,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
       {label}
     </NavLink>
   )
-  const sections = sheet === 'finance' ? [FINANCE_SECTION] : sheet === 'tools' ? [TOOLS_SECTION] : MORE_SECTIONS
+  const sections = sheet === 'finance' ? FINANCE_SECTIONS : sheet === 'trading' ? [TRADING_SECTION] : MORE_SECTIONS
 
   return (
     <div className="lg:hidden">
@@ -406,7 +416,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               </div>
               {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="mb-4">
-                  {section.label && sheet === 'more' && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
+                  {section.label && sections.length > 1 && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
                   <div className="grid grid-cols-3 gap-2.5">
                     {section.items.map((item) => (
                       <NavLink
@@ -475,12 +485,12 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
           type="button"
           onClick={() => {
             tap()
-            setSheet(sheet === 'tools' ? null : 'tools')
+            setSheet(sheet === 'trading' ? null : 'trading')
           }}
-          className={tab(sheet === 'tools' || (!sheet && inTools))}
+          className={tab(sheet === 'trading' || (!sheet && inTrading))}
         >
-          <Wrench className="h-5 w-5" />
-          Tools
+          <TrendingUp className="h-5 w-5" />
+          Trading
         </button>
         <button type="button" onClick={() => {
             tap()

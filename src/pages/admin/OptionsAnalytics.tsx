@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { PageBadge } from '@/components/admin/AdminShell'
-import { ArrowDownRight, ArrowUpRight, FileUp, RefreshCw, Trash2 } from 'lucide-react'
+import { Link, useInRouterContext } from 'react-router-dom'
+import { ArrowDownRight, ArrowUpRight, FileUp, NotebookPen, RefreshCw, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
 import { formatInr, formatSignedInr } from '@/lib/kite'
@@ -43,6 +44,26 @@ const RANGES: { id: Range; label: string }[] = [
   { id: '6m', label: '6 months' },
   { id: '1y', label: '1 year' },
 ]
+
+/** Jump to the Trading Journal, where the same trades are logged, reviewed and combined with Forex. */
+function JournalLink() {
+  const cls = 'inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 font-medium text-text transition-colors hover:border-accent/40 hover:text-accent'
+  const inner = (
+    <>
+      <NotebookPen className="h-3.5 w-3.5" />
+      Trading Journal
+    </>
+  )
+  return useInRouterContext() ? (
+    <Link to="/admin/trading-journal" data-cursor="hover" className={cls}>
+      {inner}
+    </Link>
+  ) : (
+    <a href="/admin/trading-journal" className={cls}>
+      {inner}
+    </a>
+  )
+}
 
 const tone = (n: number) => (n > 0 ? 'text-positive' : n < 0 ? 'text-error' : 'text-text-secondary')
 
@@ -729,6 +750,7 @@ export function OptionsAnalytics() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
+          <JournalLink />
           <input
             ref={fileRef}
             type="file"
