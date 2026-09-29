@@ -30,6 +30,7 @@ const Goals = page(() => import('@/pages/admin/Goals'), 'Goals')
 const Investments = page(() => import('@/pages/admin/Investments'), 'Investments')
 const Lending = page(() => import('@/pages/admin/Lending'), 'Lending')
 const Guardrails = page(() => import('@/pages/admin/Guardrails'), 'Guardrails')
+const TradingLedger = page(() => import('@/pages/admin/TradingLedger'), 'TradingLedger')
 const Chat = page(() => import('@/pages/admin/Chat'), 'Chat')
 const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
@@ -74,6 +75,7 @@ export function Admin() {
                 <Route path="lending" element={<Lending />} />
                 <Route path="chat" element={<Chat />} />
                 <Route path="guardrails" element={<Guardrails />} />
+                <Route path="trading-vs-life" element={<TradingLedger />} />
                 <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />

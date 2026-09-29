@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { ShieldAlert, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -69,6 +69,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/admin/trading-journal', icon: NotebookPen },
       { label: 'Trading Guardrails', k: 'nav.guardrails', to: '/admin/guardrails', icon: ShieldAlert },
+      { label: 'Trading vs Life', k: 'nav.tradingLedger', to: '/admin/trading-vs-life', icon: Scale3d },
       { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/admin/options-analytics', icon: BarChart3 },
       { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/admin/zerodha', icon: TrendingUp },
       { label: 'Margin Calculator', k: 'nav.margin', to: '/admin/margin-calculator', icon: Calculator },
