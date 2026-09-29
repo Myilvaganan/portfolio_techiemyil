@@ -35,6 +35,7 @@ const MindMoney = page(() => import('@/pages/admin/MindMoney'), 'MindMoney')
 const Subscriptions = page(() => import('@/pages/admin/Subscriptions'), 'Subscriptions')
 const MonthlyReview = page(() => import('@/pages/admin/MonthlyReview'), 'MonthlyReview')
 const DebtFree = page(() => import('@/pages/admin/DebtFree'), 'DebtFree')
+const Runway = page(() => import('@/pages/admin/Runway'), 'Runway')
 const Chat = page(() => import('@/pages/admin/Chat'), 'Chat')
 const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
@@ -84,6 +85,7 @@ export function Admin() {
                 <Route path="subscriptions" element={<Subscriptions />} />
                 <Route path="monthly-review" element={<MonthlyReview />} />
                 <Route path="debt-free" element={<DebtFree />} />
+                <Route path="runway" element={<Runway />} />
                 <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/admin" replace />} />
