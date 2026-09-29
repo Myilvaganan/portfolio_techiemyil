@@ -10,7 +10,7 @@ import { PositionSizeDialog } from '@/components/journal/PositionSizeDialog'
 import { SettingsDialog } from '@/components/journal/SettingsDialog'
 import { TradeDialog } from '@/components/journal/TradeDialog'
 import { ZerodhaSyncDialog } from '@/components/journal/ZerodhaSyncDialog'
-import { BookSwitch, HideNumbersButton, JournalTabs, pillClass, type Book, type Tab } from '@/components/journal/chrome'
+import { BookSwitch, JournalTabs, pillClass, type Book, type Tab } from '@/components/journal/chrome'
 import { blankTrade, monthOf, todayStr, type Trade } from '@/lib/journal'
 import { analyze } from '@/lib/journalAnalytics'
 import { getKiteSession } from '@/lib/kite'
@@ -150,7 +150,6 @@ function OptionsJournal({ switcher }: { switcher: ReactNode }) {
           <p className="mt-0.5 text-sm text-text-secondary">Log every trade, review every day, and see what you really keep after tax.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <HideNumbersButton />
           <button type="button" data-cursor="hover" onClick={() => setZerodhaOpen(true)} title="Fetch today’s options trades from Zerodha and add them to the journal" className={pillClass}>
             <RefreshCw className="h-3.5 w-3.5" /> Sync Zerodha
             {getKiteSession() && <span className="h-2 w-2 rounded-full bg-positive" title="Zerodha is connected" aria-label="Zerodha connected" />}

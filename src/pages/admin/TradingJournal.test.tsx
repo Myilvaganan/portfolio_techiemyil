@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TradingJournal } from './TradingJournal'
 import { DEFAULT_SETTINGS, blankTrade, type Trade } from '@/lib/journal'
@@ -220,12 +220,12 @@ describe('TradingJournal', () => {
   })
 
   it('hidden mode replaces every amount with stars and can be turned back off', async () => {
-    const user = userEvent.setup()
     render(<MemoryRouter><TradingJournal /></MemoryRouter>)
     await screen.findByText('NIFTY 25000 CE')
     expect(document.body.textContent).toContain('2,360')
 
-    await user.click(screen.getByRole('button', { name: /hide numbers/i }))
+    // The switch lives in the avatar menu now; it drives the same app-wide setting.
+    act(() => setHidden(true))
 
     expect(document.body.textContent).not.toMatch(/₹\s?[+-]?\d/)
     expect(document.body.textContent).not.toContain('2,360')
@@ -233,21 +233,21 @@ describe('TradingJournal', () => {
     expect(document.body.textContent).toContain('₹****')
     expect(screen.getByRole('button', { name: /Tuesday, Sep 15, 2026: 2 trades, net \+₹\*\*\*\*/ })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /show numbers/i }))
+    act(() => setHidden(false))
     expect(document.body.textContent).toContain('2,360')
   })
 
   it('remembers hidden mode between visits', async () => {
-    const user = userEvent.setup()
     const first = render(<MemoryRouter><TradingJournal /></MemoryRouter>)
     await screen.findByText('NIFTY 25000 CE')
-    await user.click(screen.getByRole('button', { name: /hide numbers/i }))
+    act(() => setHidden(true))
     first.unmount()
 
     render(<MemoryRouter><TradingJournal /></MemoryRouter>)
     await screen.findByText('NIFTY 25000 CE')
-    expect(screen.getByRole('button', { name: /show numbers/i })).toBeInTheDocument()
+    expect(localStorage.getItem('journal_hide_numbers')).toBe('1')
     expect(document.body.textContent).not.toContain('2,360')
+    act(() => setHidden(false))
   })
 
   it('moves between months and loads each one', async () => {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -19,6 +19,7 @@ import { useOnline, useTouchGestures } from '@/hooks/useTouchGestures'
 import { GlobalSearch } from './GlobalSearch'
 import { LocalePicker } from './LocalePicker'
 import { useT, type TKey } from '@/lib/i18n'
+import { usePrivacy } from '@/lib/privacy'
 import { useLocale } from '@/lib/locale'
 
 interface NavItem {
@@ -146,6 +147,29 @@ interface ScaleProps {
   lock: AppLock
 }
 
+/** One switch for the whole app: every amount turns to stars (for opening the app in public). */
+function HideNumbersRow() {
+  const { hidden, toggle } = usePrivacy()
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={hidden}
+      onClick={toggle}
+      className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left"
+    >
+      <IconBadge icon={hidden ? EyeOff : Eye} seed="hide-numbers" size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-text">Hide numbers</span>
+        <span className="block truncate text-xs text-text-secondary">Stars instead of amounts</span>
+      </span>
+      <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', hidden ? 'bg-accent' : 'bg-surface-15')}>
+        <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', hidden ? 'translate-x-[18px]' : 'translate-x-0.5')} />
+      </span>
+    </button>
+  )
+}
+
 /** Turns the Face ID / fingerprint app lock on or off. Hidden on devices that can't do it. */
 function AppLockRow({ lock }: { lock: AppLock }) {
   const [busy, setBusy] = useState(false)
@@ -243,7 +267,8 @@ function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void 
           <div className="space-y-3 border-b border-border p-3">
             <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
-            <AppLockRow lock={lock} />
+            <HideNumbersRow />
+                  <AppLockRow lock={lock} />
           </div>
           <button
             type="button"
@@ -463,6 +488,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                 <div className="mb-4 space-y-3">
                   <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
+                  <HideNumbersRow />
                   <AppLockRow lock={lock} />
                 </div>
               )}

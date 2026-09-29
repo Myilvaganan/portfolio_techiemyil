@@ -7,7 +7,6 @@ import { CategoryPicker } from '@/components/statements/CategoryPicker'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { Card, Kpi } from '@/components/statements/parts'
 import { cn } from '@/lib/utils'
 import { useMoney } from '@/lib/privacy'
@@ -280,7 +279,6 @@ export function Budgets() {
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-text">{monthLabel(month, true)}</span>
-          <HideNumbersButton />
         </div>
       </div>
 

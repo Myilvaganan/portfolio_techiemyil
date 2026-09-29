@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { Loader2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { AreaChart, BarChart } from '@/components/viz/charts'
 import { Card, Kpi } from '@/components/statements/parts'
 import { useMoney } from '@/lib/privacy'
@@ -36,7 +35,6 @@ export function CashFlow() {
           <p className="page-lede">Income against spending, how long your bank balance lasts, and the next three months.</p>
           </div>
         </div>
-        <HideNumbersButton />
       </div>
 
       {(error || settingsError) && (

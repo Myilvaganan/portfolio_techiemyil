@@ -3,7 +3,6 @@ import { PageBadge } from '@/components/admin/AdminShell'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, Database, Loader2, Send, Sparkles, Trash2 } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge } from '@/components/ui/Avatar'
@@ -133,7 +132,6 @@ export function Chat() {
                 <Trash2 className="h-3.5 w-3.5" /> New chat
               </button>
             )}
-            <HideNumbersButton />
           </div>
         </div>
       </div>

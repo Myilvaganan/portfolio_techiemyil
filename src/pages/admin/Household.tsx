@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { Bike, Building2, Car, ChevronDown, Flame, Fuel, Home, Loader2, ShoppingBag, ShoppingBasket, UtensilsCrossed, Wrench, Zap, type LucideIcon } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Donut } from '@/components/viz/charts'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
 import { useMoney } from '@/lib/privacy'
 import { fetchStatements } from '@/lib/statementsApi'
@@ -314,7 +313,6 @@ export function Household() {
               </button>
             ))}
           </div>
-          <HideNumbersButton />
         </div>
       </div>
 

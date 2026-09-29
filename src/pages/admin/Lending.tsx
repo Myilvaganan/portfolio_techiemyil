@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { Calculator, CalendarClock, ChevronDown, HandCoins, Loader2, Pencil, Phone, Plus, Trash2, Users, X } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
 import { Avatar } from '@/components/ui/Avatar'
 import { useMoney } from '@/lib/privacy'
@@ -524,7 +523,6 @@ export function Lending() {
               </button>
             ))}
           </div>
-          <HideNumbersButton />
           <Button size="sm" magnetic={false} onClick={() => setDialog({ open: true, entry: blankEntry(today) })} className="!h-9 !px-4 !text-xs">
             <Plus className="h-3.5 w-3.5" /> Add person
           </Button>

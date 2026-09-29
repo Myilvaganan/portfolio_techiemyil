@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { CalendarView } from '@/components/journal/CalendarView'
 import { DayPanel } from '@/components/journal/DayPanel'
 import { JournalDashboard } from '@/components/journal/JournalDashboard'
-import { HideNumbersButton, JournalTabs, type Tab } from '@/components/journal/chrome'
+import { JournalTabs, type Tab } from '@/components/journal/chrome'
 import { useJournalBook } from '@/hooks/useJournalBook'
 import { ALL_ACCOUNTS } from '@/lib/journal'
 import { analyze } from '@/lib/journalAnalytics'
@@ -32,7 +32,6 @@ export function AllJournal({ switcher, account = ALL_ACCOUNTS, scope = 'Options 
           </div>
           <p className="mt-0.5 text-sm text-text-secondary">{scope}. Dollar trades are converted at ₹{usdInr.toFixed(2)} per $1. Add or edit trades in their own journal.</p>
         </div>
-        <HideNumbersButton />
       </div>
 
       {chips}

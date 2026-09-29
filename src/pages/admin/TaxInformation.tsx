@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FileJson, Loader2, Receipt, Trash2, UploadCloud } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { BarChart, Legend } from '@/components/viz/charts'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { cn } from '@/lib/utils'
 import { useMoney } from '@/lib/privacy'
 import { fetchStatements } from '@/lib/statementsApi'
@@ -573,7 +572,6 @@ export function TaxInformation() {
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />} Add return JSON
           </button>
-          <HideNumbersButton />
         </div>
       </div>
 

@@ -3,7 +3,6 @@ import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
 import { CalendarClock, Loader2, Plus, Trash2, Upload } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { HideNumbersButton } from '@/components/journal/chrome'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { cn } from '@/lib/utils'
 import { useMoney } from '@/lib/privacy'
@@ -409,7 +408,6 @@ export function Investments() {
           <p className="page-lede">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/admin/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
           </div>
         </div>
-        <HideNumbersButton />
       </div>
       {stmtError && <p role="alert" className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">{stmtError}</p>}
       <Returns rows={rows} source={source} error={holdErr} />

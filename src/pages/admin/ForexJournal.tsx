@@ -12,7 +12,7 @@ import { Mt5AccountCard } from '@/components/journal/Mt5AccountCard'
 import { Mt5UploadDialog, type Mt5Imported } from '@/components/journal/Mt5UploadDialog'
 import { SettingsDialog } from '@/components/journal/SettingsDialog'
 import { TradeDialog } from '@/components/journal/TradeDialog'
-import { HideNumbersButton, JournalTabs, pillClass, type Tab } from '@/components/journal/chrome'
+import { JournalTabs, pillClass, type Tab } from '@/components/journal/chrome'
 import { Chip } from '@/components/journal/parts'
 import { useJournalBook } from '@/hooks/useJournalBook'
 import { FOREX_ALL, blankTrade, monthOf, type JournalSettings, type Trade } from '@/lib/journal'
@@ -83,7 +83,7 @@ function EmptyForex({ switcher, onUpload }: { switcher: ReactNode; onUpload: () 
   ]
   return (
     <div className="w-full space-y-4">
-      <Header switcher={switcher} actions={<HideNumbersButton />} />
+      <Header switcher={switcher}  />
       <GlassCard hover={false} className="mx-auto max-w-3xl p-6 text-center sm:p-10">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 text-accent">
           <Globe className="h-7 w-7" />
@@ -301,7 +301,6 @@ function ForexWorkspace({
           switcher={switcher}
           actions={
             <>
-              <HideNumbersButton />
               <button type="button" data-cursor="hover" aria-label="Journal settings" onClick={() => setSettingsOpen(true)} className={pillClass}>
                 <SettingsIcon className="h-3.5 w-3.5" /> Settings
               </button>
