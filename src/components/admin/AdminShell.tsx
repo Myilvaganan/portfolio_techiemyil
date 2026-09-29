@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -36,6 +36,7 @@ interface NavSection {
 
 const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/loans': 'emi prepay foreclosure',
+  '/admin/subscriptions': 'recurring renewal netflix insurance domain price rise cancel',
   '/admin/guardrails': 'rules stop loss limit discipline checklist risk',
   '/admin/trading-journal': 'mt5 forex options calendar',
   '/admin/health-report': 'inbody weight fat body',
@@ -84,6 +85,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Budgets', k: 'nav.budgets', to: '/admin/budgets', icon: PiggyBank },
       { label: 'Cash Flow', k: 'nav.cashFlow', to: '/admin/cash-flow', icon: Waves },
       { label: 'Household', k: 'nav.household', to: '/admin/household', icon: Home },
+      { label: 'Subscriptions', k: 'nav.subscriptions', to: '/admin/subscriptions', icon: Repeat },
     ],
   },
   {
