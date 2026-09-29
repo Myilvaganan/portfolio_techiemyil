@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useSyncExternalStore } from 'react'
 import { formatInr, formatSignedInr } from './kite'
+import { displayCurrency, displayRate, useLocale } from './locale'
 
 // "Hidden mode": every amount is drawn as stars so the journal can be opened in public. The choice is remembered
 // in this browser and shared by every component through one tiny store, so a toggle updates them all at once.
@@ -86,6 +87,19 @@ const compactForeign = (n: number) => {
 }
 
 export function makeMoney(isHidden: boolean, currency = 'INR'): Money {
+  // Rupee books follow the chosen display currency: amounts are converted and shown like any foreign book.
+  const rate = currency === 'INR' ? displayRate() : null
+  if (rate) {
+    const shown = makeMoney(isHidden, displayCurrency())
+    return {
+      ...shown,
+      currency: 'INR',
+      inr: (n, d) => shown.inr(n * rate, d),
+      signed: (n, d) => shown.signed(n * rate, d),
+      axis: (n) => shown.axis(n * rate),
+      compact: (n) => shown.compact(n * rate),
+    }
+  }
   if (currency === 'INR') {
     return {
       hidden: isHidden,
@@ -121,5 +135,6 @@ export const useCurrency = () => useContext(CurrencyContext)
 export function useMoney(): Money {
   const { hidden: isHidden } = usePrivacy()
   const currency = useContext(CurrencyContext)
-  return useMemo(() => makeMoney(isHidden, currency), [isHidden, currency])
+  const { version } = useLocale()
+  return useMemo(() => makeMoney(isHidden, currency), [isHidden, currency, version])
 }

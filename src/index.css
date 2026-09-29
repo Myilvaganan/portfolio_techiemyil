@@ -7,6 +7,10 @@
 @import '@fontsource/plus-jakarta-sans/600.css';
 @import '@fontsource/plus-jakarta-sans/700.css';
 @import '@fontsource/plus-jakarta-sans/800.css';
+@import '@fontsource-variable/fraunces/index.css';
+@import '@fontsource/noto-sans-tamil/400.css';
+@import '@fontsource/noto-sans-tamil/600.css';
+@import '@fontsource/noto-sans-tamil/700.css';
 
 @custom-variant light (&:where([data-theme='light'], [data-theme='light'] *, [data-theme='royal-light'], [data-theme='royal-light'] *));
 
@@ -873,4 +877,188 @@ textarea {
     animation: none;
     opacity: 0.5;
   }
+}
+
+
+/* =====================================================================================================================
+   AURUM — the admin app's design system. Scoped to html.admin (set by AdminShell), so the public site keeps its look.
+   Warm ink and ivory surfaces, champagne gold, a serif display face, layered elevation and one motion language.
+   The royal themes keep their own palette and only pick up type, elevation and motion from here.
+   ===================================================================================================================== */
+
+html.admin {
+  --font-sans: 'Inter', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces Variable', 'Noto Sans Tamil', Georgia, serif;
+  --font-mono: 'Inter', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --ease-aurum: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-card: 20px;
+  --shadow-card: 0 1px 0 0 var(--card-inset-highlight) inset, 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px -18px rgba(0, 0, 0, 0.55);
+  --shadow-lift: 0 1px 0 0 var(--card-inset-highlight) inset, 0 2px 4px rgba(0, 0, 0, 0.25), 0 28px 60px -24px rgba(0, 0, 0, 0.7);
+  --aurum-glow: 214 179 106;
+}
+
+/* Dark (default): ink with a warm undertone, ivory text, champagne gold. */
+html.admin[data-theme='dark'],
+html.admin:not([data-theme]) {
+  --color-bg: #07080c;
+  --color-bg-secondary: #0c0e14;
+  --color-card: #10131b;
+  --color-border: rgba(244, 236, 220, 0.075);
+  --color-text: #f4f1ea;
+  --color-text-secondary: #9c9aa3;
+  --color-accent: #d6b36a;
+  --color-accent-hover: #ecd29a;
+  --color-success: #3ddc97;
+  --color-positive: #3ddc97;
+  --color-error: #ff6b6b;
+  --color-surface-2: rgba(244, 236, 220, 0.025);
+  --color-surface-3: rgba(244, 236, 220, 0.035);
+  --color-surface-5: rgba(244, 236, 220, 0.05);
+  --color-surface-7: rgba(244, 236, 220, 0.07);
+  --color-surface-10: rgba(244, 236, 220, 0.1);
+  --color-surface-15: rgba(244, 236, 220, 0.15);
+  --card-inset-highlight: rgba(255, 244, 220, 0.05);
+  --accent-rgb: 214 179 106;
+}
+
+/* Light: ivory paper, ink text, burnished gold. */
+html.admin[data-theme='light'] {
+  --color-bg: #f6f3ec;
+  --color-bg-secondary: #efeae0;
+  --color-card: #fffdf8;
+  --color-border: rgba(40, 32, 18, 0.1);
+  --color-text: #16140f;
+  --color-text-secondary: #6b6456;
+  --color-accent: #9a7328;
+  --color-accent-hover: #b48a3a;
+  --color-success: #14875b;
+  --color-positive: #14875b;
+  --color-error: #c8372d;
+  --color-surface-2: rgba(40, 32, 18, 0.03);
+  --color-surface-3: rgba(40, 32, 18, 0.045);
+  --color-surface-5: rgba(40, 32, 18, 0.06);
+  --color-surface-7: rgba(40, 32, 18, 0.08);
+  --color-surface-10: rgba(40, 32, 18, 0.1);
+  --color-surface-15: rgba(40, 32, 18, 0.14);
+  --card-inset-highlight: rgba(255, 255, 255, 0.7);
+  --accent-rgb: 154 115 40;
+  --aurum-glow: 154 115 40;
+  --shadow-card: 0 1px 0 0 var(--card-inset-highlight) inset, 0 1px 2px rgba(40, 32, 18, 0.06), 0 12px 30px -20px rgba(40, 32, 18, 0.25);
+  --shadow-lift: 0 1px 0 0 var(--card-inset-highlight) inset, 0 2px 4px rgba(40, 32, 18, 0.06), 0 26px 50px -24px rgba(40, 32, 18, 0.32);
+}
+
+html.admin body {
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+/* Serif display for titles only; body, labels and every figure stay in Inter. */
+html.admin h1,
+html.admin h2,
+html.admin .page-title,
+html.admin .section-title {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+html.admin:lang(ta) h1,
+html.admin:lang(ta) h2,
+html.admin:lang(ta) .page-title {
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* Ambient light: a soft gold aurora behind the page. Static (no animation, no blur filter) so phones stay smooth. */
+html.admin .aurum-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(var(--aurum-glow) / 0.1), transparent 70%),
+    radial-gradient(40rem 26rem at -5% 20%, rgb(var(--aurum-glow) / 0.05), transparent 70%);
+}
+
+/* Cards: one radius, layered elevation, a gold edge on hover. */
+html.admin .royal-card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 0.45s var(--ease-aurum),
+    box-shadow 0.45s var(--ease-aurum),
+    border-color 0.3s ease;
+}
+@media (hover: hover) {
+  html.admin .royal-card.aurum-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+    border-color: rgb(var(--aurum-glow) / 0.35);
+  }
+}
+
+/* Page entrance: the page's blocks rise in one after another. Pure CSS, runs once per page. */
+@keyframes aurum-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+html.admin .aurum-page > * {
+  animation: aurum-rise 0.55s var(--ease-aurum) both;
+}
+html.admin .aurum-page > *:nth-child(2) { animation-delay: 50ms; }
+html.admin .aurum-page > *:nth-child(3) { animation-delay: 100ms; }
+html.admin .aurum-page > *:nth-child(4) { animation-delay: 150ms; }
+html.admin .aurum-page > *:nth-child(5) { animation-delay: 200ms; }
+html.admin .aurum-page > *:nth-child(n + 6) { animation-delay: 240ms; }
+
+/* Primary actions: a gold gradient with a sheen. */
+html.admin .aurum-cta {
+  background: linear-gradient(135deg, var(--color-accent-hover), var(--color-accent) 55%, color-mix(in srgb, var(--color-accent) 70%, #000));
+  color: #140f05;
+  box-shadow: 0 8px 22px -10px rgb(var(--aurum-glow) / 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Gold hairline under the sticky header. */
+html.admin .aurum-header {
+  border-bottom-color: transparent;
+  background-image: linear-gradient(90deg, transparent, rgb(var(--aurum-glow) / 0.35), transparent);
+  background-size: 100% 1px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
+
+/* Numbers that just changed glow briefly. */
+@keyframes aurum-flash {
+  from { text-shadow: 0 0 18px rgb(var(--aurum-glow) / 0.8); }
+  to { text-shadow: none; }
+}
+html.admin .aurum-flash {
+  animation: aurum-flash 1.2s var(--ease-aurum);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.admin .aurum-page > *,
+  html.admin .aurum-flash {
+    animation: none !important;
+  }
+  html.admin .royal-card {
+    transition: none;
+  }
+}
+
+/* Every primary button in the admin app becomes the gold call to action (royal themes keep their own). */
+html.admin:not([data-theme^='royal']) .btn-primary {
+  background: linear-gradient(135deg, var(--color-accent-hover), var(--color-accent) 55%, color-mix(in srgb, var(--color-accent) 72%, #000));
+  color: #140f05;
+  box-shadow: 0 8px 22px -10px rgb(var(--aurum-glow) / 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+html.admin:not([data-theme^='royal']) .btn-primary:hover {
+  box-shadow: 0 14px 30px -10px rgb(var(--aurum-glow) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }

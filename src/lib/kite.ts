@@ -1,3 +1,4 @@
+import { displayCurrency, displayRate, regionOf, symbolOf } from './locale'
 import { clearStoredToken, getStoredToken } from './adminAuth'
 
 const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL
@@ -256,8 +257,15 @@ export function openPositions(positions: KiteSnapshot['positions']): KitePositio
 
 // ---------- Formatting ----------
 
+/**
+ * A rupee amount as the user wants to see it: in the chosen display currency (converted at the daily rate) and grouped
+ * the region's way (1,00,000 in India, 100,000 elsewhere). With the defaults it is plain rupees, exactly as before.
+ */
 export function formatInr(n: number, decimals = 0) {
-  return `₹${Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`
+  const rate = displayRate()
+  const value = rate ? n * rate : n
+  const d = rate && decimals === 0 && Math.abs(value) < 1000 ? 2 : decimals
+  return `${symbolOf(displayCurrency())}${Math.abs(value).toLocaleString(regionOf().numberLocale, { minimumFractionDigits: d, maximumFractionDigits: d })}`
 }
 
 export function formatSignedInr(n: number, decimals = 0) {

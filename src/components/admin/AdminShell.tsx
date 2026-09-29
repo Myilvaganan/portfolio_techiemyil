@@ -17,15 +17,20 @@ import { UI_SCALES, useUiScale, type UiScaleId } from '@/hooks/useUiScale'
 import { useAppLock } from '@/hooks/useAppLock'
 import { useOnline, useTouchGestures } from '@/hooks/useTouchGestures'
 import { GlobalSearch } from './GlobalSearch'
+import { LocalePicker } from './LocalePicker'
+import { useT, type TKey } from '@/lib/i18n'
+import { useLocale } from '@/lib/locale'
 
 interface NavItem {
   label: string
+  k: TKey
   to: string
   icon: typeof LayoutDashboard
 }
 
 interface NavSection {
   label?: string
+  k?: TKey
   items: NavItem[]
 }
 
@@ -53,51 +58,56 @@ const SEARCH_KEYWORDS: Record<string, string> = {
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-      { label: 'Ask My Data', to: '/admin/chat', icon: Sparkles },
+      { label: 'Dashboard', k: 'nav.dashboard', to: '/admin', icon: LayoutDashboard },
+      { label: 'Ask My Data', k: 'nav.ask', to: '/admin/chat', icon: Sparkles },
     ],
   },
   {
     label: 'Trading',
+    k: 'nav.trading',
     items: [
-      { label: 'Trading Journal', to: '/admin/trading-journal', icon: NotebookPen },
-      { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
-      { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
-      { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
+      { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/admin/trading-journal', icon: NotebookPen },
+      { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/admin/options-analytics', icon: BarChart3 },
+      { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/admin/zerodha', icon: TrendingUp },
+      { label: 'Margin Calculator', k: 'nav.margin', to: '/admin/margin-calculator', icon: Calculator },
     ],
   },
   {
     label: 'Money',
+    k: 'nav.money',
     items: [
-      { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
-      { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
-      { label: 'Budgets', to: '/admin/budgets', icon: PiggyBank },
-      { label: 'Cash Flow', to: '/admin/cash-flow', icon: Waves },
-      { label: 'Household', to: '/admin/household', icon: Home },
+      { label: 'Bank Statements', k: 'nav.bank', to: '/admin/bank-statements', icon: Landmark },
+      { label: 'Credit Cards', k: 'nav.cards', to: '/admin/credit-cards', icon: CreditCard },
+      { label: 'Budgets', k: 'nav.budgets', to: '/admin/budgets', icon: PiggyBank },
+      { label: 'Cash Flow', k: 'nav.cashFlow', to: '/admin/cash-flow', icon: Waves },
+      { label: 'Household', k: 'nav.household', to: '/admin/household', icon: Home },
     ],
   },
   {
     label: 'Wealth & debt',
+    k: 'nav.wealth',
     items: [
-      { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
-      { label: 'Investments', to: '/admin/investments', icon: LineChart },
-      { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
-      { label: 'Goals', to: '/admin/goals', icon: Target },
-      { label: 'Loans', to: '/admin/loans', icon: HandCoins },
-      { label: 'Lending', to: '/admin/lending', icon: Handshake },
-      { label: 'Tax Information', to: '/admin/tax', icon: ReceiptText },
+      { label: 'Net Worth', k: 'nav.netWorth', to: '/admin/net-worth', icon: Scale },
+      { label: 'Investments', k: 'nav.investments', to: '/admin/investments', icon: LineChart },
+      { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
+      { label: 'Goals', k: 'nav.goals', to: '/admin/goals', icon: Target },
+      { label: 'Loans', k: 'nav.loans', to: '/admin/loans', icon: HandCoins },
+      { label: 'Lending', k: 'nav.lending', to: '/admin/lending', icon: Handshake },
+      { label: 'Tax Information', k: 'nav.tax', to: '/admin/tax', icon: ReceiptText },
     ],
   },
   {
     label: 'Health',
-    items: [{ label: 'Health Report', to: '/admin/health-report', icon: HeartPulse }],
+    k: 'nav.health',
+    items: [{ label: 'Health Report', k: 'nav.healthReport', to: '/admin/health-report', icon: HeartPulse }],
   },
   {
     label: 'Manage',
+    k: 'nav.manage',
     items: [
-      { label: 'Document Manager', to: '/admin/documents', icon: FolderOpen },
-      { label: 'Website', to: '/admin/site', icon: Globe },
-      { label: 'Security', to: '/admin/security', icon: ShieldCheck },
+      { label: 'Document Manager', k: 'nav.documents', to: '/admin/documents', icon: FolderOpen },
+      { label: 'Website', k: 'nav.website', to: '/admin/site', icon: Globe },
+      { label: 'Security', k: 'nav.security', to: '/admin/security', icon: ShieldCheck },
     ],
   },
 ]
@@ -219,6 +229,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void 
           </div>
           <div className="space-y-3 border-b border-border p-3">
             <SizePicker scale={scale} onScale={onScale} />
+            <LocalePicker />
             <AppLockRow lock={lock} />
           </div>
           <button
@@ -370,6 +381,7 @@ const tap = () => {
 
 /** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
 function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
+  const t = useT()
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [sheet, setSheet] = useState<null | 'finance' | 'trading' | 'more'>(null)
@@ -416,7 +428,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               </div>
               {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="mb-4">
-                  {section.label && sections.length > 1 && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{section.label}</p>}
+                  {section.k && sections.length > 1 && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{t(section.k)}</p>}
                   <div className="grid grid-cols-3 gap-2.5">
                     {section.items.map((item) => (
                       <NavLink
@@ -428,7 +440,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                         }
                       >
                         <IconBadge icon={item.icon} seed={item.to} size="md" />
-                        <span className="leading-tight">{item.label}</span>
+                        <span className="leading-tight">{t(item.k)}</span>
                       </NavLink>
                     ))}
                   </div>
@@ -437,6 +449,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               {sheet === 'more' && (
                 <div className="mb-4 space-y-3">
                   <SizePicker scale={scale} onScale={onScale} />
+            <LocalePicker />
                   <AppLockRow lock={lock} />
                 </div>
               )}
@@ -463,13 +476,13 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
       </AnimatePresence>
 
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[60] flex border-t border-border bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
-        {link('/admin', 'Home', LayoutDashboard, true)}
+        {link('/admin', t('nav.home'), LayoutDashboard, true)}
         <button type="button" onClick={() => {
             tap()
             setSheet(sheet === 'finance' ? null : 'finance')
           }} className={tab(sheet === 'finance' || (!sheet && inFinance))}>
           <Wallet className="h-5 w-5" />
-          Finance
+          {t('nav.finance')}
         </button>
         <NavLink to="/admin/chat" onClick={tap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
@@ -477,7 +490,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               <span className={cn('-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
                 <Sparkles className="h-6 w-6" />
               </span>
-              <span className={cn('mt-0.5', isActive && !sheet ? 'text-accent' : 'text-text-secondary')}>Ask AI</span>
+              <span className={cn('mt-0.5', isActive && !sheet ? 'text-accent' : 'text-text-secondary')}>{t('nav.askAi')}</span>
             </>
           )}
         </NavLink>
@@ -490,14 +503,14 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
           className={tab(sheet === 'trading' || (!sheet && inTrading))}
         >
           <TrendingUp className="h-5 w-5" />
-          Trading
+          {t('nav.trading')}
         </button>
         <button type="button" onClick={() => {
             tap()
             setSheet(sheet === 'more' ? null : 'more')
           }} className={tab(sheet === 'more')}>
           <LayoutGrid className="h-5 w-5" />
-          More
+          {t('nav.more')}
         </button>
       </nav>
     </div>
@@ -507,6 +520,9 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
 export function AdminShell({ children, onLogout }: { children: ReactNode; onLogout: () => void }) {
   // After a few idle minutes the numbers turn to stars. Signing in lasts 30 days, so this never signs out.
   useIdleLock(() => {}, { lockAfter: Infinity })
+  const t = useT()
+  // Changing region or currency remounts the page, so figures formatted outside React pick up the new settings too.
+  const { version: localeVersion } = useLocale()
   const { pathname } = useLocation()
   const { scale, setScale } = useUiScale()
   const lock = useAppLock()
@@ -524,8 +540,15 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   const back = useCallback(() => navigate(-1), [navigate])
   const pull = useTouchGestures({ onRefresh: refresh, onBack: back })
 
+  // The Aurum design system is scoped to html.admin, so the public site keeps its own look.
+  useEffect(() => {
+    document.documentElement.classList.add('admin')
+    return () => document.documentElement.classList.remove('admin')
+  }, [])
+
   return (
-    <div className="touch-app min-h-screen bg-bg">
+    <div className="touch-app relative min-h-screen bg-bg">
+      <div className="aurum-backdrop" aria-hidden />
       {lock.enabled && lock.locked && <LockScreen onUnlock={lock.unlock} />}
       {!online && (
         <div role="status" className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black">
@@ -539,7 +562,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </span>
         </div>
       )}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card/85 backdrop-blur-xl lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
           <Logo />
         </div>
@@ -547,9 +570,9 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
           {NAV_SECTIONS.map((section, idx) => (
             <div key={section.label ?? `section-${idx}`}>
-              {section.label && (
+              {section.k && (
                 <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">
-                  {section.label}
+                  {t(section.k)}
                 </p>
               )}
               <div className="space-y-1">
@@ -560,15 +583,25 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
                     end={item.to === '/admin'}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-accent/15 text-accent'
-                          : 'text-text-secondary hover:bg-surface-3 hover:text-text',
+                        'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                        isActive ? 'text-accent' : 'text-text-secondary hover:bg-surface-3 hover:text-text',
                       )
                     }
                   >
-                    <IconBadge icon={item.icon} seed={item.to} size="sm" />
-                    <span className="truncate">{item.label}</span>
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          // One highlight that glides between items as you move through the menu.
+                          <motion.span
+                            layoutId="aurum-nav-active"
+                            transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                            className="absolute inset-0 rounded-xl border border-accent/25 bg-accent/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                          />
+                        )}
+                        <IconBadge icon={item.icon} seed={item.to} size="sm" className="relative" />
+                        <span className="relative line-clamp-2 leading-tight">{t(item.k)}</span>
+                      </>
+                    )}
                   </NavLink>
                 ))}
               </div>
@@ -590,8 +623,8 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
         </div>
       </aside>
 
-      <div className="lg:pl-64">
-        <header className="glitter sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/80 px-5 backdrop-blur-md sm:px-8 lg:px-10">
+      <div className="relative z-[1] lg:pl-64">
+        <header className="aurum-header glitter sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/75 px-5 backdrop-blur-md sm:px-8 lg:px-10">
 <HeaderTitle />
           <GlobalSearch pages={SEARCH_PAGES} />
 
@@ -602,7 +635,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </div>
         </header>
 
-        <motion.main key={`${pathname}-${refreshKey}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
+        <motion.main key={`${pathname}-${refreshKey}-${localeVersion}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="aurum-page space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
           {children}
         </motion.main>
       </div>
