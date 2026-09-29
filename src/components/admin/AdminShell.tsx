@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -40,6 +40,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/subscriptions': 'recurring renewal netflix insurance domain price rise cancel',
   '/admin/debt-free': 'avalanche snowball payoff prepay credit card interest emi',
   '/admin/runway': 'emergency fund months job loss stress test savings',
+  '/admin/life-admin': 'passport licence insurance puc kyc deadline expiry renewal advance tax itr',
   '/admin/guardrails': 'rules stop loss limit discipline checklist risk',
   '/admin/trading-journal': 'mt5 forex options calendar',
   '/admin/health-report': 'inbody weight fat body',
@@ -117,7 +118,10 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Growth',
     k: 'nav.growth',
-    items: [{ label: 'Monthly Review', k: 'nav.monthlyReview', to: '/admin/monthly-review', icon: CalendarCheck }],
+    items: [
+      { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/admin/monthly-review', icon: CalendarCheck },
+      { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/admin/life-admin', icon: ClipboardList },
+    ],
   },
   {
     label: 'Manage',
