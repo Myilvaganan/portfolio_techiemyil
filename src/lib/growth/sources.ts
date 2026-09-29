@@ -70,10 +70,10 @@ export function loadSource<K extends SourceKey>(key: K): Promise<Sources[K]> {
 export const clearSources = () => cache.clear()
 
 /**
- * `const { data, loading, errors } = useSources(['trades', 'bank'])`. A source that fails is left empty and reported
+ * `const { data, loading, errors } = useSources(['trades', 'bank'], version)` — bump `version` (after clearSources) to reload. A source that fails is left empty and reported
  * in `errors`, so one unavailable source never blanks the whole page.
  */
-export function useSources<K extends SourceKey>(keys: K[]) {
+export function useSources<K extends SourceKey>(keys: K[], version = 0) {
   const [data, setData] = useState<Partial<Pick<Sources, K>>>({})
   const [loading, setLoading] = useState(true)
   const [errors, setErrors] = useState<string[]>([])
@@ -97,7 +97,7 @@ export function useSources<K extends SourceKey>(keys: K[]) {
     return () => {
       cancelled = true
     }
-  }, [sig]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sig, version]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { data, loading, errors }
 }
