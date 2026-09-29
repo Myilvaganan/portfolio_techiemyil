@@ -102,6 +102,14 @@ describe('parseMt5Report — positions', () => {
     expect(overnight).toMatchObject({ commission: -0.7, swap: -0.15, profit: -2 })
   })
 
+  // Some brokers (e.g. Octa) print times to the millisecond on every row; a report full of them must not come back empty.
+  it('reads positions whose timestamps carry milliseconds', () => {
+    const withMs = SAMPLE_TRADES.map((t) => ({ ...t, openTime: `${t.openTime}.516`, closeTime: `${t.closeTime}.603` }))
+    const report = parse({ trades: withMs })
+    expect(report.positions).toHaveLength(withMs.length)
+    expect(report.positions.find((p) => p.position === '1000001')).toMatchObject({ openTime: '2026-09-22 12:12:05.516', closeTime: '2026-09-22 12:16:12.603' })
+  })
+
   it('reads a sell and negative profit', () => {
     expect(report.positions.find((p) => p.position === '1000002')).toMatchObject({ type: 'sell', profit: -9.27 })
   })

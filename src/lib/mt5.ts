@@ -103,7 +103,8 @@ export async function readReportFile(file: Blob): Promise<string> {
 
 // ---------- Parsing helpers ----------
 
-const TIME_RE = /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}(:\d{2})?$/
+// Some brokers (e.g. Octa) now print milliseconds on every timestamp ("12:12:05.516"); seconds and the fraction are both optional.
+const TIME_RE = /^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}(:\d{2}(\.\d+)?)?$/
 const SECTIONS = ['Positions', 'Orders', 'Deals', 'Results']
 
 // The report is full of &nbsp; (non-breaking spaces); fold them and any run of whitespace into one plain space.
