@@ -18,6 +18,7 @@ const { createInvestApi } = require('./invest')
 const { createInboxApi } = require('./inbox')
 const { createLendingApi } = require('./lending')
 const { createChatApi } = require('./chat')
+const { createGrowthApi } = require('./growth')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -57,6 +58,7 @@ const inboxApi = createInboxApi({
 })
 const chatApi = createChatApi({ s3, bucket: S3_BUCKET, callOpenAI: (o) => statementsCallOpenAI({ ...o, model: statementsModel() }), model: undefined })
 const lendingApi = createLendingApi({ s3, bucket: S3_BUCKET })
+const growthApi = createGrowthApi({ s3, bucket: S3_BUCKET })
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
 const investApi = createInvestApi({ s3, bucket: S3_BUCKET })
@@ -653,6 +655,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/security')) {
       const result = await securityApi.route({ method, path, payload, account: session.sub })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path === '/admin/growth') {
+      const result = await growthApi({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }
 

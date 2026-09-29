@@ -158,3 +158,16 @@ export const LANGUAGES: { id: Language; label: string; native: string }[] = [
   { id: 'en', label: 'English', native: 'English' },
   { id: 'ta', label: 'Tamil', native: 'தமிழ்' },
 ]
+
+type StringTable = Record<string, string | ((...args: never[]) => string)>
+
+/**
+ * Per-module text: `const useS = defineStrings({ title: 'Guardrails', trades: (n: number) => `${n} trades` }, { title: 'வரம்புகள்' })`
+ * then `const s = useS()` in the component. Tamil entries are optional and fall back to English one by one.
+ */
+export function defineStrings<E extends StringTable>(en: E, ta: Partial<{ [K in keyof E]: E[K] }>) {
+  return function useStrings(): E {
+    const { language } = useLocale()
+    return language === 'ta' ? ({ ...en, ...ta } as E) : en
+  }
+}

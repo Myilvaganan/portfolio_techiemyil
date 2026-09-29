@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { ShieldAlert, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -36,6 +36,7 @@ interface NavSection {
 
 const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/loans': 'emi prepay foreclosure',
+  '/admin/guardrails': 'rules stop loss limit discipline checklist risk',
   '/admin/trading-journal': 'mt5 forex options calendar',
   '/admin/health-report': 'inbody weight fat body',
   '/admin/household': 'rent electricity bescom tangedco petrol bike zomato swiggy rapido ola instamart amazon appusamy visalakshi',
@@ -67,6 +68,7 @@ const NAV_SECTIONS: NavSection[] = [
     k: 'nav.trading',
     items: [
       { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/admin/trading-journal', icon: NotebookPen },
+      { label: 'Trading Guardrails', k: 'nav.guardrails', to: '/admin/guardrails', icon: ShieldAlert },
       { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/admin/options-analytics', icon: BarChart3 },
       { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/admin/zerodha', icon: TrendingUp },
       { label: 'Margin Calculator', k: 'nav.margin', to: '/admin/margin-calculator', icon: Calculator },
