@@ -9,7 +9,7 @@ import { fetchLending } from '../lendingApi'
 import { fetchLogs } from '../healthApi'
 import { fetchUsdInr } from '../livePrices'
 import { FALLBACK_USD_INR } from '../margin'
-import type { Txn } from '../statements'
+import type { Statement, Txn } from '../statements'
 import type { Goal } from '../goals'
 import type { DailyLog } from '../health'
 import type { LendingEntry } from '../lending'
@@ -25,6 +25,7 @@ export interface Sources {
   usdInr: number
   bank: Txn[]
   card: Txn[]
+  cardStatements: Statement[]
   tags: TagMap
   budgets: Record<string, number>
   goals: Goal[]
@@ -46,6 +47,7 @@ const LOADERS: { [K in SourceKey]: () => Promise<Sources[K]> } = {
   usdInr: async () => (await fetchUsdInr().catch(() => null)) || FALLBACK_USD_INR,
   bank: async () => (await fetchStatements('bank')).transactions,
   card: async () => (await fetchStatements('card')).transactions,
+  cardStatements: async () => (await fetchStatements('card')).statements,
   tags: async () => (await fetchFinance()).tags as TagMap,
   budgets: async () => (await fetchFinance()).budgets,
   goals: () => fetchGoals(),

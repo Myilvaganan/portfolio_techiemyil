@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -38,6 +38,7 @@ interface NavSection {
 const SEARCH_KEYWORDS: Record<string, string> = {
   '/admin/loans': 'emi prepay foreclosure',
   '/admin/subscriptions': 'recurring renewal netflix insurance domain price rise cancel',
+  '/admin/debt-free': 'avalanche snowball payoff prepay credit card interest emi',
   '/admin/guardrails': 'rules stop loss limit discipline checklist risk',
   '/admin/trading-journal': 'mt5 forex options calendar',
   '/admin/health-report': 'inbody weight fat body',
@@ -98,6 +99,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
       { label: 'Goals', k: 'nav.goals', to: '/admin/goals', icon: Target },
       { label: 'Loans', k: 'nav.loans', to: '/admin/loans', icon: HandCoins },
+      { label: 'Debt-Free Plan', k: 'nav.debtFree', to: '/admin/debt-free', icon: Mountain },
       { label: 'Lending', k: 'nav.lending', to: '/admin/lending', icon: Handshake },
       { label: 'Tax Information', k: 'nav.tax', to: '/admin/tax', icon: ReceiptText },
     ],
