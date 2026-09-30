@@ -81,6 +81,14 @@ export function Goals() {
       setLoading(false)
     }
   }, [])
+  // Escape (also sent by the phone's drag-down and back gesture) closes the goal sheet.
+  useEffect(() => {
+    if (!draft) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDraft(null)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [draft])
+
   useEffect(() => {
     void reload()
   }, [reload])
@@ -209,8 +217,9 @@ export function Goals() {
         )}
 
         {draft && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label={draft.id ? 'Edit goal' : 'New goal'}>
-            <GlassCard hover={false} className="w-full max-w-md p-5">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" onClick={(e) => e.target === e.currentTarget && setDraft(null)}>
+            {/* data-state lets the phone treat this as a bottom sheet (drag down or Android back to close). */}
+            <GlassCard hover={false} role="dialog" aria-modal="true" data-state="open" aria-label={draft.id ? 'Edit goal' : 'New goal'} className="native-sheet w-full max-w-md !bg-card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="section-title">{draft.id ? 'Edit goal' : 'New goal'}</h2>
                 <button type="button" aria-label="Close" onClick={() => setDraft(null)} className="text-text-secondary hover:text-text"><X className="h-4 w-4" /></button>

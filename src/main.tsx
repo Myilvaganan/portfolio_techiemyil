@@ -5,6 +5,14 @@ import App from './App.tsx'
 import { AppErrorBoundary } from './components/common/AppErrorBoundary'
 import { reloadForNewVersion } from './lib/lazyRetry'
 import { registerSW } from 'virtual:pwa-register'
+import { IS_ADMIN_HOST } from './lib/host'
+
+// The admin domain installs as its own app (name, splash, shortcuts), not as the portfolio.
+if (IS_ADMIN_HOST) {
+  const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]') ?? document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'manifest' }))
+  link.href = '/admin.webmanifest'
+  document.title = 'Myil Admin'
+}
 
 // Vite raises this when a lazily loaded file can't be fetched (an old cached build after an update).
 window.addEventListener('vite:preloadError', (e) => {

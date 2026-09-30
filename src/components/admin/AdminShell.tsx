@@ -18,6 +18,7 @@ import { useAppLock } from '@/hooks/useAppLock'
 import { useOnline, useTouchGestures } from '@/hooks/useTouchGestures'
 import { GlobalSearch } from './GlobalSearch'
 import { LocalePicker } from './LocalePicker'
+import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
 import { useLocale } from '@/lib/locale'
@@ -419,12 +420,11 @@ const FINANCE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label === 'Money' || s
 const TRADING_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Trading')!
 const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Money' && sec.label !== 'Wealth & debt' && sec.label !== 'Trading')
 
-const tap = () => {
-  try {
-    navigator.vibrate?.(8)
-  } catch {
-    /* haptics are optional */
-  }
+const tap = () => haptic(8)
+/** A bottom-tab or menu-sheet jump: fade the next screen in instead of sliding it. */
+const tabTap = () => {
+  haptic(8)
+  markTabNavigation()
 }
 
 /** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
@@ -442,7 +442,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
   const tab = (active: boolean) =>
     cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
   const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
-    <NavLink to={to} end={end} onClick={tap} className={({ isActive }) => tab(isActive && !sheet)}>
+    <NavLink to={to} end={end} onClick={tabTap} className={({ isActive }) => tab(isActive && !sheet)}>
       <Icon className="h-5 w-5" />
       {label}
     </NavLink>
@@ -483,6 +483,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                         key={item.to}
                         to={item.to}
                         end={item.to === '/'}
+                        onClick={markTabNavigation}
                         className={({ isActive }) =>
                           cn('btn-3d flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
                         }
@@ -533,7 +534,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
           <Wallet className="h-5 w-5" />
           {t('nav.finance')}
         </button>
-        <NavLink to="/chat" onClick={tap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
+        <NavLink to="/chat" onClick={tabTap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
             <>
               <span className={cn('-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
@@ -588,6 +589,11 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   }, [])
   const back = useCallback(() => navigate(-1), [navigate])
   const pull = useTouchGestures({ onRefresh: refresh, onBack: back })
+
+  useNativeFeel()
+  const direction = useNavDirection()
+  const isPhone = typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+  const motionFor = isPhone ? SLIDE[direction] : SLIDE.tab
 
   // The Aurum design system is scoped to html.admin, so the public site keeps its own look.
   useEffect(() => {
@@ -684,7 +690,13 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </div>
         </header>
 
-        <motion.main key={`${pathname}-${refreshKey}-${localeVersion}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="aurum-page space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
+        <motion.main key={`${pathname}-${refreshKey}-${localeVersion}`} initial={motionFor.initial} animate={motionFor.animate} transition={isPhone && direction !== 'tab' ? { type: 'spring', stiffness: 380, damping: 38, mass: 0.9 } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }} onAnimationComplete={() => {
+            // A leftover transform would make <main> the frame for every fixed overlay inside a page (sheets would sit
+            // behind the tab bar and shrink to the content column), so clear it once the entrance is done.
+            const el = document.querySelector<HTMLElement>('main.aurum-page')
+            if (el) el.style.transform = 'none'
+          }}
+          className="aurum-page overflow-x-clip space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
           {children}
         </motion.main>
       </div>
@@ -704,10 +716,24 @@ function HeaderTitle() {
   return useInRouterContext() ? <HeaderTitleInner /> : null
 }
 function HeaderTitleInner() {
+  const { pathname } = useLocation()
+  // Large title in the page, compact title in the bar once it scrolls away — the Android/iOS "large title" pattern.
+  const title = useTitleScrolledAway(pathname)
   return (
-    <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+    <div className="relative flex min-w-0 items-center gap-2.5 lg:hidden">
       <Logo showName={false} />
-      <span className="truncate font-display text-base font-semibold text-text sm:hidden">{personal.brand}</span>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={title ?? 'brand'}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.18 }}
+          className="truncate font-display text-base font-semibold text-text"
+        >
+          {title ?? personal.brand}
+        </motion.span>
+      </AnimatePresence>
     </div>
   )
 }

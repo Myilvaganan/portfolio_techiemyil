@@ -1,3 +1,4 @@
+import { IS_ADMIN_HOST } from '@/lib/host'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 
 export type Theme = 'dark' | 'light' | 'royal-light' | 'royal'
@@ -13,6 +14,8 @@ const THEME_COLOR = {
   'royal-light': '#fbf7ee',
   royal: '#0a0612',
 } as const
+// The admin app's own (Aurum) page colours, so the phone's status bar blends into the top bar.
+const ADMIN_THEME_COLOR = { dark: '#07080c', light: '#f5f6f8', 'royal-light': '#fbf7ee', royal: '#0a0612' } as const
 
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
@@ -36,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem(STORAGE_KEY, theme)
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', (IS_ADMIN_HOST ? ADMIN_THEME_COLOR : THEME_COLOR)[theme])
   }, [theme])
 
   const toggleTheme = useCallback(() => {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarClock, EyeOff, Scissors, TrendingUp } from 'lucide-react'
-import { CountUp, Empty, Loading, Notice, PageHero, Panel, Pill, Stat } from '@/components/growth/kit'
+import { CountUp, Empty, Loading, Notice, PageHero, Panel, Pill, Stat, SwipeRow } from '@/components/growth/kit'
 import { cn } from '@/lib/utils'
 import { defineStrings } from '@/lib/i18n'
 import { useMoney } from '@/lib/privacy'
@@ -150,7 +150,12 @@ export function Subscriptions() {
               <ul className="divide-y divide-border">
                 <AnimatePresence initial={false}>
                   {shown.map((x) => (
-                    <motion.li key={x.key} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap items-center gap-3 py-3">
+                    <motion.li key={x.key} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }}>
+                      <SwipeRow
+                        right={{ label: s.cancel, icon: <Scissors className="h-4 w-4" />, tone: 'good', onTrigger: () => cancel(x) }}
+                        left={{ label: s.hide, icon: <EyeOff className="h-4 w-4" />, tone: 'neutral', onTrigger: () => hide(x) }}
+                      >
+                      <div className="flex flex-wrap items-center gap-3 bg-card py-3">
                       <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', x.status === 'stopped' ? 'bg-surface-5 text-text-secondary' : 'bg-accent/15 text-accent')}>
                         <CalendarClock className="h-4 w-4" />
                       </span>
@@ -181,6 +186,8 @@ export function Subscriptions() {
                           <EyeOff className="h-3.5 w-3.5" />
                         </button>
                       </div>
+                      </div>
+                      </SwipeRow>
                     </motion.li>
                   ))}
                 </AnimatePresence>

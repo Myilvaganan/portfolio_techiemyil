@@ -1,0 +1,25 @@
+{
+  "name": "Myil Admin",
+  "short_name": "Myil Admin",
+  "description": "Private workspace — money, trading, health and documents.",
+  "id": "/?app=admin",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "portrait",
+  "theme_color": "#07080c",
+  "background_color": "#07080c",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "/favicon/web-app-manifest-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon/web-app-manifest-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon/maskable-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon/maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Trading Journal", "url": "/trading-journal" },
+    { "name": "Budgets", "url": "/budgets" },
+    { "name": "Ask AI", "url": "/chat" }
+  ]
+}

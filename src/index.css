@@ -1015,7 +1015,8 @@ html.admin .royal-card {
   }
 }
 html.admin .aurum-page > * {
-  animation: aurum-rise 0.55s var(--ease-aurum) both;
+  /* backwards, not both: once finished it must hold no transform, or fixed sheets inside would size to this block. */
+  animation: aurum-rise 0.55s var(--ease-aurum) backwards;
 }
 html.admin .aurum-page > *:nth-child(2) { animation-delay: 50ms; }
 html.admin .aurum-page > *:nth-child(3) { animation-delay: 100ms; }
@@ -1066,4 +1067,125 @@ html.admin:not([data-theme^='royal']) .btn-primary {
 }
 html.admin:not([data-theme^='royal']) .btn-primary:hover {
   box-shadow: 0 14px 30px -10px rgb(var(--aurum-glow) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* ---------- Native feel (phones) ---------- */
+
+/* Material-style ripple, added on tap by src/lib/native.ts. */
+.native-ripple {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.16;
+  transform: scale(0);
+  animation: native-ripple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes native-ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Every dialog is a bottom sheet on a phone: full width, rounded top, a grab handle, sliding up from the bottom.
+   Dragging the handle down (or Android back) closes it — see src/lib/native.ts. */
+@keyframes native-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (max-width: 639px) and (pointer: coarse) {
+  html.admin [role='dialog'][data-state],
+  html.admin [role='alertdialog'][data-state] {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    translate: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    max-height: 92dvh !important;
+    border-radius: 26px 26px 0 0 !important;
+    border-width: 1px 0 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding-top: 26px !important;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -18px 50px -12px rgba(0, 0, 0, 0.45) !important;
+  }
+  html.admin [role='dialog'][data-state='open'],
+  html.admin [role='alertdialog'][data-state='open'] {
+    animation: native-sheet-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+  /* Grab handle drawn on the sheet itself, so every dialog gets one without code changes. */
+  html.admin [role='dialog'][data-state]::before,
+  html.admin [role='alertdialog'][data-state]::before {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    width: 42px;
+    height: 5px;
+    margin-left: -21px;
+    border-radius: 9999px;
+    background: var(--color-surface-15);
+  }
+}
+
+/* App chrome: no text selection or long-press callouts on controls, no overscroll glow behind the app. */
+@media (pointer: coarse) {
+  html.admin,
+  html.admin body {
+    overscroll-behavior-y: none;
+  }
+  html.admin button,
+  html.admin a,
+  html.admin [role='button'] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Skeleton shimmer for loading placeholders. */
+@keyframes skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.skeleton-line {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--color-surface-5) 25%, var(--color-surface-10) 50%, var(--color-surface-5) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line {
+    animation: none;
+  }
+}
+
+/* The top bar stays pinned; the glitter effect forces position: relative, which would otherwise override sticky. */
+html.admin header.aurum-header {
+  position: sticky !important;
+}
+/* Sheets opened by the app itself (not a Radix dialog) need to be fixed to the bottom too. */
+@media (max-width: 639px) and (pointer: coarse) {
+  html.admin [role='dialog'][data-state].native-sheet {
+    position: fixed !important;
+  }
+}
+
+/* While a sheet is open the bottom tab bar slides away, as in native apps, so the sheet owns the bottom edge. */
+html.admin nav[aria-label='Main'] {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.admin body:has([role='dialog'][data-state='open']) nav[aria-label='Main'],
+html.admin body:has([role='alertdialog'][data-state='open']) nav[aria-label='Main'] {
+  transform: translateY(calc(100% + 56px));
 }

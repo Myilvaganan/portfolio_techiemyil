@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { animate, motion, useInView, useReducedMotion } from 'framer-motion'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
+import { haptic } from '@/lib/native'
+import { AlertTriangle } from 'lucide-react'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
@@ -73,12 +74,9 @@ export function Panel({ title, hint, action, children, className }: { title?: st
   )
 }
 
+/** Loading state for a module page: skeleton shapes rather than a spinner, so the layout never jumps. */
 export function Loading({ label }: { label: string }) {
-  return (
-    <div role="status" className="flex items-center justify-center gap-2 py-16 text-sm text-text-secondary">
-      <Loader2 className="h-4 w-4 animate-spin text-accent" /> {label}
-    </div>
-  )
+  return <PageSkeleton label={label} />
 }
 
 export function Notice({ children, tone = 'warn' }: { children: ReactNode; tone?: 'warn' | 'bad' | 'info' }) {
@@ -158,5 +156,90 @@ export function Pill({ active, onClick, children }: { active: boolean; onClick: 
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * A list row you can swipe on a phone, like a native mail list: swipe right for the `right` action, left for the
+ * `left` action. The colour and icon behind the row appear as it moves; past the threshold it fires (with a buzz).
+ * On desktop it is a plain row — the same actions stay available as buttons inside it.
+ */
+export function SwipeRow({
+  children,
+  left,
+  right,
+}: {
+  children: ReactNode
+  left?: { label: string; icon: ReactNode; tone: 'bad' | 'good' | 'neutral'; onTrigger: () => void }
+  right?: { label: string; icon: ReactNode; tone: 'bad' | 'good' | 'neutral'; onTrigger: () => void }
+}) {
+  const x = useMotionValue(0)
+  const THRESHOLD = 96
+  const toneBg = { bad: 'bg-error', good: 'bg-positive', neutral: 'bg-surface-15' }
+  const leftOpacity = useTransform(x, [-THRESHOLD, -24], [1, 0])
+  const rightOpacity = useTransform(x, [24, THRESHOLD], [0, 1])
+  const [armed, setArmed] = useState<'left' | 'right' | null>(null)
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      {right && (
+        <motion.div style={{ opacity: rightOpacity }} className={cn('absolute inset-0 flex items-center gap-2 pl-4 text-sm font-medium text-white', toneBg[right.tone])}>
+          {right.icon} {right.label}
+        </motion.div>
+      )}
+      {left && (
+        <motion.div style={{ opacity: leftOpacity }} className={cn('absolute inset-0 flex items-center justify-end gap-2 pr-4 text-sm font-medium text-white', toneBg[left.tone])}>
+          {left.label} {left.icon}
+        </motion.div>
+      )}
+      <motion.div
+        drag={left || right ? 'x' : false}
+        dragDirectionLock
+        dragConstraints={{ left: left ? -160 : 0, right: right ? 160 : 0 }}
+        dragElastic={0.12}
+        dragSnapToOrigin
+        style={{ x, touchAction: 'pan-y' }}
+        onDrag={(_, info) => {
+          const next = info.offset.x > THRESHOLD ? 'right' : info.offset.x < -THRESHOLD ? 'left' : null
+          if (next !== armed) {
+            if (next) haptic(12)
+            setArmed(next)
+          }
+        }}
+        onDragEnd={(_, info) => {
+          setArmed(null)
+          if (info.offset.x > THRESHOLD) right?.onTrigger()
+          else if (info.offset.x < -THRESHOLD) left?.onTrigger()
+        }}
+        className="relative"
+      >
+        {children}
+      </motion.div>
+    </div>
+  )
+}
+
+/** Placeholder shapes shaped like a module page (four stat tiles and two panels), shimmering while data loads. */
+export function PageSkeleton({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-24 rounded-[20px] border border-border bg-surface-2 p-4">
+            <div className="skeleton-line h-3 w-20" />
+            <div className="skeleton-line mt-3 h-6 w-28" />
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        {[0, 1].map((i) => (
+          <div key={i} className="space-y-3 rounded-[20px] border border-border bg-surface-2 p-5">
+            <div className="skeleton-line h-5 w-40" />
+            {[0, 1, 2, 3].map((j) => (
+              <div key={j} className="skeleton-line h-10 w-full" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

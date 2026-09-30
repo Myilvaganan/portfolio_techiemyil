@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Car, Check, FileBadge, HeartPulse, Home, Landmark, Plus, ReceiptText, ShieldCheck, Tag, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Empty, Field, Loading, Notice, PageHero, Panel, Stat, inputCls } from '@/components/growth/kit'
+import { Empty, Field, Loading, Notice, PageHero, Panel, Stat, SwipeRow, inputCls } from '@/components/growth/kit'
 import { cn } from '@/lib/utils'
 import { defineStrings } from '@/lib/i18n'
 import { useLocale } from '@/lib/locale'
@@ -135,7 +135,12 @@ export function LifeAdmin() {
                           const c = cat(i.category)
                           const Icon = c.icon
                           return (
-                            <motion.li key={i.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5">
+                            <motion.li key={i.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}>
+                            <SwipeRow
+                              right={!i.builtIn && !i.done ? { label: s.markDone, icon: <Check className="h-4 w-4" />, tone: 'good', onTrigger: () => markDone(i) } : undefined}
+                              left={!i.builtIn ? { label: s.remove, icon: <Trash2 className="h-4 w-4" />, tone: 'bad', onTrigger: () => remove(i) } : undefined}
+                            >
+                            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
                               <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl', b === 'overdue' ? 'bg-error/15 text-error' : b === 'soon' ? 'bg-amber-500/15 text-amber-500' : 'bg-accent/12 text-accent')}>
                                 <Icon className="h-4 w-4" />
                               </span>
@@ -158,6 +163,8 @@ export function LifeAdmin() {
                                   </button>
                                 </div>
                               )}
+                            </div>
+                            </SwipeRow>
                             </motion.li>
                           )
                         })}
