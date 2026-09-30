@@ -114,7 +114,7 @@ function BackfillBody({ asOf, onImported, onClose }: { asOf: string; onImported:
         <p>No closed options trades were found in Options Analytics yet.</p>
         <p>
           Import a tradebook there first, then come back.{' '}
-          <Link to="/admin/options-analytics" onClick={onClose} className="text-accent underline-offset-2 hover:underline">
+          <Link to="/options-analytics" onClick={onClose} className="text-accent underline-offset-2 hover:underline">
             Open Options Analytics
           </Link>
         </p>

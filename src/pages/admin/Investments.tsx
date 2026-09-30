@@ -405,7 +405,7 @@ export function Investments() {
           <PageBadge />
           <div className="min-w-0">
           <h1 className="page-title">Investments</h1>
-          <p className="page-lede">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/admin/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
+          <p className="page-lede">Returns, SIPs, capital gains, tax savings and reminders. {!session && <Link to="/zerodha" className="text-accent hover:underline">Connect Zerodha</Link>}{!session && ' for live holdings.'}</p>
           </div>
         </div>
       </div>

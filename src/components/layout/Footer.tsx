@@ -1,5 +1,4 @@
 import { Heart } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/Container'
 import { Logo } from '@/components/ui/Logo'
 import { navLinks } from '@/data/nav'
@@ -84,9 +83,6 @@ export function Footer() {
               Built with React + TypeScript
               <Heart className="h-3.5 w-3.5 fill-accent text-accent" />
             </p>
-            <Link to="/admin" className="text-text-secondary/40 transition-colors hover:text-text-secondary">
-              Admin
-            </Link>
           </div>
         </Container>
       </div>

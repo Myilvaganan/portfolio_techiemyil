@@ -76,7 +76,7 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (hits[active]) go(hits[active].to)
-      else if (query.trim()) go(`/admin/documents?q=${encodeURIComponent(query.trim())}`)
+      else if (query.trim()) go(`/documents?q=${encodeURIComponent(query.trim())}`)
     }
   }
 

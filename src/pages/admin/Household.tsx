@@ -131,7 +131,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
             ) : (
               <>
                 Nothing found yet.{s.id === 'electricity' ? ' Bills paid through Amazon Pay, CRED or cash won’t show here.' : ''}{' '}
-                <Link to="/admin/bank-statements" className="text-accent hover:underline" onClick={(e) => e.stopPropagation()}>
+                <Link to="/bank-statements" className="text-accent hover:underline" onClick={(e) => e.stopPropagation()}>
                   Add statements
                 </Link>
               </>

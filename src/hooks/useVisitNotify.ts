@@ -1,3 +1,4 @@
+import { IS_ADMIN_HOST } from '@/lib/host'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { notifyVisit } from '@/lib/visit'
@@ -12,6 +13,6 @@ export function useVisitNotify() {
 
   // One cookieless page view per page opened; the server ignores /admin paths.
   useEffect(() => {
-    if (!pathname.startsWith('/admin')) recordHit(pathname)
+    if (!IS_ADMIN_HOST) recordHit(pathname)
   }, [pathname])
 }

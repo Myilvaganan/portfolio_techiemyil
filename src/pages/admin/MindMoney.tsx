@@ -187,7 +187,7 @@ export function MindMoney() {
             {report.loggedDays === 0 ? (
               <Empty title={s.noLogs}>
                 <p>{s.noLogsHint}</p>
-                <Link to="/admin/health-report" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
+                <Link to="/health-report" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
                   {s.health} →
                 </Link>
               </Empty>

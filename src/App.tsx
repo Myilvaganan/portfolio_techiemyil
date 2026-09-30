@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -20,6 +20,7 @@ import { ThemeProvider } from '@/hooks/useTheme'
 import { ResumeDownloadProvider } from '@/hooks/useResumeDownload'
 import { Home } from '@/pages/Home'
 import { retryImport } from '@/lib/lazyRetry'
+import { ADMIN_URL, IS_ADMIN_HOST } from '@/lib/host'
 
 const AtAGlance = lazy(() => retryImport(() => import('@/pages/AtAGlance')).then((m) => ({ default: m.AtAGlance })))
 const Blog = lazy(() => retryImport(() => import('@/pages/Blog')).then((m) => ({ default: m.Blog })))
@@ -28,9 +29,14 @@ const Tools = lazy(() => retryImport(() => import('@/pages/Tools')).then((m) => 
 const Admin = lazy(() => retryImport(() => import('@/pages/Admin')).then((m) => ({ default: m.Admin })))
 const NotFound = lazy(() => retryImport(() => import('@/pages/NotFound')).then((m) => ({ default: m.NotFound })))
 
+// Zerodha still sends its login callback to the old address until the redirect URL is changed in the Kite developer
+// console. Forward only that callback (with its token) to the admin domain; there is no admin on this site.
+if (!IS_ADMIN_HOST && typeof window !== 'undefined' && window.location.pathname === '/admin/zerodha' && window.location.search.includes('request_token')) {
+  window.location.replace(`${ADMIN_URL}/zerodha${window.location.search}`)
+}
+
 function AppShell() {
-  const location = useLocation()
-  const isAdmin = location.pathname.startsWith('/admin')
+  const isAdmin = IS_ADMIN_HOST
 
   useLenis({ disabled: isAdmin })
   useDisableContextMenu({ disabled: isAdmin })
@@ -43,7 +49,7 @@ function AppShell() {
         <RoyalSparkles />
         <Suspense fallback={null}>
           <Routes>
-            <Route path="/admin/*" element={<Admin />} />
+            <Route path="/*" element={<Admin />} />
           </Routes>
         </Suspense>
       </>

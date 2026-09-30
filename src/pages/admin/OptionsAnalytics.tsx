@@ -55,11 +55,11 @@ function JournalLink() {
     </>
   )
   return useInRouterContext() ? (
-    <Link to="/admin/trading-journal" data-cursor="hover" className={cls}>
+    <Link to="/trading-journal" data-cursor="hover" className={cls}>
       {inner}
     </Link>
   ) : (
-    <a href="/admin/trading-journal" className={cls}>
+    <a href="/trading-journal" className={cls}>
       {inner}
     </a>
   )

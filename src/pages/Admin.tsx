@@ -92,7 +92,7 @@ export function Admin() {
                 <Route path="habits" element={<Habits />} />
                 <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
-                <Route path="*" element={<Navigate to="/admin" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </AdminShell>
@@ -100,7 +100,7 @@ export function Admin() {
           <AdminLogin
             onSuccess={() => {
               setAuthed(true)
-              navigate('/admin', { replace: true })
+              navigate('', { replace: true })
             }}
           />
         )}

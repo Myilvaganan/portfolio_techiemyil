@@ -47,20 +47,20 @@ function StatCard({
 }
 
 const QUICK_ACTIONS = [
-  { label: 'Document Manager', to: '/admin/documents', icon: FolderOpen },
-  { label: 'Margin Calculator', to: '/admin/margin-calculator', icon: Calculator },
-  { label: 'Portfolio Rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
-  { label: 'Zerodha Dashboard', to: '/admin/zerodha', icon: TrendingUp },
-  { label: 'Options Analytics', to: '/admin/options-analytics', icon: BarChart3 },
-  { label: 'Bank Statements', to: '/admin/bank-statements', icon: Landmark },
-  { label: 'Credit Cards', to: '/admin/credit-cards', icon: CreditCard },
-  { label: 'Loans', to: '/admin/loans', icon: HandCoins },
-  { label: 'Health Report', to: '/admin/health-report', icon: HeartPulse },
-  { label: 'Trading Journal', to: '/admin/trading-journal', icon: BookOpen },
-  { label: 'Household', to: '/admin/household', icon: Home },
-  { label: 'Tax Information', to: '/admin/tax', icon: ReceiptText },
-  { label: 'Net Worth', to: '/admin/net-worth', icon: Scale },
-  { label: 'Website', to: '/admin/site', icon: Globe },
+  { label: 'Document Manager', to: '/documents', icon: FolderOpen },
+  { label: 'Margin Calculator', to: '/margin-calculator', icon: Calculator },
+  { label: 'Portfolio Rebalance', to: '/portfolio-rebalance', icon: PieChart },
+  { label: 'Zerodha Dashboard', to: '/zerodha', icon: TrendingUp },
+  { label: 'Options Analytics', to: '/options-analytics', icon: BarChart3 },
+  { label: 'Bank Statements', to: '/bank-statements', icon: Landmark },
+  { label: 'Credit Cards', to: '/credit-cards', icon: CreditCard },
+  { label: 'Loans', to: '/loans', icon: HandCoins },
+  { label: 'Health Report', to: '/health-report', icon: HeartPulse },
+  { label: 'Trading Journal', to: '/trading-journal', icon: BookOpen },
+  { label: 'Household', to: '/household', icon: Home },
+  { label: 'Tax Information', to: '/tax', icon: ReceiptText },
+  { label: 'Net Worth', to: '/net-worth', icon: Scale },
+  { label: 'Website', to: '/site', icon: Globe },
 ]
 
 const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '-' : ''}${formatInr(Math.abs(n))}`
@@ -181,7 +181,7 @@ export function DashboardHome() {
           value={pulse?.todayPnl != null ? signed(pulse.todayPnl) : '—'}
           valueClass={toneOf(pulse?.todayPnl ?? null)}
           sub={pulse ? `${pulse.todayTrades} trade${pulse.todayTrades === 1 ? '' : 's'} today · all books` : 'Loading…'}
-          onClick={() => navigate('/admin/trading-journal')}
+          onClick={() => navigate('/trading-journal')}
         />
         <PulseCard
           label="This month"
@@ -189,14 +189,14 @@ export function DashboardHome() {
           value={pulse?.monthPnl != null ? signed(pulse.monthPnl) : '—'}
           valueClass={toneOf(pulse?.monthPnl ?? null)}
           sub="Options + Forex, before tax"
-          onClick={() => navigate('/admin/trading-journal')}
+          onClick={() => navigate('/trading-journal')}
         />
         <PulseCard
           label="Next EMI"
           icon={CalendarClock}
           value={pulse?.nextEmi ? formatInr(pulse.nextEmi.amount) : '—'}
           sub={pulse?.nextEmi ? `${pulse.nextEmi.loan} · ${pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days} days`}` : 'No upcoming EMI found'}
-          onClick={() => navigate('/admin/loans')}
+          onClick={() => navigate('/loans')}
         />
         <PulseCard
           label="Loans outstanding"
@@ -204,21 +204,21 @@ export function DashboardHome() {
           value={pulse?.loansOutstanding != null ? formatInr(pulse.loansOutstanding) : '—'}
           sub={pulse?.overdueEmis ? `${pulse.overdueEmis} overdue` : 'All paid on time'}
           valueClass={pulse?.overdueEmis ? 'text-error' : undefined}
-          onClick={() => navigate('/admin/loans')}
+          onClick={() => navigate('/loans')}
         />
         <PulseCard
           label="Latest weight"
           icon={HeartPulse}
           value={pulse?.latestWeight ? `${pulse.latestWeight.kg.toFixed(1)} kg` : '—'}
           sub={pulse?.inbodyDaysSince != null ? `InBody ${pulse.inbodyDaysSince} days ago` : 'No InBody test yet'}
-          onClick={() => navigate('/admin/health-report')}
+          onClick={() => navigate('/health-report')}
         />
         <PulseCard
           label="Website this month"
           icon={Eye}
           value={pulse?.siteViews != null ? pulse.siteViews.toLocaleString('en-IN') : '—'}
           sub={pulse?.unreadMessages ? `${pulse.unreadMessages} unread message${pulse.unreadMessages === 1 ? '' : 's'}` : 'page views'}
-          onClick={() => navigate('/admin/site')}
+          onClick={() => navigate('/site')}
         />
       </div>
 

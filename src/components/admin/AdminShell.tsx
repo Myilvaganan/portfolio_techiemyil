@@ -36,28 +36,28 @@ interface NavSection {
 }
 
 const SEARCH_KEYWORDS: Record<string, string> = {
-  '/admin/loans': 'emi prepay foreclosure',
-  '/admin/subscriptions': 'recurring renewal netflix insurance domain price rise cancel',
-  '/admin/debt-free': 'avalanche snowball payoff prepay credit card interest emi',
-  '/admin/runway': 'emergency fund months job loss stress test savings',
-  '/admin/life-admin': 'passport licence insurance puc kyc deadline expiry renewal advance tax itr',
-  '/admin/habits': 'streak routine daily checklist workout reading',
-  '/admin/guardrails': 'rules stop loss limit discipline checklist risk',
-  '/admin/trading-journal': 'mt5 forex options calendar',
-  '/admin/health-report': 'inbody weight fat body',
-  '/admin/household': 'rent electricity bescom tangedco petrol bike zomato swiggy rapido ola instamart amazon appusamy visalakshi',
-  '/admin/tax': 'itr income tax return tds advance tax refund 80c 80d hra form 16 26as ais capital gains regime',
-  '/admin/net-worth': 'assets liabilities wealth',
-  '/admin/budgets': 'budget limit category overspend rules family',
-  '/admin/cash-flow': 'income savings runway burn projection',
-  '/admin/lending': 'lend loan owed friend borrowed money receivable emi split pass through',
-  '/admin/chat': 'ask question assistant chatbot ai answer',
-  '/admin/goals': 'goal target house bike emergency fund savings',
-  '/admin/investments': 'returns sip capital gains deductions 80c reminders itr',
-  '/admin/security': '2fa two factor authenticator password login',
-  '/admin/site': 'messages contact analytics visitors',
-  '/admin/credit-cards': 'card spend',
-  '/admin/bank-statements': 'bank spend transactions',
+  '/loans': 'emi prepay foreclosure',
+  '/subscriptions': 'recurring renewal netflix insurance domain price rise cancel',
+  '/debt-free': 'avalanche snowball payoff prepay credit card interest emi',
+  '/runway': 'emergency fund months job loss stress test savings',
+  '/life-admin': 'passport licence insurance puc kyc deadline expiry renewal advance tax itr',
+  '/habits': 'streak routine daily checklist workout reading',
+  '/guardrails': 'rules stop loss limit discipline checklist risk',
+  '/trading-journal': 'mt5 forex options calendar',
+  '/health-report': 'inbody weight fat body',
+  '/household': 'rent electricity bescom tangedco petrol bike zomato swiggy rapido ola instamart amazon appusamy visalakshi',
+  '/tax': 'itr income tax return tds advance tax refund 80c 80d hra form 16 26as ais capital gains regime',
+  '/net-worth': 'assets liabilities wealth',
+  '/budgets': 'budget limit category overspend rules family',
+  '/cash-flow': 'income savings runway burn projection',
+  '/lending': 'lend loan owed friend borrowed money receivable emi split pass through',
+  '/chat': 'ask question assistant chatbot ai answer',
+  '/goals': 'goal target house bike emergency fund savings',
+  '/investments': 'returns sip capital gains deductions 80c reminders itr',
+  '/security': '2fa two factor authenticator password login',
+  '/site': 'messages contact analytics visitors',
+  '/credit-cards': 'card spend',
+  '/bank-statements': 'bank spend transactions',
 }
 
 // Ordered by how often each is used: the daily pair first, then trading (the busiest area), day-to-day money, periodic wealth
@@ -65,73 +65,73 @@ const SEARCH_KEYWORDS: Record<string, string> = {
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', k: 'nav.dashboard', to: '/admin', icon: LayoutDashboard },
-      { label: 'Ask My Data', k: 'nav.ask', to: '/admin/chat', icon: Sparkles },
+      { label: 'Dashboard', k: 'nav.dashboard', to: '/', icon: LayoutDashboard },
+      { label: 'Ask My Data', k: 'nav.ask', to: '/chat', icon: Sparkles },
     ],
   },
   {
     label: 'Trading',
     k: 'nav.trading',
     items: [
-      { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/admin/trading-journal', icon: NotebookPen },
-      { label: 'Trading Guardrails', k: 'nav.guardrails', to: '/admin/guardrails', icon: ShieldAlert },
-      { label: 'Trading vs Life', k: 'nav.tradingLedger', to: '/admin/trading-vs-life', icon: Scale3d },
-      { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/admin/options-analytics', icon: BarChart3 },
-      { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/admin/zerodha', icon: TrendingUp },
-      { label: 'Margin Calculator', k: 'nav.margin', to: '/admin/margin-calculator', icon: Calculator },
+      { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/trading-journal', icon: NotebookPen },
+      { label: 'Trading Guardrails', k: 'nav.guardrails', to: '/guardrails', icon: ShieldAlert },
+      { label: 'Trading vs Life', k: 'nav.tradingLedger', to: '/trading-vs-life', icon: Scale3d },
+      { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/options-analytics', icon: BarChart3 },
+      { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/zerodha', icon: TrendingUp },
+      { label: 'Margin Calculator', k: 'nav.margin', to: '/margin-calculator', icon: Calculator },
     ],
   },
   {
     label: 'Money',
     k: 'nav.money',
     items: [
-      { label: 'Bank Statements', k: 'nav.bank', to: '/admin/bank-statements', icon: Landmark },
-      { label: 'Credit Cards', k: 'nav.cards', to: '/admin/credit-cards', icon: CreditCard },
-      { label: 'Budgets', k: 'nav.budgets', to: '/admin/budgets', icon: PiggyBank },
-      { label: 'Cash Flow', k: 'nav.cashFlow', to: '/admin/cash-flow', icon: Waves },
-      { label: 'Household', k: 'nav.household', to: '/admin/household', icon: Home },
-      { label: 'Subscriptions', k: 'nav.subscriptions', to: '/admin/subscriptions', icon: Repeat },
+      { label: 'Bank Statements', k: 'nav.bank', to: '/bank-statements', icon: Landmark },
+      { label: 'Credit Cards', k: 'nav.cards', to: '/credit-cards', icon: CreditCard },
+      { label: 'Budgets', k: 'nav.budgets', to: '/budgets', icon: PiggyBank },
+      { label: 'Cash Flow', k: 'nav.cashFlow', to: '/cash-flow', icon: Waves },
+      { label: 'Household', k: 'nav.household', to: '/household', icon: Home },
+      { label: 'Subscriptions', k: 'nav.subscriptions', to: '/subscriptions', icon: Repeat },
     ],
   },
   {
     label: 'Wealth & debt',
     k: 'nav.wealth',
     items: [
-      { label: 'Net Worth', k: 'nav.netWorth', to: '/admin/net-worth', icon: Scale },
-      { label: 'Investments', k: 'nav.investments', to: '/admin/investments', icon: LineChart },
-      { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/admin/portfolio-rebalance', icon: PieChart },
-      { label: 'Goals', k: 'nav.goals', to: '/admin/goals', icon: Target },
-      { label: 'Loans', k: 'nav.loans', to: '/admin/loans', icon: HandCoins },
-      { label: 'Debt-Free Plan', k: 'nav.debtFree', to: '/admin/debt-free', icon: Mountain },
-      { label: 'Runway & Stress', k: 'nav.runway', to: '/admin/runway', icon: LifeBuoy },
-      { label: 'Lending', k: 'nav.lending', to: '/admin/lending', icon: Handshake },
-      { label: 'Tax Information', k: 'nav.tax', to: '/admin/tax', icon: ReceiptText },
+      { label: 'Net Worth', k: 'nav.netWorth', to: '/net-worth', icon: Scale },
+      { label: 'Investments', k: 'nav.investments', to: '/investments', icon: LineChart },
+      { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/portfolio-rebalance', icon: PieChart },
+      { label: 'Goals', k: 'nav.goals', to: '/goals', icon: Target },
+      { label: 'Loans', k: 'nav.loans', to: '/loans', icon: HandCoins },
+      { label: 'Debt-Free Plan', k: 'nav.debtFree', to: '/debt-free', icon: Mountain },
+      { label: 'Runway & Stress', k: 'nav.runway', to: '/runway', icon: LifeBuoy },
+      { label: 'Lending', k: 'nav.lending', to: '/lending', icon: Handshake },
+      { label: 'Tax Information', k: 'nav.tax', to: '/tax', icon: ReceiptText },
     ],
   },
   {
     label: 'Health',
     k: 'nav.health',
     items: [
-      { label: 'Health Report', k: 'nav.healthReport', to: '/admin/health-report', icon: HeartPulse },
-      { label: 'Mind & Money', k: 'nav.mindMoney', to: '/admin/mind-money', icon: Brain },
+      { label: 'Health Report', k: 'nav.healthReport', to: '/health-report', icon: HeartPulse },
+      { label: 'Mind & Money', k: 'nav.mindMoney', to: '/mind-money', icon: Brain },
     ],
   },
   {
     label: 'Growth',
     k: 'nav.growth',
     items: [
-      { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/admin/monthly-review', icon: CalendarCheck },
-      { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/admin/life-admin', icon: ClipboardList },
-      { label: 'Habits', k: 'nav.habits', to: '/admin/habits', icon: Flame },
+      { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/monthly-review', icon: CalendarCheck },
+      { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
+      { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
     ],
   },
   {
     label: 'Manage',
     k: 'nav.manage',
     items: [
-      { label: 'Document Manager', k: 'nav.documents', to: '/admin/documents', icon: FolderOpen },
-      { label: 'Website', k: 'nav.website', to: '/admin/site', icon: Globe },
-      { label: 'Security', k: 'nav.security', to: '/admin/security', icon: ShieldCheck },
+      { label: 'Document Manager', k: 'nav.documents', to: '/documents', icon: FolderOpen },
+      { label: 'Website', k: 'nav.website', to: '/site', icon: Globe },
+      { label: 'Security', k: 'nav.security', to: '/security', icon: ShieldCheck },
     ],
   },
 ]
@@ -482,7 +482,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                       <NavLink
                         key={item.to}
                         to={item.to}
-                        end={item.to === '/admin'}
+                        end={item.to === '/'}
                         className={({ isActive }) =>
                           cn('btn-3d flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
                         }
@@ -525,7 +525,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
       </AnimatePresence>
 
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[60] flex border-t border-border bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
-        {link('/admin', t('nav.home'), LayoutDashboard, true)}
+        {link('/', t('nav.home'), LayoutDashboard, true)}
         <button type="button" onClick={() => {
             tap()
             setSheet(sheet === 'finance' ? null : 'finance')
@@ -533,7 +533,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
           <Wallet className="h-5 w-5" />
           {t('nav.finance')}
         </button>
-        <NavLink to="/admin/chat" onClick={tap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
+        <NavLink to="/chat" onClick={tap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
             <>
               <span className={cn('-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
@@ -629,7 +629,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    end={item.to === '/admin'}
+                    end={item.to === '/'}
                     className={({ isActive }) =>
                       cn(
                         'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
@@ -695,7 +695,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
 function PageBadgeInner() {
   const { pathname } = useLocation()
-  const item = NAV_SECTIONS.flatMap((sec) => sec.items).find((i) => (i.to === '/admin' ? pathname === '/admin' : pathname.startsWith(i.to)))
+  const item = NAV_SECTIONS.flatMap((sec) => sec.items).find((i) => (i.to === '/' ? pathname === '/' : pathname.startsWith(i.to)))
   return item ? <IconBadge icon={item.icon} seed={item.to} size="lg" className="mt-0.5" /> : null
 }
 

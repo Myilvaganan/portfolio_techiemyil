@@ -80,7 +80,7 @@ describe('ZerodhaSyncDialog', () => {
     setup()
 
     expect(await screen.findByText('Connect Zerodha first')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Connect Zerodha' })).toHaveAttribute('href', '/admin/zerodha')
+    expect(screen.getByRole('link', { name: 'Connect Zerodha' })).toHaveAttribute('href', '/zerodha')
   })
 
   it('says so when the Zerodha session has expired', async () => {

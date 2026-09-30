@@ -17,12 +17,9 @@ export default defineConfig({
         short_name: 'Techie Myil',
         description:
           'Portfolio of Myilvaganan Sakthivel — Senior Software Engineer & Technical Lead building scalable, AI-integrated systems.',
-        start_url: '/admin',
+        // One build serves both domains: on admin.techiemyil.com "/" is the admin app, on techiemyil.com the portfolio.
+        start_url: '/',
         scope: '/',
-        shortcuts: [
-          { name: 'Admin', url: '/admin', icons: [{ src: '/favicon/web-app-manifest-192x192.png', sizes: '192x192' }] },
-          { name: 'Portfolio', url: '/', icons: [{ src: '/favicon/web-app-manifest-192x192.png', sizes: '192x192' }] },
-        ],
         display: 'standalone',
         theme_color: '#0a0612',
         background_color: '#0a0612',

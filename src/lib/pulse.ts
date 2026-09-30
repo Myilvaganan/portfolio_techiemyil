@@ -81,12 +81,12 @@ export interface Notice {
 
 export function noticesFrom(p: Pulse, fmt: (n: number) => string): Notice[] {
   const out: Notice[] = []
-  if (p.lossLimitHit && p.todayPnl !== null) out.push({ id: 'loss', tone: 'bad', title: 'Daily loss limit reached', detail: `Today is ${fmt(p.todayPnl)} across ${p.todayTrades} trades. Stop for the day.`, to: '/admin/trading-journal' })
-  if (p.overdueEmis > 0) out.push({ id: 'overdue', tone: 'bad', title: `${p.overdueEmis} overdue EMI${p.overdueEmis === 1 ? '' : 's'}`, detail: 'Pay now to avoid penalties and a credit-score hit.', to: '/admin/loans' })
+  if (p.lossLimitHit && p.todayPnl !== null) out.push({ id: 'loss', tone: 'bad', title: 'Daily loss limit reached', detail: `Today is ${fmt(p.todayPnl)} across ${p.todayTrades} trades. Stop for the day.`, to: '/trading-journal' })
+  if (p.overdueEmis > 0) out.push({ id: 'overdue', tone: 'bad', title: `${p.overdueEmis} overdue EMI${p.overdueEmis === 1 ? '' : 's'}`, detail: 'Pay now to avoid penalties and a credit-score hit.', to: '/loans' })
   if (p.nextEmi && p.nextEmi.days <= EMI_SOON_DAYS) {
-    out.push({ id: 'emi', tone: 'warn', title: p.nextEmi.days === 0 ? 'EMI due today' : `EMI due in ${p.nextEmi.days} day${p.nextEmi.days === 1 ? '' : 's'}`, detail: `${p.nextEmi.loan}: ${fmt(p.nextEmi.amount)} on ${p.nextEmi.date}.`, to: '/admin/loans' })
+    out.push({ id: 'emi', tone: 'warn', title: p.nextEmi.days === 0 ? 'EMI due today' : `EMI due in ${p.nextEmi.days} day${p.nextEmi.days === 1 ? '' : 's'}`, detail: `${p.nextEmi.loan}: ${fmt(p.nextEmi.amount)} on ${p.nextEmi.date}.`, to: '/loans' })
   }
-  if (p.inbodyDaysSince !== null && p.inbodyDaysSince >= INBODY_EVERY_DAYS) out.push({ id: 'inbody', tone: 'info', title: 'Time for an InBody test', detail: `Your last test was ${p.inbodyDaysSince} days ago.`, to: '/admin/health-report' })
-  if (p.unreadMessages > 0) out.push({ id: 'messages', tone: 'info', title: `${p.unreadMessages} new message${p.unreadMessages === 1 ? '' : 's'}`, detail: 'From the contact form on your website.', to: '/admin/site' })
+  if (p.inbodyDaysSince !== null && p.inbodyDaysSince >= INBODY_EVERY_DAYS) out.push({ id: 'inbody', tone: 'info', title: 'Time for an InBody test', detail: `Your last test was ${p.inbodyDaysSince} days ago.`, to: '/health-report' })
+  if (p.unreadMessages > 0) out.push({ id: 'messages', tone: 'info', title: `${p.unreadMessages} new message${p.unreadMessages === 1 ? '' : 's'}`, detail: 'From the contact form on your website.', to: '/site' })
   return [...out, ...p.extra]
 }

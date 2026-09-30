@@ -183,7 +183,7 @@ function Overview({ returns, onOpen, txns, bank }: { returns: TaxReturn[]; onOpe
               return (
                 <li key={r.ay} className={cn('flex items-start gap-2', covered === 12 ? 'text-text-secondary' : 'text-text')}>
                   {covered === 12 ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-positive" /> : <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />}
-                  {fyLabel(fyOfAy(r.ay))}: bank statements cover {covered} of 12 months.{covered < 12 && <> Add the rest on <Link to="/admin/bank-statements" className="text-accent hover:underline">Bank Statements</Link>.</>}
+                  {fyLabel(fyOfAy(r.ay))}: bank statements cover {covered} of 12 months.{covered < 12 && <> Add the rest on <Link to="/bank-statements" className="text-accent hover:underline">Bank Statements</Link>.</>}
                 </li>
               )
             })}
@@ -411,7 +411,7 @@ function Transactions({ txns, returns }: { txns: TaxTxn[]; returns: TaxReturn[] 
             Transactions considered <span className="font-normal text-text-secondary">· {shown.length}</span>
           </h3>
           {shown.length === 0 ? (
-            <p className="text-sm text-text-secondary">Nothing matched. Upload more statements on <Link to="/admin/bank-statements" className="text-accent hover:underline">Bank Statements</Link> or <Link to="/admin/credit-cards" className="text-accent hover:underline">Credit Cards</Link>.</p>
+            <p className="text-sm text-text-secondary">Nothing matched. Upload more statements on <Link to="/bank-statements" className="text-accent hover:underline">Bank Statements</Link> or <Link to="/credit-cards" className="text-accent hover:underline">Credit Cards</Link>.</p>
           ) : (
             <div className="max-h-[36rem] overflow-y-auto pr-1">
               <table className="w-full text-left text-xs">

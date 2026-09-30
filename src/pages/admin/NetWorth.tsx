@@ -187,7 +187,7 @@ export function NetWorth() {
               )}
               {!bankGroup.hasData && (
                 <p className="mt-3 text-center text-xs text-text-secondary">
-                  No bank balances yet. <Hint to="/admin/bank-statements">Add bank statements →</Hint>
+                  No bank balances yet. <Hint to="/bank-statements">Add bank statements →</Hint>
                 </p>
               )}
             </Card>
@@ -211,12 +211,12 @@ export function NetWorth() {
               <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-center text-xs text-text-secondary">
                 {!loanGroup.hasData && (
                   <p>
-                    No loans on record. <Hint to="/admin/loans">Add loan documents →</Hint>
+                    No loans on record. <Hint to="/loans">Add loan documents →</Hint>
                   </p>
                 )}
                 {!cardGroup.hasData && (
                   <p>
-                    No cards on record. <Hint to="/admin/credit-cards">Add card statements →</Hint>
+                    No cards on record. <Hint to="/credit-cards">Add card statements →</Hint>
                   </p>
                 )}
               </div>

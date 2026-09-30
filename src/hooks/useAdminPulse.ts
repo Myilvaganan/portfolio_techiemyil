@@ -39,15 +39,15 @@ async function moneyNotices(today: string): Promise<Notice[]> {
   const bankTxns = bank ? applyRules(bank.transactions, rules) : []
   const cardTxns = card ? applyRules(card.transactions, rules) : []
   const all = [...bankTxns, ...cardTxns]
-  if (settings && all.length) for (const n of budgetNotices(settings.budgets, all, today, settings.tags)) out.push({ ...n, tone: 'warn', to: '/admin/budgets' })
-  if (card) for (const n of cardDueNotices(buildCardDues(card.transactions, card.statements, today), today)) out.push({ ...n, tone: 'warn', to: '/admin/credit-cards' })
-  for (const n of dueReminders(buildReminders(bankTxns, today, custom ?? []), today, 14)) out.push({ ...n, tone: 'info', to: '/admin/investments' })
-  for (const n of spendAlerts(all, today).slice(0, 3)) out.push({ ...n, tone: 'info', to: '/admin/budgets' })
+  if (settings && all.length) for (const n of budgetNotices(settings.budgets, all, today, settings.tags)) out.push({ ...n, tone: 'warn', to: '/budgets' })
+  if (card) for (const n of cardDueNotices(buildCardDues(card.transactions, card.statements, today), today)) out.push({ ...n, tone: 'warn', to: '/credit-cards' })
+  for (const n of dueReminders(buildReminders(bankTxns, today, custom ?? []), today, 14)) out.push({ ...n, tone: 'info', to: '/investments' })
+  for (const n of spendAlerts(all, today).slice(0, 3)) out.push({ ...n, tone: 'info', to: '/budgets' })
   const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`
-  for (const n of lendingNotices(lending ?? [], today, inr)) out.push({ ...n, tone: 'warn', to: '/admin/lending' })
+  for (const n of lendingNotices(lending ?? [], today, inr)) out.push({ ...n, tone: 'warn', to: '/lending' })
   const waiting = (inbox?.items ?? []).filter((i) => ['new', 'ready', 'failed'].includes(i.status))
   if (waiting.length) {
-    const to = { bank: '/admin/bank-statements', card: '/admin/credit-cards', loan: '/admin/loans' }[waiting[0].kind ?? waiting[0].guess] ?? '/admin/bank-statements'
+    const to = { bank: '/bank-statements', card: '/credit-cards', loan: '/loans' }[waiting[0].kind ?? waiting[0].guess] ?? '/bank-statements'
     out.push({ id: `inbox-${waiting.length}`, tone: 'info', title: `${waiting.length} statement${waiting.length === 1 ? '' : 's'} arrived by email`, detail: 'Open the page to read them into your accounts.', to })
   }
   return out

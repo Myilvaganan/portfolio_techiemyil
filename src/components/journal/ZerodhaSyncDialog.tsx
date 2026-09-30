@@ -68,7 +68,7 @@ function Body({ asOf, onSynced, onClose }: { asOf: string; onSynced: (r: SyncRes
           <p>Kite needs a fresh sign-in each trading day. Connect on the Zerodha page, then come back here and sync.</p>
         </div>
         <Link
-          to="/admin/zerodha"
+          to="/zerodha"
           onClick={onClose}
           className="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-medium text-[#05130a] transition-colors hover:bg-accent-hover"
         >

@@ -99,7 +99,7 @@ describe('BackfillDialog', () => {
     setup()
 
     expect(await screen.findByText(/No closed options trades were found/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /open options analytics/i })).toHaveAttribute('href', '/admin/options-analytics')
+    expect(screen.getByRole('link', { name: /open options analytics/i })).toHaveAttribute('href', '/options-analytics')
   })
 
   it('shows a retry when the trades cannot be read', async () => {
