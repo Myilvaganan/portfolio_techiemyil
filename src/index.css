@@ -1072,11 +1072,16 @@ html.admin:not([data-theme^='royal']) .btn-primary:hover {
 /* ---------- Native feel (phones) ---------- */
 
 /* Material-style ripple, added on tap by src/lib/native.ts. */
+.native-ripple-frame {
+  position: fixed;
+  z-index: 2147483000;
+  overflow: hidden;
+  pointer-events: none;
+}
 .native-ripple {
   position: absolute;
   border-radius: 9999px;
   pointer-events: none;
-  background: currentColor;
   opacity: 0.16;
   transform: scale(0);
   animation: native-ripple 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;

@@ -2,11 +2,11 @@ import { Component, type ReactNode } from 'react'
 import { RefreshCw } from 'lucide-react'
 
 /** The last line of defence: a visible message and a Reload button instead of a black screen. */
-export class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false }
+export class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean; message: string }> {
+  state = { failed: false, message: '' }
 
-  static getDerivedStateFromError() {
-    return { failed: true }
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: true, message: error instanceof Error ? error.message : String(error) }
   }
 
   componentDidCatch(error: unknown) {
@@ -19,6 +19,8 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, { faile
       <div role="alert" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg px-6 text-center text-text">
         <h1 className="font-display text-xl font-semibold">Something went wrong</h1>
         <p className="max-w-sm text-sm text-text-secondary">The app may have just been updated. Reloading usually fixes it.</p>
+        {/* The actual error, small, so a screenshot says what broke. */}
+        {this.state.message && <p className="max-w-sm break-words font-mono text-2xs text-text-secondary/60">{this.state.message.slice(0, 200)}</p>}
         <button
           type="button"
           onClick={() => window.location.reload()}

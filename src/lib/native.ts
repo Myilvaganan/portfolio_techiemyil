@@ -55,23 +55,20 @@ function onPointerDown(e: PointerEvent) {
   const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('button:not(:disabled), a[href], [role="button"], [role="switch"], [role="tab"]')
   if (!el || el.closest('[data-no-ripple]')) return
   haptic(6)
+  // The ripple is drawn in its own layer on <body>, clipped to the control's shape — never inside the control.
+  // Adding nodes (or inline styles) to elements React owns can make its next update crash the app.
   const rect = el.getBoundingClientRect()
   const size = Math.max(rect.width, rect.height) * 1.6
+  const cs = getComputedStyle(el)
+  const frame = document.createElement('span')
+  frame.className = 'native-ripple-frame'
+  Object.assign(frame.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: cs.borderRadius })
   const ripple = document.createElement('span')
   ripple.className = 'native-ripple'
-  ripple.style.width = ripple.style.height = `${size}px`
-  ripple.style.left = `${e.clientX - rect.left - size / 2}px`
-  ripple.style.top = `${e.clientY - rect.top - size / 2}px`
-  const style = getComputedStyle(el)
-  const prev = { position: el.style.position, overflow: el.style.overflow }
-  if (style.position === 'static') el.style.position = 'relative'
-  el.style.overflow = 'hidden'
-  el.appendChild(ripple)
-  window.setTimeout(() => {
-    ripple.remove()
-    el.style.position = prev.position
-    el.style.overflow = prev.overflow
-  }, 520)
+  Object.assign(ripple.style, { width: `${size}px`, height: `${size}px`, left: `${e.clientX - rect.left - size / 2}px`, top: `${e.clientY - rect.top - size / 2}px`, background: cs.color })
+  frame.appendChild(ripple)
+  document.body.appendChild(frame)
+  window.setTimeout(() => frame.remove(), 560)
 }
 
 // ---------- Bottom sheets ----------
