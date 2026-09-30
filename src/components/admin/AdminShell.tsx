@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BellRing, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -21,6 +21,7 @@ import { LocalePicker } from './LocalePicker'
 import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
+import { usePush } from '@/lib/push'
 import { useLocale } from '@/lib/locale'
 
 interface NavItem {
@@ -158,6 +159,47 @@ interface ScaleProps {
   lock: AppLock
 }
 
+/** Push notifications on this device: card bills, deadlines and loss-limit alerts. */
+function NotificationsRow() {
+  const push = usePush()
+  const [tested, setTested] = useState(false)
+  if (!push.supported) return null
+  return (
+    <div className="space-y-1.5">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={push.enabled}
+        disabled={push.busy}
+        onClick={() => (push.enabled ? push.disable() : push.enable())}
+        className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left"
+      >
+        <IconBadge icon={BellRing} seed="push" size="sm" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-text">Notifications</span>
+          <span className="block truncate text-xs text-text-secondary">Bills, deadlines, loss limit</span>
+        </span>
+        <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', push.enabled ? 'bg-accent' : 'bg-surface-15')}>
+          <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', push.enabled ? 'translate-x-[18px]' : 'translate-x-0.5')} />
+        </span>
+      </button>
+      {push.enabled && (
+        <button
+          type="button"
+          onClick={async () => {
+            await push.test().catch(() => {})
+            setTested(true)
+          }}
+          className="px-1 text-xs font-medium text-accent"
+        >
+          {tested ? 'Test sent — check your notifications' : 'Send a test notification'}
+        </button>
+      )}
+      {push.error && <p className="px-1 text-xs text-error">{push.error}</p>}
+    </div>
+  )
+}
+
 /** One switch for the whole app: every amount turns to stars (for opening the app in public). */
 function HideNumbersRow() {
   const { hidden, toggle } = usePrivacy()
@@ -279,6 +321,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void 
             <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
             <HideNumbersRow />
+            <NotificationsRow />
                   <AppLockRow lock={lock} />
           </div>
           <button
@@ -500,6 +543,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
                   <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
                   <HideNumbersRow />
+            <NotificationsRow />
                   <AppLockRow lock={lock} />
                 </div>
               )}

@@ -19,6 +19,7 @@ const { createInboxApi } = require('./inbox')
 const { createLendingApi } = require('./lending')
 const { createChatApi } = require('./chat')
 const { createGrowthApi } = require('./growth')
+const { createPushApi } = require('./push')
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
@@ -59,6 +60,7 @@ const inboxApi = createInboxApi({
 const chatApi = createChatApi({ s3, bucket: S3_BUCKET, callOpenAI: (o) => statementsCallOpenAI({ ...o, model: statementsModel() }), model: undefined })
 const lendingApi = createLendingApi({ s3, bucket: S3_BUCKET })
 const growthApi = createGrowthApi({ s3, bucket: S3_BUCKET })
+const pushApi = createPushApi({ s3, bucket: S3_BUCKET, publicKey: process.env.VAPID_PUBLIC_KEY, privateKey: process.env.VAPID_PRIVATE_KEY })
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
 const investApi = createInvestApi({ s3, bucket: S3_BUCKET })
@@ -558,6 +560,9 @@ async function handleKiteLogout(payload) {
 // ---------- Entry point ----------
 
 exports.handler = async (event) => {
+  // The twice-daily EventBridge schedule (not an HTTP request): send any due notifications.
+  if (event && event.source === 'aws.events') return pushApi.runScheduled()
+
   const method = getMethod(event)
   const path = getPath(event)
   const origin = getOrigin(event)
@@ -655,6 +660,11 @@ exports.handler = async (event) => {
 
     if (path.startsWith('/admin/security')) {
       const result = await securityApi.route({ method, path, payload, account: session.sub })
+      if (result) return respond(result.statusCode, result.body)
+    }
+
+    if (path.startsWith('/admin/push')) {
+      const result = await pushApi.route({ method, path, payload })
       if (result) return respond(result.statusCode, result.body)
     }
 

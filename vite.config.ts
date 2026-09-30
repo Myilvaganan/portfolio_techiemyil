@@ -38,6 +38,8 @@ export default defineConfig({
         skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,woff,woff2}'],
         navigateFallbackDenylist: [/^\/resume\//],
+        // Push notifications for the admin app (see public/push-sw.js).
+        importScripts: ['/push-sw.js'],
         // Read-only offline mode: the last successful answers for vault data are kept for a week and used when the network fails.
         runtimeCaching: [
           {
