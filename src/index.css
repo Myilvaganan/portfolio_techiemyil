@@ -1806,7 +1806,7 @@ html.admin.noir .depth {
 /* ---------- Colour tiles ----------
    Stat tiles across every module: a bright gradient (set per tile in --tile-bg), white text, a soft coloured shadow.
    Beats the themes' own card backgrounds, and turns every number and label inside white so tones stay readable. */
-html.admin .color-tile {
+html.admin .color-tile.color-tile.color-tile {
   background: var(--tile-bg) !important;
   border-color: transparent !important;
   box-shadow:
@@ -1815,24 +1815,24 @@ html.admin .color-tile {
   position: relative;
   overflow: hidden;
 }
-html.admin .color-tile::before {
+html.admin .color-tile.color-tile.color-tile::before {
   content: '';
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.22), transparent 55%);
   pointer-events: none;
 }
-html.admin .color-tile,
-html.admin .color-tile * {
+html.admin .color-tile.color-tile.color-tile,
+html.admin .color-tile.color-tile.color-tile * {
   color: #fff !important;
 }
-html.admin .color-tile .label-caps,
-html.admin .color-tile [class*='text-text-secondary'],
-html.admin .color-tile .text-2xs,
-html.admin .color-tile .text-xs {
+html.admin .color-tile.color-tile.color-tile .label-caps,
+html.admin .color-tile.color-tile.color-tile [class*='text-text-secondary'],
+html.admin .color-tile.color-tile.color-tile .text-2xs,
+html.admin .color-tile.color-tile.color-tile .text-xs {
   color: rgba(255, 255, 255, 0.85) !important;
 }
-html.admin .color-tile > span[aria-hidden].absolute.inset-y-0 {
+html.admin .color-tile.color-tile.color-tile > span[aria-hidden].absolute.inset-y-0 {
   display: none;
 }
 
@@ -1866,4 +1866,13 @@ html.admin {
     width: 0;
     height: 0;
   }
+}
+
+/* Content never pushes past the right edge: grid children may shrink below their content's width, and long words wrap (the
+   browser default lets a long word or number force the column wider than the screen). */
+html.admin main .grid > * {
+  min-width: 0;
+}
+html.admin main {
+  overflow-wrap: break-word;
 }

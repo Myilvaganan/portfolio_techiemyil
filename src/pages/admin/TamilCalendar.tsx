@@ -30,12 +30,12 @@ function useMonth(month: string, placeName: string) {
 
 function TimeRow({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone?: 'good' | 'bad' }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
-      <span className="flex items-center gap-2 text-sm text-text-secondary">
+    <div className="flex items-start justify-between gap-3 py-2">
+      <span className="flex shrink-0 items-center gap-2 text-sm text-text-secondary">
         {icon}
         {label}
       </span>
-      <span className={cn('font-mono text-sm', tone === 'good' ? 'text-positive' : tone === 'bad' ? 'text-error' : 'text-text')}>{value}</span>
+      <span className={cn('min-w-0 text-right font-mono text-sm [overflow-wrap:anywhere]', tone === 'good' ? 'text-positive' : tone === 'bad' ? 'text-error' : 'text-text')}>{value}</span>
     </div>
   )
 }
@@ -101,7 +101,7 @@ export function TamilCalendar() {
   }
 
   return (
-    <div className="w-full space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <PageHero eyebrow="Tamil · English" title="Calendar" lede="Panchangam for every day: Tamil date, thithi, star, yogam, karanam, the good and bad hours, festivals and your daily rasi palan." />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -123,7 +123,7 @@ export function TamilCalendar() {
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center">
+          <div className="grid grid-cols-7 gap-0.5 text-center sm:gap-1">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
               <span key={d} className={cn('pb-1 text-2xs font-semibold', i === 0 ? 'text-error' : 'text-text-secondary')}>{d}</span>
             ))}
@@ -145,7 +145,7 @@ export function TamilCalendar() {
                   onClick={() => pick(d)}
                   whileTap={{ scale: 0.9 }}
                   className={cn(
-                    'relative flex min-h-[3.6rem] flex-col items-center justify-start gap-0.5 rounded-xl border px-0.5 pb-1 pt-1.5 transition-colors',
+                    'relative flex min-h-[3.4rem] min-w-0 flex-col items-center justify-start gap-0.5 overflow-hidden rounded-xl border px-0 pb-1 pt-1.5 transition-colors',
                     isPicked ? 'border-accent bg-accent/15' : 'border-transparent hover:bg-surface-3',
                     d === today && !isPicked && 'border-accent/50',
                     main?.major && !isPicked && 'bg-amber-500/10',
@@ -154,7 +154,7 @@ export function TamilCalendar() {
                   <span className={cn('text-sm font-semibold leading-none', new Date(`${d}T00:00:00Z`).getUTCDay() === 0 ? 'text-error' : 'text-text')}>{Number(d.slice(8))}</span>
                   <span className="text-[9px] leading-none text-text-secondary">{info?.facts.tamil.day}</span>
                   {main ? (
-                    <FestiveIcon kind={main.icon} className={cn('mt-0.5 h-5 w-5', ICON_TONE[main.icon])} />
+                    <FestiveIcon kind={main.icon} className={cn('mt-0.5 h-4 w-4 sm:h-5 sm:w-5', ICON_TONE[main.icon])} />
                   ) : t === 14 ? (
                     <FestiveIcon kind="fullMoon" className="mt-0.5 h-4 w-4 text-sky-400" />
                   ) : null}
