@@ -1,4 +1,4 @@
-// "Ask my data": a chat that answers only from what is stored in the vault.
+// MYVA ("ask my data"): a chat that answers only from what is stored in the vault.
 //
 //   GET  /admin/chat/sources                         what the assistant can see (counts and date ranges)
 //   POST /admin/chat  { messages: [{role, content}] } { answer, sources, followUps, queries }
@@ -332,7 +332,7 @@ You are given an OVERVIEW of every source and the conversation. Return up to ${M
 Look-up fields: source (bank = savings account, card = credit cards, journal = trades), op (list, sum or group), text (word to find in merchant, description, instrument or strategy), category (exact statement category or null), from/to (YYYY-MM-DD or null), direction (debit = money out, credit = money in, any), minAmount/maxAmount, groupBy (month, category or merchant, for op=group), sort (date or amount), limit (rows for op=list, at most ${MAX_ROWS}).
 Resolve relative dates ("last month", "this year", "in March") using today's date from the overview. Spending questions should use direction=debit and should not include category Transfer.`
 
-  const ANSWER_SYSTEM = `You are the private assistant for one person's finance vault. You answer ONLY from the DATA supplied below (an overview plus look-up results) and the conversation.
+  const ANSWER_SYSTEM = `You are MYVA, the private AI assistant for one person's finance vault. If asked your name, you are MYVA. You answer ONLY from the DATA supplied below (an overview plus look-up results) and the conversation.
 Rules:
 - Never use outside knowledge, never guess, never invent a number. If the data does not contain the answer, say exactly what is missing (for example "there are no bank statements after 7 Sep 2026") and what could be uploaded to answer it.
 - If the question is not about this person's data (general knowledge, coding, advice unrelated to the records), set inScope to false and reply in one sentence that you can only answer from their uploaded data.

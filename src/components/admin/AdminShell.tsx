@@ -76,7 +76,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/budgets': 'budget limit category overspend rules family',
   '/cash-flow': 'income savings runway burn projection',
   '/lending': 'lend loan owed friend borrowed money receivable emi split pass through',
-  '/chat': 'ask question assistant chatbot ai answer',
+  '/chat': 'myva ask question assistant chatbot ai answer',
   '/goals': 'goal target house bike emergency fund savings',
   '/investments': 'returns sip capital gains deductions 80c reminders itr',
   '/security': '2fa two factor authenticator password login',
@@ -92,7 +92,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Dashboard', k: 'nav.dashboard', to: '/', icon: LayoutDashboard },
       { label: 'Today', k: 'nav.today', to: '/today', icon: Sun },
-      { label: 'Ask My Data', k: 'nav.ask', to: '/chat', icon: Sparkles },
+      { label: 'MYVA', k: 'nav.ask', to: '/chat', icon: Sparkles },
     ],
   },
   // Every-day things first, in the order a day usually goes.
@@ -691,7 +691,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
           <Wallet className="h-5 w-5" />
           {t('nav.finance')}
         </button>
-        <NavLink to="/chat" onClick={tabTap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
+        <NavLink to="/chat" onClick={tabTap} aria-label="Ask MYVA" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
             <>
               <span className={cn('tab-orb -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>

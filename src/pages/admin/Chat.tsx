@@ -121,8 +121,8 @@ export function Chat() {
           <div className="flex items-start gap-3.5">
             <PageBadge />
             <div className="min-w-0">
-            <p className="page-eyebrow">Ask your data</p>
-            <h1 className="mt-1 page-title">Chat</h1>
+            <p className="page-eyebrow">Your AI assistant</p>
+            <h1 className="mt-1 page-title">MYVA</h1>
             <p className="page-lede hidden sm:block">Answers come only from what you have uploaded: statements, loans, trades, health, lending and more. New uploads are included automatically.</p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export function Chat() {
                 void send(input)
               }
             }}
-            placeholder="Ask about your spending, loans, trades, health…"
+            placeholder="Ask MYVA about your spending, loans, trades, health…"
             className="max-h-32 min-h-[2.75rem] flex-1 resize-none rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-text outline-none transition-colors focus:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/30"
           />
           <button type="submit" aria-label="Send" disabled={busy || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-[#05130a] transition-opacity hover:opacity-90 disabled:opacity-40">

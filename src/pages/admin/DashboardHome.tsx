@@ -147,7 +147,7 @@ export function DashboardHome() {
             onClick={() => navigate(lead ? lead.to : '/chat')}
             className="shrink-0 rounded-[10px] border-[1.5px] border-text px-5 py-3 text-sm font-semibold text-text transition-transform active:scale-95"
           >
-            {lead ? 'Review now' : 'Ask AI'}
+            {lead ? 'Review now' : 'Ask MYVA'}
           </button>
         </div>
         {lead && <p className="mt-2 text-sm text-text-secondary">{lead.detail}</p>}

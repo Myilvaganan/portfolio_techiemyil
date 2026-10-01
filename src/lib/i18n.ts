@@ -7,7 +7,7 @@ import { getLocale, useLocale, type Language } from './locale'
 const en = {
   // Navigation
   'nav.dashboard': 'Dashboard',
-  'nav.ask': 'Ask My Data',
+  'nav.ask': 'MYVA',
   'nav.trading': 'Trading',
   'nav.daily': 'Daily',
   'nav.money': 'Spending',
@@ -61,7 +61,7 @@ const en = {
   'nav.home': 'Home',
   'nav.finance': 'Finance',
   'nav.more': 'More',
-  'nav.askAi': 'Ask AI',
+  'nav.askAi': 'MYVA',
 
   // Preferences
   'prefs.title': 'Region & language',
@@ -90,7 +90,7 @@ export type TKey = keyof typeof en
 
 const ta: Partial<Record<TKey, string>> = {
   'nav.dashboard': 'டாஷ்போர்டு',
-  'nav.ask': 'என் தரவைக் கேள்',
+  'nav.ask': 'MYVA',
   'nav.trading': 'வர்த்தகம்',
   'nav.daily': 'தினசரி',
   'nav.money': 'செலவு',
@@ -144,7 +144,7 @@ const ta: Partial<Record<TKey, string>> = {
   'nav.home': 'முகப்பு',
   'nav.finance': 'நிதி',
   'nav.more': 'மேலும்',
-  'nav.askAi': 'AI-யிடம் கேள்',
+  'nav.askAi': 'MYVA',
 
   'prefs.title': 'பகுதி & மொழி',
   'prefs.language': 'மொழி',

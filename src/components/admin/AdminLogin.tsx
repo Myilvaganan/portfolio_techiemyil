@@ -18,7 +18,7 @@ const FEATURES = [
   { icon: FileText, text: 'Documents' },
   { icon: TrendingUp, text: 'Finance & investments' },
   { icon: HeartPulse, text: 'Health records' },
-  { icon: MessagesSquare, text: 'Ask My Data' },
+  { icon: MessagesSquare, text: 'MYVA, your AI assistant' },
 ]
 const label = 'mb-2 block text-xs font-medium uppercase tracking-wide text-text-secondary'
 
