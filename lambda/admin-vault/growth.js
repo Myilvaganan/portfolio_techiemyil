@@ -72,6 +72,19 @@ const SANITIZERS = {
   debt(v) {
     return { extraPerMonth: amount(v?.extraPerMonth), strategy: v?.strategy === 'snowball' ? 'snowball' : 'avalanche' }
   },
+  // End-to-end encrypted: the browser encrypts with a key from your password or pattern; only ciphertext is stored.
+  diary(v) {
+    const b64 = (x, max) => (typeof x === 'string' && x.length <= max && /^[A-Za-z0-9+/=]*$/.test(x) ? x : '')
+    const box = (b, max) => (b && b64(b.iv, 32) && b64(b.ct, max) ? { iv: b.iv, ct: b.ct } : null)
+    return {
+      method: v?.method === 'pattern' ? 'pattern' : v?.method === 'password' ? 'password' : '',
+      salt: b64(v?.salt, 64),
+      check: box(v?.check, 200),
+      entries: list(v?.entries, 5000)
+        .map((e) => ({ id: id(e?.id), date: isDate(e?.date) ? e.date : '', box: box(e?.box, 80_000) }))
+        .filter((e) => e.date && e.box),
+    }
+  },
   calendar(v) {
     const pick = (x, max) => (Number.isInteger(x) && x >= -1 && x <= max ? x : -1)
     return { place: text(v?.place, 40) || 'Chennai', rasi: pick(v?.rasi, 11), star: pick(v?.star, 26), notify: v?.notify !== false }
@@ -147,7 +160,7 @@ function createGrowthApi({ s3, bucket }) {
     if (method === 'POST') {
       const value = SANITIZERS[doc](payload?.value ?? {})
       const body = JSON.stringify(value)
-      if (body.length > 300_000) return { statusCode: 413, body: { error: 'That is too much to save at once.' } }
+      if (body.length > (doc === 'diary' ? 6_000_000 : 300_000)) return { statusCode: 413, body: { error: 'That is too much to save at once.' } }
       await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key(doc), Body: body, ContentType: 'application/json' }))
       return { statusCode: 200, body: { doc, value } }
     }

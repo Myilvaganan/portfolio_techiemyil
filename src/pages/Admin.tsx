@@ -39,6 +39,7 @@ const Runway = page(() => import('@/pages/admin/Runway'), 'Runway')
 const LifeAdmin = page(() => import('@/pages/admin/LifeAdmin'), 'LifeAdmin')
 const Habits = page(() => import('@/pages/admin/Habits'), 'Habits')
 const Water = page(() => import('@/pages/admin/Water'), 'Water')
+const Diary = page(() => import('@/pages/admin/Diary'), 'Diary')
 const TamilCalendar = page(() => import('@/pages/admin/TamilCalendar'), 'TamilCalendar')
 const Profile = page(() => import('@/pages/admin/Profile'), 'Profile')
 const Chat = page(() => import('@/pages/admin/Chat'), 'Chat')
@@ -94,6 +95,7 @@ export function Admin() {
                 <Route path="life-admin" element={<LifeAdmin />} />
                 <Route path="habits" element={<Habits />} />
                 <Route path="water" element={<Water />} />
+                <Route path="diary" element={<Diary />} />
                 <Route path="tamil-calendar" element={<TamilCalendar />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="security" element={<Security />} />

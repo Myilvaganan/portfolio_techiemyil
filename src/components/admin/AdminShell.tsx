@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BellRing, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
@@ -51,6 +51,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/habits': 'streak routine daily checklist workout reading',
   '/profile': 'profile photo picture name personal info settings account',
   '/tamil-calendar': 'tamil calendar panchangam thithi nakshatra rahu kalam nalla neram festival pradosham ekadasi amavasai pournami rasi palan horoscope',
+  '/diary': 'diary journal notes daily notes private personal locked',
   '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
@@ -135,6 +136,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
       { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },
       { label: 'Tamil Calendar', k: 'nav.tamilCalendar', to: '/tamil-calendar', icon: CalendarDays },
+      { label: 'Diary', k: 'nav.diary', to: '/diary', icon: BookLock },
     ],
   },
   {

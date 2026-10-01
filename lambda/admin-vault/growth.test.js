@@ -42,3 +42,9 @@ it('household keeps manual paid marks for known groups only', () => {
   const v = SANITIZERS.household({ manual: [{ id: 'abcd1', group: 'rentSalem', month: '2026-09', amount: 12000 }, { group: 'hack', month: '2026-09' }, { group: 'rentBengaluru', month: '2026-13' }] })
   expect(v.manual).toEqual([{ id: 'abcd1', group: 'rentSalem', month: '2026-09', amount: 12000 }])
 })
+
+it('diary stores only ciphertext boxes', () => {
+  const v = SANITIZERS.diary({ method: 'pattern', salt: 'c2FsdA==', check: { iv: 'aXY=', ct: 'Y3Q=' }, entries: [{ id: 'abcd1', date: '2026-10-01', box: { iv: 'aXY=', ct: 'Y3Q=' } }, { date: '2026-10-01', text: 'plain secret' }] })
+  expect(v.entries).toEqual([{ id: 'abcd1', date: '2026-10-01', box: { iv: 'aXY=', ct: 'Y3Q=' } }])
+  expect(JSON.stringify(v)).not.toContain('plain secret')
+})

@@ -69,6 +69,18 @@ export interface HouseholdDoc {
   manual: { id: string; group: string; month: string; amount: number }[]
 }
 
+export interface CipherBox {
+  iv: string
+  ct: string
+}
+export interface DiaryDoc {
+  method: '' | 'password' | 'pattern'
+  salt: string
+  /** A known value encrypted with the key, to tell a wrong password from a right one. */
+  check: CipherBox | null
+  entries: { id: string; date: string; box: CipherBox }[]
+}
+
 export interface ProfileDoc {
   displayName: string
   fullName: string
@@ -92,6 +104,7 @@ export interface GrowthDocs {
   water: WaterDoc
   profile: ProfileDoc
   household: HouseholdDoc
+  diary: DiaryDoc
   calendar: { place: string; rasi: number; star: number; notify: boolean }
 }
 export type GrowthDoc = keyof GrowthDocs
@@ -104,6 +117,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
   household: { manual: [] },
+  diary: { method: '', salt: '', check: null, entries: [] },
   calendar: { place: 'Chennai', rasi: -1, star: -1, notify: true },
   profile: { displayName: '', fullName: '', email: '', phone: '', dob: '', city: '', occupation: '', bio: '', photo: '' },
   water: { weightKg: 0, activity: 'moderate', hot: false, customMl: 0, targetMl: 0, glassMl: 250, reminders: true, startHour: 8, endHour: 21, logs: {} },
