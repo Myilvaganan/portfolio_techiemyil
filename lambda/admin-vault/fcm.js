@@ -34,7 +34,9 @@ function createFcm({ serviceAccount, fetchImpl = fetch, now = () => Date.now() }
           token,
           notification: { title: alert.title, body: alert.body },
           data: { url: alert.url || '/', tag: alert.tag || '' },
-          android: { ttl: '21600s', notification: { tag: alert.tag || undefined } },
+          // High priority on the "alerts" channel (created by the app with sound and vibration) so it pops up as a
+          // heads-up banner with sound, even with the screen off.
+          android: { priority: 'HIGH', ttl: '21600s', notification: { tag: alert.tag || undefined, channel_id: 'alerts', sound: 'default', default_vibrate_timings: true, notification_priority: 'PRIORITY_HIGH', visibility: 'PRIVATE' } },
         },
       }),
     })

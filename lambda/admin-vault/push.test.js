@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { buildAlerts, buildWaterAlert, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate } = require('./push')
+const { buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate } = require('./push')
 
 describe('push alerts', () => {
   it('uses the Indian date', () => {
@@ -115,5 +115,14 @@ describe('android (FCM) devices', () => {
     const r = buildWeeklyReview({ today: '2026-10-04', trades: [{ date: '2026-10-01', grossPnl: -500, fees: 20 }], tasks: { tasks: [], sessions: [{ date: '2026-10-02', minutes: 50 }] } })
     expect(r.body).toContain('Trading: −₹520 across 1 trades')
     expect(r.body).toContain('Focus 0h 50m')
+  })
+
+  it('nudges only for features in use, and only when not done yet', () => {
+    const today = '2026-10-01'
+    expect(buildNudges({ today, istHour: 8, docs: {} })).toEqual([])
+    const docs = { tasks: { tasks: [{ when: 'today', done: false }] }, gate: { days: { '2026-09-30': { rulesRead: true } } }, habits: { habits: [{ id: 'h1', name: 'Walk', auto: '' }], checks: {} }, food: { entries: [{ date: today, meal: 'snack', kcal: 200 }] } }
+    expect(buildNudges({ today, istHour: 8, docs }).map((a) => a.title)).toEqual(['☀️ Your day', '🛡️ Trading check-in'])
+    expect(buildNudges({ today, istHour: 14, docs }).map((a) => a.title)).toEqual(['🍛 Log your meals'])
+    expect(buildNudges({ today, istHour: 21, docs }).map((a) => a.title)).toEqual(['🔥 Keep your streaks', '🍽️ 200 kcal today'])
   })
 })

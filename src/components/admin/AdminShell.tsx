@@ -28,7 +28,7 @@ import { LocalePicker } from './LocalePicker'
 import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
-import { useNativePushTaps, usePush } from '@/lib/push'
+import { useKeepPushRegistered, useNativePushTaps, usePush } from '@/lib/push'
 import { useDismissedNotices } from '@/lib/dismissed'
 import { useLocale } from '@/lib/locale'
 import { useSkin, type Skin } from '@/hooks/useSkin'
@@ -233,7 +233,6 @@ interface ScaleProps {
 /** Push notifications on this device: card bills, deadlines and loss-limit alerts. */
 function NotificationsRow() {
   const push = usePush()
-  const [tested, setTested] = useState(false)
   if (!push.supported) return null
   return (
     <div className="space-y-1.5">
@@ -248,24 +247,18 @@ function NotificationsRow() {
         <IconBadge icon={BellRing} seed="push" size="sm" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-text">Notifications</span>
-          <span className="block truncate text-xs text-text-secondary">Bills, deadlines, loss limit</span>
+          <span className="block truncate text-xs text-text-secondary">{push.busy ? 'Setting up…' : 'Bills, reminders, medicines, daily notes'}</span>
         </span>
         <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', push.enabled ? 'bg-accent' : 'bg-surface-15')}>
           <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', push.enabled ? 'translate-x-[18px]' : 'translate-x-0.5')} />
         </span>
       </button>
       {push.enabled && (
-        <button
-          type="button"
-          onClick={async () => {
-            await push.test().catch(() => {})
-            setTested(true)
-          }}
-          className="px-1 text-xs font-medium text-accent"
-        >
-          {tested ? 'Test sent — check your notifications' : 'Send a test notification'}
+        <button type="button" onClick={() => void push.test()} className="px-1 text-xs font-medium text-accent">
+          Send a test notification
         </button>
       )}
+      {push.testResult && <p className="px-1 text-xs text-text-secondary">{push.testResult}</p>}
       {push.error && <p className="px-1 text-xs text-error">{push.error}</p>}
     </div>
   )
@@ -743,6 +736,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   const online = useOnline()
   const navigate = useNavigate()
   useNativePushTaps(navigate)
+  useKeepPushRegistered()
   // Bumping the key remounts the page, so it fetches fresh data: that is what pull-to-refresh does.
   const [refreshKey, setRefreshKey] = useState(0)
   const [refreshing, setRefreshing] = useState(false)

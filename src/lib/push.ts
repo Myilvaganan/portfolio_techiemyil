@@ -35,8 +35,14 @@ const storedFcmToken = () => {
   }
 }
 
+/** The Android channel notifications arrive on: high importance, default sound, vibration, heads-up banner. */
+async function ensureChannel() {
+  await PushNotifications.createChannel({ id: 'alerts', name: 'Alerts', description: 'Bills, reminders, medicines and daily notes', importance: 5, visibility: 0, sound: 'default', vibration: true, lights: true }).catch(() => {})
+}
+
 /** Ask Android for permission and a Firebase device token. */
 async function nativeToken(): Promise<string> {
+  await ensureChannel()
   let perm = await PushNotifications.checkPermissions()
   if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') perm = await PushNotifications.requestPermissions()
   if (perm.receive !== 'granted') throw new Error('Notifications are blocked for this app in Android settings.')
@@ -69,6 +75,36 @@ export function useNativePushTaps(navigate: (to: string) => void) {
   }, [navigate])
 }
 
+/**
+ * Keep this device registered: on every launch, if notifications are on, send the current token / subscription to the
+ * server again. A token changes after an app update or reinstall, and the server drops dead ones — without this the
+ * phone silently stops getting notifications.
+ */
+export function useKeepPushRegistered() {
+  useEffect(() => {
+    const run = async () => {
+      if (!getStoredToken()) return
+      if (isNative()) {
+        const p = await PushNotifications.checkPermissions()
+        if (p.receive !== 'granted' || !storedFcmToken()) return
+        const token = await nativeToken()
+        await call('/admin/push/fcm/register', { token })
+        try {
+          localStorage.setItem(FCM_TOKEN_KEY, token)
+        } catch {
+          // ignore
+        }
+        return
+      }
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || Notification.permission !== 'granted') return
+      const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription()
+      if (sub) await call('/admin/push/subscribe', { subscription: sub.toJSON() })
+    }
+    const t = window.setTimeout(() => void run().catch(() => {}), 2500)
+    return () => window.clearTimeout(t)
+  }, [])
+}
+
 export const pushSupported = () => isNative() || typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 
 /** Notifications on this device: state, and turning them on/off (asks for permission the first time). */
@@ -76,6 +112,18 @@ export function usePush() {
   const [enabled, setEnabled] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [testResult, setTestResult] = useState<string | null>(null)
+
+  /** Send a test right away and say whether it went out. */
+  const sendTest = useCallback(async () => {
+    setTestResult('Sending a test…')
+    try {
+      const r = await call('/admin/push/test', {})
+      setTestResult(r?.sent > 0 ? 'Test sent — you should see and hear it now.' : 'The server couldn’t reach this device. Turn notifications off and on again.')
+    } catch (e) {
+      setTestResult((e as Error).message)
+    }
+  }, [])
 
   useEffect(() => {
     if (isNative()) {
@@ -87,6 +135,7 @@ export function usePush() {
   }, [])
 
   const enable = useCallback(async () => {
+    setTestResult(null)
     setBusy(true)
     setError(null)
     try {
@@ -99,6 +148,7 @@ export function usePush() {
           // Only used to show the switch as on; the device stays registered on the server either way.
         }
         setEnabled(true)
+        await sendTest()
         return
       }
       if ((await Notification.requestPermission()) !== 'granted') throw new Error('Notifications are blocked for this site in Chrome settings.')
@@ -108,12 +158,13 @@ export function usePush() {
       const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(publicKey) }))
       await call('/admin/push/subscribe', { subscription: sub.toJSON() })
       setEnabled(true)
+      await sendTest()
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setBusy(false)
     }
-  }, [])
+  }, [sendTest])
 
   const disable = useCallback(async () => {
     setBusy(true)
@@ -141,7 +192,5 @@ export function usePush() {
     }
   }, [])
 
-  const test = useCallback(() => call('/admin/push/test', {}), [])
-
-  return { supported: pushSupported(), enabled, busy, error, enable, disable, test }
+  return { supported: pushSupported(), enabled, busy, error, enable, disable, test: sendTest, testResult }
 }

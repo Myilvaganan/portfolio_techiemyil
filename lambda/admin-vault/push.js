@@ -155,6 +155,46 @@ function buildWeeklyReview({ today, trades = [], water, habits, tasks, mood, ban
   return { tag: `weekly-${today}`, title: '📊 Your week in review', body: `${lines.join('\n')}\n${tip}`, url: '/monthly-review' }
 }
 
+/**
+ * Pure: the daily nudges, one per feature in use. Each only fires if you use that feature and haven't done the thing
+ * yet, so an unused module never notifies.
+ */
+function buildNudges({ today, istHour, docs }) {
+  const { tasks, reminders, meds, gate, mood, food, habits, diary } = docs
+  const out = []
+  const wd = new Date(`${today}T00:00:00Z`).getUTCDay()
+  if (istHour === 8) {
+    const openTasks = (tasks?.tasks ?? []).filter((t) => t.when === 'today' && !t.done).length
+    const dueRem = (reminders?.items ?? []).filter((r) => !r.done && r.date <= today).length
+    const medDoses = (meds?.items ?? []).filter((m) => m.active !== false).reduce((s, m) => s + m.hours.length, 0)
+    const parts = [openTasks && `${openTasks} task${openTasks === 1 ? '' : 's'}`, dueRem && `${dueRem} reminder${dueRem === 1 ? '' : 's'}`, medDoses && `${medDoses} medicine dose${medDoses === 1 ? '' : 's'}`].filter(Boolean)
+    if (parts.length) out.push({ tag: `today-${today}`, title: '☀️ Your day', body: `${parts.join(' · ')} today. Tap to see the list.`, url: '/today' })
+  }
+  if (istHour === 8 && wd >= 1 && wd <= 5 && gate && Object.keys(gate.days ?? {}).length && !gate.days?.[today]?.rulesRead) {
+    out.push({ tag: `gate-${today}`, title: '🛡️ Trading check-in', body: 'Sleep, mood and your rules — 30 seconds before the market opens.', url: '/today' })
+  }
+  if (istHour === 9 && mood && Object.keys(mood.days ?? {}).length && !mood.days?.[today]) {
+    out.push({ tag: `mood-${today}`, title: '😴 How did you sleep?', body: 'Two taps: hours slept and your mood.', url: '/sleep-mood' })
+  }
+  const eaten = (food?.entries ?? []).filter((e) => e.date === today)
+  const usesFood = (food?.entries ?? []).length > 0
+  if (istHour === 14 && usesFood && !eaten.some((e) => e.meal === 'lunch' || e.meal === 'breakfast')) {
+    out.push({ tag: `food-${today}-lunch`, title: '🍛 Log your meals', body: 'Type or snap what you ate today.', url: '/calories' })
+  }
+  if (istHour === 21) {
+    const manual = (habits?.habits ?? []).filter((h) => !h.auto)
+    const ticked = new Set(habits?.checks?.[today] ?? [])
+    const left = manual.filter((h) => !ticked.has(h.id))
+    if (left.length) out.push({ tag: `habits-${today}`, title: '🔥 Keep your streaks', body: `Not ticked yet: ${left.map((h) => h.name).slice(0, 4).join(', ')}`, url: '/habits' })
+    if (usesFood && eaten.length) {
+      const kcal = Math.round(eaten.reduce((s, e) => s + e.kcal, 0))
+      out.push({ tag: `food-${today}-day`, title: `🍽️ ${kcal} kcal today`, body: `${eaten.length} item${eaten.length === 1 ? '' : 's'} logged. Add dinner if you haven’t.`, url: '/calories' })
+    }
+  }
+  if (istHour === 22 && diary?.check) out.push({ tag: `diary-${today}`, title: '📔 A minute for your diary', body: 'How did today go?', url: '/diary' })
+  return out
+}
+
 function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:admin@techiemyil.com', now = () => new Date(), fcmFactory = createFcm }) {
   const ready = Boolean(publicKey && privateKey)
   if (ready) webpush.setVapidDetails(subject, publicKey, privateKey)
@@ -265,6 +305,12 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
       ])
       alerts.push(buildWeeklyReview({ today, trades: journals.flatMap((j) => j?.trades ?? []), water, habits, tasks, mood, bank: bank?.transactions ?? [] }))
     }
+    if ([8, 9, 14, 21, 22].includes(istHour)) {
+      const names = ['tasks', 'meds', 'gate', 'mood', 'food', 'habits', 'diary']
+      const loaded = await Promise.all(names.map((n) => getJson(`${ROOT}/growth/${n}.json`, null)))
+      const docs = Object.fromEntries(names.map((n, i) => [n, loaded[i]]))
+      alerts.push(...buildNudges({ today, istHour, docs: { ...docs, reminders } }))
+    }
     const water1 = buildWaterAlert({ today, istHour, water })
     if (water1) alerts.push(water1)
     return { job: 'water', sent: alerts.length ? await sendAll(alerts) : 0 }
@@ -335,4 +381,4 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   return { route, runScheduled }
 }
 
-module.exports = { createPushApi, buildAlerts, buildWaterAlert, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate }
+module.exports = { createPushApi, buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate }

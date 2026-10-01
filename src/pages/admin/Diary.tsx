@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { SpeechRecognition } from '@capacitor-community/speech-recognition'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BookLock, Mic, MicOff, KeyRound, Lock, NotebookPen, Plus, Search, ShieldCheck, Trash2, Grid3x3 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -32,16 +34,42 @@ type Recognition = { lang: string; continuous: boolean; interimResults: boolean;
  */
 function MicButton({ onText }: { onText: (text: string) => void }) {
   const Ctor = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }).SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition
+  const native = Capacitor.isNativePlatform()
   const [on, setOn] = useState(false)
   const [lang, setLang] = useState<'en-IN' | 'ta-IN'>('en-IN')
+  const [err, setErr] = useState<string | null>(null)
   const rec = useRef<Recognition | null>(null)
-  if (!Ctor) return null
+  if (!native && !Ctor) return null
+
+  // In the Android app: Android's own speech recogniser (the Google voice dialog), which the in-app browser lacks.
+  const nativeListen = async () => {
+    setErr(null)
+    try {
+      const perm = await SpeechRecognition.requestPermissions()
+      if (perm.speechRecognition !== 'granted') throw new Error('Allow the microphone for this app in Android settings.')
+      setOn(true)
+      haptic(10)
+      const r = await SpeechRecognition.start({ language: lang, maxResults: 1, popup: true, partialResults: false, prompt: lang === 'ta-IN' ? 'பேசுங்கள்…' : 'Speak now…' })
+      const text = r?.matches?.[0]?.trim()
+      if (text) onText(text)
+    } catch (e) {
+      const m = (e as Error).message || ''
+      if (!/no match|cancel/i.test(m)) setErr(m || 'Voice typing failed.')
+    } finally {
+      setOn(false)
+    }
+  }
+
   const toggle = () => {
+    if (native) {
+      void nativeListen()
+      return
+    }
     if (on) {
       rec.current?.stop()
       return
     }
-    const r = new Ctor()
+    const r = new Ctor!()
     r.lang = lang
     r.continuous = true
     r.interimResults = false
@@ -55,13 +83,14 @@ function MicButton({ onText }: { onText: (text: string) => void }) {
     haptic(10)
   }
   return (
-    <span className="inline-flex items-center gap-1">
-      <button type="button" onClick={toggle} title="Dictate (Chrome uses Google’s speech service; only the text is kept)" className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm', on ? 'animate-pulse bg-error/15 text-error' : 'bg-surface-3 text-text-secondary')}>
-        {on ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {on ? 'Stop' : 'Speak'}
+    <span className="inline-flex flex-wrap items-center gap-1">
+      <button type="button" onClick={toggle} title="Dictate (Google’s speech service turns it into text; only the text is kept)" className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm', on ? 'animate-pulse bg-error/15 text-error' : 'bg-surface-3 text-text-secondary')}>
+        {on ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {on ? (native ? 'Listening…' : 'Stop') : 'Speak'}
       </button>
       {!on && (
         <button type="button" onClick={() => setLang(lang === 'en-IN' ? 'ta-IN' : 'en-IN')} className="rounded-full px-2 py-1 text-xs text-text-secondary">{lang === 'en-IN' ? 'EN' : 'தமிழ்'}</button>
       )}
+      {err && <span className="text-xs text-error">{err}</span>}
     </span>
   )
 }

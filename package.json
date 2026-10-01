@@ -16,6 +16,7 @@
     "build:shared": "esbuild src/lib/serverShared.ts --bundle --platform=node --format=cjs --target=node20 --outfile=lambda/admin-vault/shared.gen.js --banner:js=\"// Generated from src/lib/serverShared.ts by npm run build:shared. Do not edit.\""
   },
   "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/push-notifications": "^8.1.2",

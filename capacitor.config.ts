@@ -12,6 +12,10 @@ const config: CapacitorConfig = {
   android: {
     backgroundColor: '#ffffff',
   },
+  plugins: {
+    // Show notifications (with sound) even while the app is open.
+    PushNotifications: { presentationOptions: ['badge', 'sound', 'alert'] },
+  },
 }
 
 export default config
