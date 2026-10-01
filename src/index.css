@@ -1409,6 +1409,14 @@ html.admin.noir .btn-3d.border {
   background: transparent;
   font-weight: 600;
 }
+/* …but a chosen option (display size, haptics, any radio or toggle button) is filled with ink and its text turns
+   paper-coloured, so it reads in both Noir light and dark. */
+html.admin.noir .btn-3d.border[aria-checked='true'],
+html.admin.noir .btn-3d.border[aria-pressed='true'] {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-bg);
+}
 /* Text on a solid accent fill must be paper-coloured (the accent is ink in Noir). */
 html.admin.noir .bg-accent {
   color: var(--color-bg);
