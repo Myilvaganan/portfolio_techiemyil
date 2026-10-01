@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, ChevronLeft, ChevronRight, Flame, Loader2, Plus, Sparkles, Trash2, Wand2, X } from 'lucide-react'
-import { Empty, Field, Loading, Notice, PageHero, Panel, Pill, Stat, inputCls } from '@/components/growth/kit'
+import { Empty, Field, Loading, Notice, PageHero, Panel, Pill, inputCls } from '@/components/growth/kit'
 import { cn } from '@/lib/utils'
 import { haptic } from '@/lib/native'
 import { estimateFood, useGrowthDoc, type FoodEntry, type FoodItem, type FoodProfile, type Meal } from '@/lib/growthApi'
@@ -13,6 +13,10 @@ import { ACTIVITY, MEALS, dayTotals, insights, logStreak, targets, topFoods } fr
 
 // Type what you ate or snap a photo; the AI splits it into items with calories and macros, you check and save. The
 // dashboard tracks the day against your target and points out patterns over the last weeks.
+
+const MEAL_TONE: Record<Meal, string> = { breakfast: 'border-l-amber-400 bg-gradient-to-r from-amber-500/10 to-transparent', lunch: 'border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent', dinner: 'border-l-indigo-500 bg-gradient-to-r from-indigo-500/10 to-transparent', snack: 'border-l-pink-500 bg-gradient-to-r from-pink-500/10 to-transparent' }
+const MEAL_ROW: Record<Meal, string> = { breakfast: 'bg-amber-500/10', lunch: 'bg-emerald-500/10', dinner: 'bg-indigo-500/10', snack: 'bg-pink-500/10' }
+const MEAL_BAR: Record<Meal, string> = { breakfast: 'bg-amber-400', lunch: 'bg-emerald-500', dinner: 'bg-indigo-500', snack: 'bg-pink-500' }
 
 const newId = () => Math.random().toString(36).slice(2, 10)
 const shift = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
@@ -153,10 +157,19 @@ export function Calories() {
       {(error || doc.error) && <Notice tone="bad">{error || doc.error}</Notice>}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Target" value={t ? `${t.kcal} kcal` : '—'} sub={t?.tdee ? `Maintenance ${t.tdee}` : undefined} tone="gold" />
-        <Stat label="7-day average" value={avg7 ? `${Math.round(avg7)} kcal` : '—'} tone={t && avg7 > t.kcal * 1.05 ? 'bad' : 'good'} />
-        <Stat label="Logging streak" value={`${streak} day${streak === 1 ? '' : 's'}`} />
-        <Stat label="Days logged (30d)" value={`${loggedDays.length}/30`} />
+        {[
+          { label: 'Daily target', value: t ? `${t.kcal}` : '—', unit: 'kcal', sub: t?.tdee ? `Maintenance ${t.tdee}` : 'Set up below', from: 'from-orange-500', to: 'to-amber-400', emoji: '🎯' },
+          { label: '7-day average', value: avg7 ? `${Math.round(avg7)}` : '—', unit: 'kcal', sub: t && avg7 ? (avg7 > t.kcal * 1.05 ? 'Above target' : avg7 < t.kcal * 0.9 ? 'Below target' : 'On target') : '', from: 'from-emerald-500', to: 'to-teal-400', emoji: '📈' },
+          { label: 'Logging streak', value: String(streak), unit: streak === 1 ? 'day' : 'days', sub: streak >= 7 ? 'Great consistency' : 'Log every meal', from: 'from-pink-500', to: 'to-rose-400', emoji: '🔥' },
+          { label: 'Days logged', value: String(loggedDays.length), unit: '/ 30', sub: 'Last 30 days', from: 'from-violet-500', to: 'to-indigo-400', emoji: '🗓️' },
+        ].map((x, i) => (
+          <motion.div key={x.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={cn('relative overflow-hidden rounded-[20px] bg-gradient-to-br p-4 text-white shadow-lg', x.from, x.to)}>
+            <span className="absolute -right-2 -top-2 text-5xl opacity-25" aria-hidden>{x.emoji}</span>
+            <p className="text-2xs font-semibold uppercase tracking-wider text-white/80">{x.label}</p>
+            <p className="mt-1 font-mono text-2xl font-bold">{x.value} <span className="text-sm font-medium text-white/80">{x.unit}</span></p>
+            {x.sub && <p className="mt-0.5 text-xs text-white/85">{x.sub}</p>}
+          </motion.div>
+        ))}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_26rem]">
@@ -179,23 +192,38 @@ export function Calories() {
                 <Macro label="Fibre" value={day.fiber} target={t?.fiber ?? 0} color="#10b981" />
               </div>
             </div>
+            {day.kcal > 0 && (
+              <div className="mt-4">
+                <div className="flex h-3 overflow-hidden rounded-full">
+                  {MEALS.map((m) => day.byMeal[m.id] > 0 && <motion.span key={m.id} initial={{ width: 0 }} animate={{ width: `${(day.byMeal[m.id] / day.kcal) * 100}%` }} className={MEAL_BAR[m.id]} title={`${m.label}: ${Math.round(day.byMeal[m.id])} kcal`} />)}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-2xs text-text-secondary">
+                  {MEALS.map((m) => <span key={m.id} className="flex items-center gap-1"><span className={cn('h-2 w-2 rounded-full', MEAL_BAR[m.id])} />{m.label} {Math.round(day.byMeal[m.id])}</span>)}
+                </div>
+              </div>
+            )}
           </Panel>
 
           {/* Meals */}
           {MEALS.map((m) => {
             const list = entries.filter((e) => e.date === date && e.meal === m.id)
             return (
-              <Panel key={m.id} title={`${m.emoji} ${m.label}`} hint={list.length ? `${Math.round(day.byMeal[m.id])} kcal` : undefined}>
+              <Panel key={m.id} title={`${m.emoji} ${m.label}`} hint={list.length ? `${Math.round(day.byMeal[m.id])} kcal` : undefined} className={cn('border-l-4', MEAL_TONE[m.id])}>
                 {list.length === 0 ? <p className="text-sm text-text-secondary">Nothing logged.</p> : (
                   <ul className="space-y-1.5">
                     <AnimatePresence initial={false}>
                       {list.map((e) => (
-                        <motion.li key={e.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: 30 }} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+                        <motion.li key={e.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: 30 }} className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-sm', MEAL_ROW[e.meal])}>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-text">{e.name}</span>
-                            <span className="block truncate text-xs text-text-secondary">{e.qty} · P {Math.round(e.protein)} · C {Math.round(e.carbs)} · F {Math.round(e.fat)}</span>
+                            <span className="flex flex-wrap items-center gap-1 text-xs text-text-secondary">
+                              {e.qty && <span className="mr-1">{e.qty}</span>}
+                              <span className="rounded-full bg-blue-500/15 px-1.5 text-blue-500">P {Math.round(e.protein)}</span>
+                              <span className="rounded-full bg-amber-500/15 px-1.5 text-amber-600 dark:text-amber-400">C {Math.round(e.carbs)}</span>
+                              <span className="rounded-full bg-pink-500/15 px-1.5 text-pink-500">F {Math.round(e.fat)}</span>
+                            </span>
                           </span>
-                          <span className="shrink-0 font-mono text-text">{Math.round(e.kcal)}</span>
+                          <span className="shrink-0 rounded-full bg-orange-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-orange-500">{Math.round(e.kcal)}</span>
                           <button type="button" aria-label={`Remove ${e.name}`} onClick={() => doc.save({ ...doc.value, entries: entries.filter((x) => x.id !== e.id) })} className="p-1 text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>
                         </motion.li>
                       ))}
@@ -284,7 +312,7 @@ export function Calories() {
           {tips.length > 0 && (
             <Panel title="Insights" hint="From the last 14 days">
               <ul className="space-y-2">
-                {tips.map((x) => <li key={x.text} className={cn('rounded-xl px-3 py-2 text-sm', x.tone === 'good' ? 'bg-positive/10 text-text' : x.tone === 'warn' ? 'bg-amber-500/10 text-text' : 'bg-surface-2 text-text')}>{x.text}</li>)}
+                {tips.map((x) => <li key={x.text} className={cn('rounded-xl px-3 py-2 text-sm', x.tone === 'good' ? 'border-l-4 border-emerald-500 bg-emerald-500/10 text-text' : x.tone === 'warn' ? 'border-l-4 border-amber-500 bg-amber-500/10 text-text' : 'border-l-4 border-sky-500 bg-sky-500/10 text-text')}>{x.text}</li>)}
               </ul>
             </Panel>
           )}

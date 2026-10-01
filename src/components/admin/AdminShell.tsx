@@ -92,8 +92,22 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Dashboard', k: 'nav.dashboard', to: '/', icon: LayoutDashboard },
       { label: 'Today', k: 'nav.today', to: '/today', icon: Sun },
-      { label: 'Tasks & Focus', k: 'nav.focus', to: '/focus', icon: Timer },
       { label: 'Ask My Data', k: 'nav.ask', to: '/chat', icon: Sparkles },
+    ],
+  },
+  // Every-day things first, in the order a day usually goes.
+  {
+    label: 'Daily',
+    k: 'nav.daily',
+    items: [
+      { label: 'Tasks & Focus', k: 'nav.focus', to: '/focus', icon: Timer },
+      { label: 'Reminders', k: 'nav.reminders', to: '/reminders', icon: AlarmClock },
+      { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
+      { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },
+      { label: 'Calories', k: 'nav.calories', to: '/calories', icon: Salad },
+      { label: 'Medicines', k: 'nav.medicines', to: '/medicines', icon: Pill },
+      { label: 'Tamil Calendar', k: 'nav.tamilCalendar', to: '/tamil-calendar', icon: CalendarDays },
+      { label: 'Diary', k: 'nav.diary', to: '/diary', icon: BookLock },
     ],
   },
   {
@@ -102,23 +116,23 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Trading Journal', k: 'nav.tradingJournal', to: '/trading-journal', icon: NotebookPen },
       { label: 'Trading Guardrails', k: 'nav.guardrails', to: '/guardrails', icon: ShieldAlert },
-      { label: 'Trading vs Life', k: 'nav.tradingLedger', to: '/trading-vs-life', icon: Scale3d },
       { label: 'Options Analytics', k: 'nav.optionsAnalytics', to: '/options-analytics', icon: BarChart3 },
       { label: 'Zerodha Dashboard', k: 'nav.zerodha', to: '/zerodha', icon: TrendingUp },
+      { label: 'Trading vs Life', k: 'nav.tradingLedger', to: '/trading-vs-life', icon: Scale3d },
       { label: 'Margin Calculator', k: 'nav.margin', to: '/margin-calculator', icon: Calculator },
     ],
   },
   {
-    label: 'Money',
+    label: 'Spending',
     k: 'nav.money',
     items: [
+      { label: 'Budgets', k: 'nav.budgets', to: '/budgets', icon: PiggyBank },
       { label: 'Bank Statements', k: 'nav.bank', to: '/bank-statements', icon: Landmark },
       { label: 'Credit Cards', k: 'nav.cards', to: '/credit-cards', icon: CreditCard },
-      { label: 'Budgets', k: 'nav.budgets', to: '/budgets', icon: PiggyBank },
       { label: 'Receipts', k: 'nav.receipts', to: '/receipts', icon: Receipt },
-      { label: 'Cash Flow', k: 'nav.cashFlow', to: '/cash-flow', icon: Waves },
       { label: 'Household', k: 'nav.household', to: '/household', icon: Home },
       { label: 'Subscriptions', k: 'nav.subscriptions', to: '/subscriptions', icon: Repeat },
+      { label: 'Cash Flow', k: 'nav.cashFlow', to: '/cash-flow', icon: Waves },
     ],
   },
   {
@@ -126,49 +140,42 @@ export const NAV_SECTIONS: NavSection[] = [
     k: 'nav.wealth',
     items: [
       { label: 'Net Worth', k: 'nav.netWorth', to: '/net-worth', icon: Scale },
-      { label: 'Goal timeline', k: 'nav.goalTimeline', to: '/goal-timeline', icon: Milestone },
-      { label: 'Investments', k: 'nav.investments', to: '/investments', icon: LineChart },
-      { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/portfolio-rebalance', icon: PieChart },
-      { label: 'Goals', k: 'nav.goals', to: '/goals', icon: Target },
       { label: 'Loans', k: 'nav.loans', to: '/loans', icon: HandCoins },
       { label: 'Debt-Free Plan', k: 'nav.debtFree', to: '/debt-free', icon: Mountain },
+      { label: 'Goal timeline', k: 'nav.goalTimeline', to: '/goal-timeline', icon: Milestone },
+      { label: 'Goals', k: 'nav.goals', to: '/goals', icon: Target },
+      { label: 'Investments', k: 'nav.investments', to: '/investments', icon: LineChart },
+      { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/portfolio-rebalance', icon: PieChart },
       { label: 'Runway & Stress', k: 'nav.runway', to: '/runway', icon: LifeBuoy },
       { label: 'Lending', k: 'nav.lending', to: '/lending', icon: Handshake },
       { label: 'Tax Information', k: 'nav.tax', to: '/tax', icon: ReceiptText },
     ],
   },
   {
-    label: 'Health',
+    label: 'Health & mind',
     k: 'nav.health',
     items: [
       { label: 'Health Report', k: 'nav.healthReport', to: '/health-report', icon: HeartPulse },
-      { label: 'Calories', k: 'nav.calories', to: '/calories', icon: Salad },
       { label: 'Sleep & Mood', k: 'nav.sleepMood', to: '/sleep-mood', icon: BedDouble },
-      { label: 'Medicines', k: 'nav.medicines', to: '/medicines', icon: Pill },
       { label: 'Mind & Money', k: 'nav.mindMoney', to: '/mind-money', icon: Brain },
     ],
   },
   {
-    label: 'Growth',
+    label: 'Life',
     k: 'nav.growth',
     items: [
-      { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/monthly-review', icon: CalendarCheck },
-      { label: 'Reminders', k: 'nav.reminders', to: '/reminders', icon: AlarmClock },
-      { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
-      { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
-      { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },
       { label: 'Family dates', k: 'nav.family', to: '/family', icon: Cake },
-      { label: 'Tamil Calendar', k: 'nav.tamilCalendar', to: '/tamil-calendar', icon: CalendarDays },
-      { label: 'Diary', k: 'nav.diary', to: '/diary', icon: BookLock },
+      { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
+      { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/monthly-review', icon: CalendarCheck },
     ],
   },
   {
     label: 'Manage',
     k: 'nav.manage',
     items: [
+      { label: 'Profile', k: 'nav.profile', to: '/profile', icon: UserRound },
       { label: 'Document Manager', k: 'nav.documents', to: '/documents', icon: FolderOpen },
       { label: 'Website', k: 'nav.website', to: '/site', icon: Globe },
-      { label: 'Profile', k: 'nav.profile', to: '/profile', icon: UserRound },
       { label: 'Security', k: 'nav.security', to: '/security', icon: ShieldCheck },
     ],
   },
@@ -556,10 +563,11 @@ function NotificationBell() {
 // Every menu item gets its own colour, so no two tiles in a sheet look alike.
 assignColors(NAV_SECTIONS.flatMap((sec) => sec.items).map((i) => i.to))
 
-// Phone tabs: Finance opens Money + Wealth & debt, Trading opens the trading tools, More holds everything else.
-const FINANCE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label === 'Money' || sec.label === 'Wealth & debt')
-const TRADING_SECTION = NAV_SECTIONS.find((sec) => sec.label === 'Trading')!
-const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.label !== 'Money' && sec.label !== 'Wealth & debt' && sec.label !== 'Trading')
+// Phone tabs: Finance opens Spending + Wealth & debt, Trading opens the trading tools, More holds everything else
+// (Daily first).
+const FINANCE_SECTIONS = NAV_SECTIONS.filter((sec) => sec.k === 'nav.money' || sec.k === 'nav.wealth')
+const TRADING_SECTION = NAV_SECTIONS.find((sec) => sec.k === 'nav.trading')!
+const MORE_SECTIONS = NAV_SECTIONS.filter((sec) => !sec.k || !['nav.money', 'nav.wealth', 'nav.trading'].includes(sec.k))
 
 const tap = () => haptic(8)
 /** A bottom-tab or menu-sheet jump: fade the next screen in instead of sliding it. */

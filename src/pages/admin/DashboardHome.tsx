@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { TodayCard } from '@/components/admin/TodayCard'
 import { NAV_SECTIONS } from '@/components/admin/AdminShell'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { useProfile } from '@/lib/profile'
@@ -134,7 +135,7 @@ export function DashboardHome() {
   if (pulse?.siteViews != null) slides.push({ eyebrow: 'Website this month', title: `${pulse.siteViews.toLocaleString('en-IN')} views`, to: '/site' })
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <section aria-label="Greeting">
         <p className="noir-eyebrow">{lead ? 'Now live' : now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         <div className="mt-3 flex items-center justify-between gap-4">
@@ -152,19 +153,7 @@ export function DashboardHome() {
         {lead && <p className="mt-2 text-sm text-text-secondary">{lead.detail}</p>}
       </section>
 
-      <CinemaBanner slides={slides} onOpen={navigate} />
-
-      <section>
-        <SectionLabel>Money matters</SectionLabel>
-        <div className="noir-rail -mx-5 px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
-          <MoneyCard label="Today's P&L" icon={TrendingUp} value={pulse?.todayPnl != null ? signed(pulse.todayPnl) : '—'} valueClass={toneOf(pulse?.todayPnl ?? null)} sub={pulse ? `${pulse.todayTrades} trades today` : 'Loading…'} onClick={() => navigate('/trading-journal')} />
-          <MoneyCard label="This month" icon={BarChart3} value={pulse?.monthPnl != null ? signed(pulse.monthPnl) : '—'} valueClass={toneOf(pulse?.monthPnl ?? null)} sub="before tax" onClick={() => navigate('/trading-journal')} />
-          <MoneyCard label="Next EMI" icon={CalendarClock} value={pulse?.nextEmi ? formatInr(pulse.nextEmi.amount) : '—'} sub={pulse?.nextEmi ? (pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days} days`) : 'none due'} onClick={() => navigate('/loans')} />
-          <MoneyCard label="Loans" icon={Wallet} value={pulse?.loansOutstanding != null ? formatInr(pulse.loansOutstanding) : '—'} valueClass={pulse?.overdueEmis ? 'text-error' : undefined} sub={pulse?.overdueEmis ? `${pulse.overdueEmis} overdue` : 'outstanding'} onClick={() => navigate('/loans')} />
-          <MoneyCard label="Weight" icon={HeartPulse} value={pulse?.latestWeight ? `${pulse.latestWeight.kg.toFixed(1)} kg` : '—'} sub={pulse?.inbodyDaysSince != null ? `InBody ${pulse.inbodyDaysSince}d ago` : 'no test yet'} onClick={() => navigate('/health-report')} />
-          <MoneyCard label="Website" icon={Eye} value={pulse?.siteViews != null ? pulse.siteViews.toLocaleString('en-IN') : '—'} sub={pulse?.unreadMessages ? `${pulse.unreadMessages} unread` : 'views this month'} onClick={() => navigate('/site')} />
-        </div>
-      </section>
+      <TodayCard />
 
       {notices.length > 0 && (
         <section aria-label="Needs attention">
@@ -191,6 +180,23 @@ export function DashboardHome() {
         </section>
       )}
 
+      <section>
+        <SectionLabel>Money matters</SectionLabel>
+        <div className="noir-rail -mx-5 px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
+          <MoneyCard label="Today's P&L" icon={TrendingUp} value={pulse?.todayPnl != null ? signed(pulse.todayPnl) : '—'} valueClass={toneOf(pulse?.todayPnl ?? null)} sub={pulse ? `${pulse.todayTrades} trades today` : 'Loading…'} onClick={() => navigate('/trading-journal')} />
+          <MoneyCard label="This month" icon={BarChart3} value={pulse?.monthPnl != null ? signed(pulse.monthPnl) : '—'} valueClass={toneOf(pulse?.monthPnl ?? null)} sub="before tax" onClick={() => navigate('/trading-journal')} />
+          <MoneyCard label="Next EMI" icon={CalendarClock} value={pulse?.nextEmi ? formatInr(pulse.nextEmi.amount) : '—'} sub={pulse?.nextEmi ? (pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days} days`) : 'none due'} onClick={() => navigate('/loans')} />
+          <MoneyCard label="Loans" icon={Wallet} value={pulse?.loansOutstanding != null ? formatInr(pulse.loansOutstanding) : '—'} valueClass={pulse?.overdueEmis ? 'text-error' : undefined} sub={pulse?.overdueEmis ? `${pulse.overdueEmis} overdue` : 'outstanding'} onClick={() => navigate('/loans')} />
+          <MoneyCard label="Weight" icon={HeartPulse} value={pulse?.latestWeight ? `${pulse.latestWeight.kg.toFixed(1)} kg` : '—'} sub={pulse?.inbodyDaysSince != null ? `InBody ${pulse.inbodyDaysSince}d ago` : 'no test yet'} onClick={() => navigate('/health-report')} />
+          <MoneyCard label="Website" icon={Eye} value={pulse?.siteViews != null ? pulse.siteViews.toLocaleString('en-IN') : '—'} sub={pulse?.unreadMessages ? `${pulse.unreadMessages} unread` : 'views this month'} onClick={() => navigate('/site')} />
+        </div>
+      </section>
+
+      <CinemaBanner slides={slides} onOpen={navigate} />
+
+
+
+
       {/* Every module, grouped like the menu, so nothing is more than one tap from Home. */}
       <section>
         <SectionLabel>For you</SectionLabel>
@@ -199,7 +205,7 @@ export function DashboardHome() {
             <div key={si}>
               {sec.label && <p className="mb-3 text-2xs font-semibold uppercase tracking-[0.18em] text-text-secondary">{sec.label}</p>}
               {/* One swipeable row per group, snapping to each icon. */}
-              <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
+              <div className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 sm:scroll-px-8 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
                 {sec.items.filter((it) => it.to !== '/').map((it) => (
                   <button key={it.to} type="button" onClick={() => navigate(it.to)} className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 text-center">
                     <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
