@@ -1693,3 +1693,21 @@ html.admin.noir .logo-name {
   to { opacity: 1; transform: none; }
 }
 .search-sheet { animation: search-sheet-in 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Every sideways-scrolling area in the admin (tables, card rows, chips) scrolls the same native way: momentum, no
+   visible scrollbar, and a swipe that reaches the end stops there instead of dragging the whole page or triggering
+   the back gesture. */
+html.admin .overflow-x-auto,
+html.admin .noir-rail {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+html.admin .overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+/* And the page itself never scrolls sideways. */
+html.admin body {
+  overflow-x: clip;
+}
