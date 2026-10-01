@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 export const UI_SCALES = [
+  { id: 'xs', label: 'Extra small', percent: 87.5 },
   { id: 'small', label: 'Small', percent: 100 },
   { id: 'medium', label: 'Medium', percent: 112.5 },
   { id: 'large', label: 'Large', percent: 125 },

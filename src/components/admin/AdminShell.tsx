@@ -330,7 +330,7 @@ function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
   return (
     <div>
       <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">Display size</p>
-      <div role="radiogroup" aria-label="Display size" className="grid grid-cols-4 gap-1.5">
+      <div role="radiogroup" aria-label="Display size" className="grid grid-cols-5 gap-1.5">
         {UI_SCALES.map((s, i) => (
           <button
             key={s.id}
@@ -339,8 +339,8 @@ function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
             aria-checked={scale === s.id}
             aria-label={s.label}
             onClick={() => onScale(s.id)}
-            className={cn('btn-3d flex h-11 items-center justify-center rounded-xl border font-semibold transition-colors', scale === s.id ? 'border-accent/40 bg-accent/15 text-accent' : 'border-border bg-surface-2 text-text')}
-            style={{ fontSize: `${12 + i * 2.5}px` }}
+            className={cn('btn-3d flex h-11 items-center justify-center rounded-xl border font-semibold transition-colors', scale === s.id ? 'border-text bg-text text-bg shadow-md ring-2 ring-accent/50 ring-offset-2 ring-offset-card' : 'border-border bg-surface-2 text-text-secondary')}
+            style={{ fontSize: `${11 + i * 2.5}px` }}
           >
             A
           </button>
