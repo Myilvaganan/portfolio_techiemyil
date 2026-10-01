@@ -48,3 +48,11 @@ it('diary stores only ciphertext boxes', () => {
   expect(v.entries).toEqual([{ id: 'abcd1', date: '2026-10-01', box: { iv: 'aXY=', ct: 'Y3Q=' } }])
   expect(JSON.stringify(v)).not.toContain('plain secret')
 })
+
+it('food estimates go through the AI and come back sanitised', async () => {
+  const ai = async () => ({ isFood: true, items: [{ name: 'Idli', qty: '2 pieces', kcal: 130, protein: 4, carbs: 28, fat: 0.4, fiber: 1.2 }] })
+  const api = createGrowthApi({ s3: { send: async () => ({}) }, bucket: 'b', ai })
+  const r = await api({ method: 'POST', path: '/admin/food/estimate', payload: { text: '2 idli' } })
+  expect(r.statusCode).toBe(200)
+  expect(r.body.items[0]).toMatchObject({ name: 'Idli', kcal: 130 })
+})

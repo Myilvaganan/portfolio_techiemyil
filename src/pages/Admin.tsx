@@ -39,6 +39,7 @@ const Runway = page(() => import('@/pages/admin/Runway'), 'Runway')
 const LifeAdmin = page(() => import('@/pages/admin/LifeAdmin'), 'LifeAdmin')
 const Habits = page(() => import('@/pages/admin/Habits'), 'Habits')
 const Water = page(() => import('@/pages/admin/Water'), 'Water')
+const Calories = page(() => import('@/pages/admin/Calories'), 'Calories')
 const Reminders = page(() => import('@/pages/admin/Reminders'), 'Reminders')
 const GoalTimeline = page(() => import('@/pages/admin/GoalTimeline'), 'GoalTimeline')
 const Receipts = page(() => import('@/pages/admin/Receipts'), 'Receipts')
@@ -103,6 +104,7 @@ export function Admin() {
                 <Route path="life-admin" element={<LifeAdmin />} />
                 <Route path="habits" element={<Habits />} />
                 <Route path="water" element={<Water />} />
+                <Route path="calories" element={<Calories />} />
                 <Route path="reminders" element={<Reminders />} />
                 <Route path="goal-timeline" element={<GoalTimeline />} />
                 <Route path="receipts" element={<Receipts />} />

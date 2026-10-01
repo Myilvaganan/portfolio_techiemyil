@@ -85,6 +85,35 @@ const SANITIZERS = {
         .filter((e) => e.date && e.box),
     }
   },
+  food(v) {
+    const p = v?.profile ?? {}
+    const MEALS = ['breakfast', 'lunch', 'dinner', 'snack']
+    return {
+      profile: {
+        sex: p.sex === 'female' ? 'female' : 'male',
+        age: int(p.age, 110),
+        heightCm: amount(p.heightCm, 250),
+        weightKg: amount(p.weightKg, 400),
+        activity: ['sedentary', 'light', 'moderate', 'active', 'athlete'].includes(p.activity) ? p.activity : 'light',
+        goal: ['lose', 'maintain', 'gain'].includes(p.goal) ? p.goal : 'maintain',
+        customKcal: int(p.customKcal, 8000),
+      },
+      entries: list(v?.entries, 6000)
+        .map((e) => ({
+          id: id(e?.id),
+          date: isDate(e?.date) ? e.date : '',
+          meal: MEALS.includes(e?.meal) ? e.meal : 'snack',
+          name: text(e?.name, 80),
+          qty: text(e?.qty, 40),
+          kcal: amount(e?.kcal, 5000),
+          protein: amount(e?.protein, 500),
+          carbs: amount(e?.carbs, 1000),
+          fat: amount(e?.fat, 500),
+          fiber: amount(e?.fiber, 200),
+        }))
+        .filter((e) => e.date && e.name),
+    }
+  },
   reminders(v) {
     const children = list(v?.children, 10).map((c) => ({ id: id(c?.id), name: text(c?.name, 40), dob: isDate(c?.dob) ? c.dob : '' })).filter((c) => c.name && c.dob)
     const ids = new Set(children.map((c) => c.id))
@@ -222,6 +251,14 @@ const RECEIPT_SCHEMA = {
     category: { type: 'string', enum: ['Groceries', 'Food & Dining', 'Fuel', 'Shopping', 'Medical', 'Bills & Utilities', 'Travel', 'Home', 'Education', 'Other'] },
   },
 }
+const FOOD_ITEM = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['name', 'qty', 'kcal', 'protein', 'carbs', 'fat', 'fiber'],
+  properties: { name: { type: 'string' }, qty: { type: 'string' }, kcal: { type: 'number' }, protein: { type: 'number' }, carbs: { type: 'number' }, fat: { type: 'number' }, fiber: { type: 'number' } },
+}
+const FOOD_SCHEMA = { type: 'object', additionalProperties: false, required: ['isFood', 'items'], properties: { isFood: { type: 'boolean' }, items: { type: 'array', items: FOOD_ITEM } } }
+const FOOD_RULES = 'You are a nutritionist who knows Indian home and restaurant food well (idli, dosa, chapati, rice, sambar, rasam, curries, biryani, parotta, snacks, sweets, chai, filter coffee) as well as global foods and packaged brands. Split the meal into separate items. For each, give a short name, the quantity you assumed (e.g. "2 pieces", "1 cup / 150 g"), and estimates for that quantity: kcal, protein g, carbs g, fat g, fiber g. Use typical South Indian home portions unless stated; count oil/ghee used in cooking. Round sensibly. If it is not food or drink, set isFood false and return no items.'
 const RECEIPT_RULES = 'You read Indian shop receipts and bills. Return the merchant name, the bill date as YYYY-MM-DD (null if not printed), the final total paid in rupees (after tax and discounts; null if unreadable) and the best category. If the photo is not a receipt or bill, set isReceipt false.'
 
 function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined }) {
@@ -252,8 +289,26 @@ function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined 
     }
   }
 
+  async function estimateFood(payload) {
+    const description = text(payload?.text, 500)
+    const image = typeof payload?.image === 'string' ? payload.image : ''
+    if (!description && !image) return { statusCode: 400, body: { error: 'Describe what you ate or add a photo.' } }
+    if (image && (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length > 4_500_000)) return { statusCode: 400, body: { error: 'Please use a JPEG, PNG or WebP photo under 4 MB.' } }
+    if (!ai) return { statusCode: 503, body: { error: 'Food estimates are not set up.' } }
+    try {
+      const user = image ? [{ type: 'input_text', text: description ? `The meal: ${description}` : 'Estimate this meal.' }, { type: 'input_image', image_url: image, detail: 'high' }] : `The meal: ${description}`
+      const r = await ai({ model: visionModel(), system: FOOD_RULES, user, name: 'food', schema: FOOD_SCHEMA, effort: 'low', timeoutMs: 25000, maxTokens: 1500 })
+      if (!r?.isFood || !r.items?.length) return { statusCode: 422, body: { error: 'I couldn’t find food in that. Try describing it, e.g. “2 idli with sambar”.' } }
+      return { statusCode: 200, body: { items: r.items.slice(0, 15).map((i) => ({ name: text(i.name, 80), qty: text(i.qty, 40), kcal: amount(i.kcal, 5000), protein: amount(i.protein, 500), carbs: amount(i.carbs, 1000), fat: amount(i.fat, 500), fiber: amount(i.fiber, 200) })) } }
+    } catch (err) {
+      if (err.code && err.statusCode) return { statusCode: err.statusCode, body: { error: err.message } }
+      throw err
+    }
+  }
+
   return async function handle({ method, path, query, payload }) {
     if (method === 'POST' && path === '/admin/receipt/scan') return scanReceipt(payload)
+    if (method === 'POST' && path === '/admin/food/estimate') return estimateFood(payload)
     if (path !== '/admin/growth') return null
     const doc = method === 'GET' ? query?.doc : payload?.doc
     if (!DOCS.includes(doc)) return { statusCode: 400, body: { error: 'Unknown document.' } }

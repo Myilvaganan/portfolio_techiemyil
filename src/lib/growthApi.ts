@@ -153,6 +153,29 @@ export interface RemindersDoc {
   vaccines: Record<string, Record<string, string>>
 }
 
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export interface FoodEntry {
+  id: string
+  date: string
+  meal: Meal
+  name: string
+  qty: string
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber: number
+}
+export interface FoodProfile {
+  sex: 'male' | 'female'
+  age: number
+  heightCm: number
+  weightKg: number
+  activity: 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete'
+  goal: 'lose' | 'maintain' | 'gain'
+  customKcal: number
+}
+
 export interface GrowthDocs {
   guardrails: GuardrailRules
   habits: HabitsDoc
@@ -165,6 +188,7 @@ export interface GrowthDocs {
   household: HouseholdDoc
   diary: DiaryDoc
   tasks: TasksDoc
+  food: { profile: FoodProfile; entries: FoodEntry[] }
   reminders: RemindersDoc
   gate: { days: Record<string, GateDay> }
   mood: { days: Record<string, MoodDay> }
@@ -184,6 +208,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   subscriptions: { cancelled: [], ignored: [] },
   household: { manual: [] },
   tasks: { tasks: [], sessions: [] },
+  food: { profile: { sex: 'male', age: 0, heightCm: 0, weightKg: 0, activity: 'light', goal: 'maintain', customKcal: 0 }, entries: [] },
   reminders: { items: [], children: [], vaccines: {} },
   gate: { days: {} },
   mood: { days: {} },
@@ -253,3 +278,7 @@ export function useGrowthDoc<K extends GrowthDoc>(doc: K) {
 
 /** Read a receipt photo (data URL) into merchant, date, amount and category. */
 export const scanReceipt = async (image: string): Promise<{ merchant: string; date: string; amount: number; category: string }> => call('/admin/receipt/scan', 'POST', { image })
+
+export type FoodItem = Omit<FoodEntry, 'id' | 'date' | 'meal'>
+/** Estimate calories and macros from a description and/or a photo of a meal. */
+export const estimateFood = async (o: { text?: string; image?: string }): Promise<{ items: FoodItem[] }> => call('/admin/food/estimate', 'POST', o)

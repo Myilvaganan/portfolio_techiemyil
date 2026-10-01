@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { AlarmClock, BedDouble, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlarmClock, BedDouble, Salad, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
@@ -65,6 +65,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/receipts': 'receipt bill photo scan cash expense',
   '/goal-timeline': 'goal net worth debt free timeline projection',
   '/reminders': 'reminder alarm repeat vaccine vaccination child baby immunisation schedule',
+  '/calories': 'calories food diet meal nutrition protein carbs fat kcal weight loss',
   '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
@@ -141,6 +142,7 @@ export const NAV_SECTIONS: NavSection[] = [
     k: 'nav.health',
     items: [
       { label: 'Health Report', k: 'nav.healthReport', to: '/health-report', icon: HeartPulse },
+      { label: 'Calories', k: 'nav.calories', to: '/calories', icon: Salad },
       { label: 'Sleep & Mood', k: 'nav.sleepMood', to: '/sleep-mood', icon: BedDouble },
       { label: 'Medicines', k: 'nav.medicines', to: '/medicines', icon: Pill },
       { label: 'Mind & Money', k: 'nav.mindMoney', to: '/mind-money', icon: Brain },
