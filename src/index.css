@@ -1749,3 +1749,39 @@ html.admin .orb {
 html.admin[data-theme$='light'] .orb {
   background-image: radial-gradient(120% 120% at 30% 20%, rgba(255, 255, 255, 1), rgba(241, 243, 247, 0.6) 70%);
 }
+
+/* ---------- Background pattern ----------
+   A faint geometric lattice (diamonds with a dot at each crossing, kolam-like) over two soft abstract shapes.
+   Drawn in the theme's text colour at a few percent opacity, so it suits every theme; one fixed layer that never
+   repaints while scrolling. */
+html.admin.noir .aurum-backdrop {
+  display: block;
+  background: none;
+}
+html.admin .aurum-backdrop::before,
+html.admin .aurum-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+html.admin .aurum-backdrop::before {
+  background-color: var(--color-text);
+  opacity: 0.045;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 4 52 28 28 52 4 28Z' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M28 16 40 28 28 40 16 28Z' fill='none' stroke='%23000' stroke-width='.8'/%3E%3Ccircle cx='28' cy='28' r='1.6'/%3E%3Ccircle cx='0' cy='0' r='1.4'/%3E%3Ccircle cx='56' cy='0' r='1.4'/%3E%3Ccircle cx='0' cy='56' r='1.4'/%3E%3Ccircle cx='56' cy='56' r='1.4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 4 52 28 28 52 4 28Z' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M28 16 40 28 28 40 16 28Z' fill='none' stroke='%23000' stroke-width='.8'/%3E%3Ccircle cx='28' cy='28' r='1.6'/%3E%3Ccircle cx='0' cy='0' r='1.4'/%3E%3Ccircle cx='56' cy='0' r='1.4'/%3E%3Ccircle cx='0' cy='56' r='1.4'/%3E%3Ccircle cx='56' cy='56' r='1.4'/%3E%3C/svg%3E");
+  -webkit-mask-size: 56px 56px;
+  mask-size: 56px 56px;
+  /* Fade the lattice out towards the middle of the screen so content stays clean. */
+}
+html.admin .aurum-backdrop::after {
+  background:
+    radial-gradient(28rem 28rem at 110% 8%, color-mix(in srgb, var(--color-text) 6%, transparent), transparent 70%),
+    radial-gradient(22rem 22rem at -10% 85%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 70%),
+    conic-gradient(from 210deg at 100% 100%, transparent 0 25%, color-mix(in srgb, var(--color-text) 3%, transparent) 25% 30%, transparent 30%);
+}
+html.admin .aurum-backdrop {
+  -webkit-mask-image: radial-gradient(140% 90% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 55%, #000 100%);
+  mask-image: radial-gradient(140% 90% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 55%, #000 100%);
+  transform: translateZ(0);
+}

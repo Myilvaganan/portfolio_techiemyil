@@ -428,7 +428,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
       </button>
       <AnimatePresence>
         {open && (
-        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[calc(100dvh-var(--inset-top,0px)-6rem)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[75dvh] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
           <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 border-b border-border px-4 py-3 hover:bg-surface-3">
             <MeAvatar size="md" />
             <span className="min-w-0 flex-1">
@@ -540,7 +540,7 @@ function NotificationBell() {
       </button>
       <AnimatePresence>
         {open && (
-        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[calc(100dvh-var(--inset-top,0px)-6rem)] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[75dvh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
           {notices.length === 0 ? (
             <p className="p-4 text-center text-sm text-text-secondary">You&apos;re all caught up.</p>
           ) : (
@@ -631,7 +631,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
   const inFinance = FINANCE_SECTIONS.some((sec) => sec.items.some((i) => pathname.startsWith(i.to)))
   const inTrading = TRADING_SECTION.items.some((i) => pathname.startsWith(i.to))
   const tab = (active: boolean) =>
-    cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-[transform,color] duration-150 active:scale-90', active ? 'text-accent' : 'text-text-secondary')
+    cn('flex flex-1 select-none flex-col items-center gap-0.5 py-2 text-2xs font-medium transition-colors duration-200', active ? 'text-accent' : 'text-text-secondary')
   const link = (to: string, label: string, Icon: typeof LayoutDashboard, end = false) => (
     <NavLink to={to} end={end} onClick={tabTap} className={({ isActive }) => tab(isActive && !sheet)}>
       <Icon className="h-5 w-5" />
@@ -745,7 +745,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
         <NavLink to="/chat" onClick={tabTap} aria-label="Ask MYVA" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
             <>
-              <span className={cn('tab-orb -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
+              <span className={cn('tab-orb -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-shadow duration-200',)}>
                 <Sparkles className="h-6 w-6" />
               </span>
               <span className={cn('mt-0.5', isActive && !sheet ? 'text-accent' : 'text-text-secondary')}>{t('nav.askAi')}</span>
