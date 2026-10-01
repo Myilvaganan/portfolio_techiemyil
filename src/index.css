@@ -1759,7 +1759,7 @@ html.admin[data-theme$='light'] .orb {
 }
 
 /* ---------- Background pattern ----------
-   A faint geometric lattice (diamonds with a dot at each crossing, kolam-like) over two soft abstract shapes.
+   A fine dot grid with faint graph-paper lines over two soft abstract shapes.
    Drawn in the theme's text colour at a few percent opacity, so it suits every theme; one fixed layer that never
    repaints while scrolling. */
 html.admin.noir .aurum-backdrop {
@@ -1774,13 +1774,18 @@ html.admin .aurum-backdrop::after {
   pointer-events: none;
 }
 html.admin .aurum-backdrop::before {
-  background-color: var(--color-text);
-  opacity: 0.045;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 4 52 28 28 52 4 28Z' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M28 16 40 28 28 40 16 28Z' fill='none' stroke='%23000' stroke-width='.8'/%3E%3Ccircle cx='28' cy='28' r='1.6'/%3E%3Ccircle cx='0' cy='0' r='1.4'/%3E%3Ccircle cx='56' cy='0' r='1.4'/%3E%3Ccircle cx='0' cy='56' r='1.4'/%3E%3Ccircle cx='56' cy='56' r='1.4'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 4 52 28 28 52 4 28Z' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M28 16 40 28 28 40 16 28Z' fill='none' stroke='%23000' stroke-width='.8'/%3E%3Ccircle cx='28' cy='28' r='1.6'/%3E%3Ccircle cx='0' cy='0' r='1.4'/%3E%3Ccircle cx='56' cy='0' r='1.4'/%3E%3Ccircle cx='0' cy='56' r='1.4'/%3E%3Ccircle cx='56' cy='56' r='1.4'/%3E%3C/svg%3E");
-  -webkit-mask-size: 56px 56px;
-  mask-size: 56px 56px;
-  /* Fade the lattice out towards the middle of the screen so content stays clean. */
+  /* Graph paper: a fine dot grid, with faint lines every fourth dot. */
+  --dot: color-mix(in srgb, var(--color-text) 16%, transparent);
+  --line: color-mix(in srgb, var(--color-text) 6%, transparent);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1.5px),
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size:
+    22px 22px,
+    88px 88px,
+    88px 88px;
+  background-position: 0 0;
 }
 html.admin .aurum-backdrop::after {
   background:
