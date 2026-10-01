@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BellRing, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BellRing, Droplets, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -44,6 +44,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/runway': 'emergency fund months job loss stress test savings',
   '/life-admin': 'passport licence insurance puc kyc deadline expiry renewal advance tax itr',
   '/habits': 'streak routine daily checklist workout reading',
+  '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
   '/health-report': 'inbody weight fat body',
@@ -125,6 +126,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/monthly-review', icon: CalendarCheck },
       { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
       { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
+      { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },
     ],
   },
   {
