@@ -613,6 +613,20 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
   // Only the grab handle drags the sheet closed, so swiping inside it scrolls the list as normal.
   const dragControls = useDragControls()
   useEffect(() => setSheet(null), [pathname])
+  // Switching from one sheet to another (Finance → Trading): the open sheet slides away first, then the new one rises,
+  // like native bottom sheets — instead of the contents swapping in place.
+  const swapTimer = useRef<number | undefined>(undefined)
+  const toggleSheet = (next: 'finance' | 'trading' | 'more') => {
+    window.clearTimeout(swapTimer.current)
+    if (sheet === next) return setSheet(null)
+    if (sheet) {
+      setSheet(null)
+      swapTimer.current = window.setTimeout(() => setSheet(next), 230)
+      return
+    }
+    setSheet(next)
+  }
+  useEffect(() => () => window.clearTimeout(swapTimer.current), [])
 
   const inFinance = FINANCE_SECTIONS.some((sec) => sec.items.some((i) => pathname.startsWith(i.to)))
   const inTrading = TRADING_SECTION.items.some((i) => pathname.startsWith(i.to))
@@ -636,7 +650,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
               key="sheet"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+              exit={{ y: '100%', transition: { duration: 0.2, ease: [0.3, 0, 0.8, 0.15] } }}
               transition={{ type: 'spring', damping: 32, stiffness: 320 }}
               drag="y"
               dragControls={dragControls}
@@ -723,7 +737,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
         {link('/', t('nav.home'), LayoutDashboard, true)}
         <button type="button" onClick={() => {
             tap()
-            setSheet(sheet === 'finance' ? null : 'finance')
+            toggleSheet('finance')
           }} className={tab(sheet === 'finance' || (!sheet && inFinance))}>
           <Wallet className="h-5 w-5" />
           {t('nav.finance')}
@@ -742,7 +756,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
           type="button"
           onClick={() => {
             tap()
-            setSheet(sheet === 'trading' ? null : 'trading')
+            toggleSheet('trading')
           }}
           className={tab(sheet === 'trading' || (!sheet && inTrading))}
         >
@@ -751,7 +765,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
         </button>
         <button type="button" onClick={() => {
             tap()
-            setSheet(sheet === 'more' ? null : 'more')
+            toggleSheet('more')
           }} className={tab(sheet === 'more')}>
           <LayoutGrid className="h-5 w-5" />
           {t('nav.more')}
