@@ -8,6 +8,11 @@ import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
 import { useProfile } from '@/lib/profile'
+import { useGrowthDoc } from '@/lib/growthApi'
+import { todayStr } from '@/lib/journal'
+import { dayDivisions, istTime, nallaNeram } from '@/lib/panchang/core'
+import { dayFacts, rasiPalan, specialsFor } from '@/lib/panchang/days'
+import { placeOf } from '@/lib/panchang/note'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 import { clearStoredToken } from '@/lib/adminAuth'
@@ -901,17 +906,46 @@ function CoinPill() {
   const navigate = useNavigate()
   const { pulse } = useAdminPulse()
   const { visible } = useDismissedNotices()
+  const cal = useGrowthDoc('calendar')
+  const water = useGrowthDoc('water')
+  const tasks = useGrowthDoc('tasks')
+  const reminders = useGrowthDoc('reminders')
+  // The day at a glance: Tamil date and festival, Rahu kalam, the next good time and your palan.
+  const sky = useMemo(() => {
+    const today = todayStr()
+    const place = placeOf(cal.value.place)
+    const shift = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
+    const f = dayFacts(today, place)
+    const div = dayDivisions(today, place)
+    return { f, div, specials: specialsFor(f, dayFacts(shift(-1), place), dayFacts(shift(1), place)), good: nallaNeram(div) }
+  }, [cal.value.place])
   const items = useMemo(() => {
     const out: string[] = []
+    const today = todayStr()
+    const now = new Date()
+    out.push(`${sky.f.tamil.monthName} ${sky.f.tamil.day}${sky.specials.length ? ` · ${sky.specials.map((x) => x.name).join(', ')}` : ''}`)
+    if (now < sky.div.rahu.end) out.push(`Rahu ${istTime(sky.div.rahu.start)}–${istTime(sky.div.rahu.end)}`)
+    const nextGood = sky.good.find((g) => g.end > now)
+    if (nextGood) out.push(`Good time ${istTime(nextGood.start)}–${istTime(nextGood.end)}`)
+    if (cal.value.rasi >= 0) {
+      const p = rasiPalan(cal.value.rasi, cal.value.star, sky.f)
+      out.push(p.chandrashtamam ? 'Chandrashtamam — go slow' : `Palan ${'★'.repeat(p.score)}`)
+    }
+    const target = water.value.customMl || water.value.targetMl
+    if (target) out.push(`Water ${((water.value.logs[today] || 0) / 1000).toFixed(1)}/${(target / 1000).toFixed(1)} L`)
+    const open = tasks.value.tasks.filter((t) => t.when === 'today' && !t.done).length
+    if (open) out.push(`${open} task${open === 1 ? '' : 's'} today`)
+    const rem = reminders.value.items.filter((r) => !r.done && r.date <= today).sort((a, b) => a.hour - b.hour)[0]
+    if (rem) out.push(`⏰ ${rem.title}`)
     if (pulse?.todayPnl != null) out.push(`Today ${signed(pulse.todayPnl)}`)
     if (pulse?.nextEmi) out.push(`EMI ${formatInr(pulse.nextEmi.amount)} ${pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days}d`}`)
     if (pulse?.monthPnl != null) out.push(`Month ${signed(pulse.monthPnl)}`)
     for (const n of pulse ? visible(noticesFrom(pulse, signed)).slice(0, 3) : []) out.push(n.title)
     return out.length ? out : [personal.brand]
-  }, [pulse, visible])
+  }, [pulse, visible, sky, cal.value, water.value, tasks.value, reminders.value])
   const text = items.join('   ·   ')
   return (
-    <button type="button" onClick={() => navigate('/monthly-review')} className="noir-coin-pill relative flex h-10 min-w-0 max-w-[15rem] flex-1 items-center gap-2 overflow-hidden rounded-full pl-1.5 pr-3 lg:hidden" aria-label={text}>
+    <button type="button" onClick={() => navigate('/today')} className="noir-coin-pill relative flex h-10 min-w-0 max-w-[15rem] flex-1 items-center gap-2 overflow-hidden rounded-full pl-1.5 pr-3 lg:hidden" aria-label={text}>
       <img src={tmLogo} alt="" aria-hidden="true" className="h-7 w-7 shrink-0 rounded-full" width={28} height={28} />
       <span className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
         <span className="noir-marquee text-sm font-semibold" aria-hidden>
