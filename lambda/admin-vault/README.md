@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \
@@ -429,3 +429,19 @@ of every source, asks the model which detailed look-ups the question needs (sear
 runs those look-ups in code on the real data, then asks the model to answer using only the overview and those results. Questions that are
 not about the data get a one-line "I can only answer from your uploaded data" and no sources. It uses the same `OPENAI_API_KEY` and model as
 statement reading, so the account needs OpenAI credit. Two model calls have to fit inside the 29-second function timeout.
+
+## Android app notifications (Firebase Cloud Messaging)
+
+The Android app (Capacitor, `android/`) can't use web push, so it registers a Firebase device token with
+`POST /admin/push/fcm/register { token }` (and `/admin/push/fcm/unregister`). The scheduled alerts and the test
+notification go to these devices as well as to web-push subscribers; tokens Firebase reports as gone are removed.
+
+The Firebase service-account key (project `techiemyil-admin`) is stored in the vault bucket at
+`_data/push/fcm-service-account.json`, not in the code or the Lambda environment. To rotate it, generate a new key in
+Firebase → Project settings → Service accounts and upload it there:
+
+```bash
+aws s3 cp firebase-admin.json s3://techiemyil-admin-vault/_data/push/fcm-service-account.json --sse AES256 --region ap-south-1
+```
+
+The Lambda reads it once per cold start, so a redeploy (or waiting for new instances) picks up a rotated key.

@@ -21,7 +21,7 @@ import { LocalePicker } from './LocalePicker'
 import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
-import { usePush } from '@/lib/push'
+import { useNativePushTaps, usePush } from '@/lib/push'
 import { useLocale } from '@/lib/locale'
 
 interface NavItem {
@@ -622,6 +622,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   const lock = useAppLock()
   const online = useOnline()
   const navigate = useNavigate()
+  useNativePushTaps(navigate)
   // Bumping the key remounts the page, so it fetches fresh data: that is what pull-to-refresh does.
   const [refreshKey, setRefreshKey] = useState(0)
   const [refreshing, setRefreshing] = useState(false)

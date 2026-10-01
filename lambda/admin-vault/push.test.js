@@ -30,3 +30,61 @@ describe('push alerts', () => {
     expect(buildAlerts({ today: '2026-10-01', slot: 'evening', trades, dailyLossLimit: 8000 })).toEqual([])
   })
 })
+
+describe('android (FCM) devices', () => {
+  const { createPushApi } = require('./push')
+  const { createFcm } = require('./fcm')
+
+  function memS3(initial = {}) {
+    const store = { ...initial }
+    return {
+      store,
+      send: async (cmd) => {
+        const { Key, Body } = cmd.input
+        if (cmd.constructor.name === 'PutObjectCommand') { store[Key] = Body; return {} }
+        if (!(Key in store)) throw Object.assign(new Error('missing'), { name: 'NoSuchKey' })
+        return { Body: { transformToString: async () => store[Key] } }
+      },
+    }
+  }
+  const SA = '_data/push/fcm-service-account.json'
+  const TOKENS = '_data/push/fcm-tokens.json'
+  const token = 'dev1:' + 'a'.repeat(40)
+
+  it('registers a device, sends to it and drops it once Firebase says it is gone', async () => {
+    const s3 = memS3({ [SA]: JSON.stringify({ private_key: 'k', project_id: 'p', client_email: 'e' }) })
+    const results = ['ok', 'gone']
+    const sent = []
+    const api = createPushApi({ s3, bucket: 'b', fcmFactory: () => ({ send: async (t, a) => { sent.push([t, a.title]); return results.shift() } }) })
+    expect((await api.route({ method: 'POST', path: '/admin/push/fcm/register', payload: { token } })).statusCode).toBe(200)
+    expect(JSON.parse(s3.store[TOKENS])).toEqual([token])
+    expect((await api.route({ method: 'POST', path: '/admin/push/test', payload: {} })).body.sent).toBe(1)
+    await api.route({ method: 'POST', path: '/admin/push/test', payload: {} })
+    expect(JSON.parse(s3.store[TOKENS])).toEqual([])
+    expect(sent[0]).toEqual([token, 'Notifications are on'])
+  })
+
+  it('refuses to register when no service account is uploaded, and rejects bad tokens', async () => {
+    const api = createPushApi({ s3: memS3(), bucket: 'b' })
+    expect((await api.route({ method: 'POST', path: '/admin/push/fcm/register', payload: { token } })).statusCode).toBe(503)
+    expect((await api.route({ method: 'POST', path: '/admin/push/fcm/register', payload: { token: 'x' } })).statusCode).toBe(400)
+  })
+
+  it('signs a token request and sends an HTTP v1 message', async () => {
+    const { privateKey } = require('crypto').generateKeyPairSync('rsa', { modulusLength: 2048, privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } })
+    const calls = []
+    const fetchImpl = async (url, opts) => {
+      calls.push([url, opts])
+      if (url.includes('oauth2')) return { ok: true, json: async () => ({ access_token: 'tok', expires_in: 3600 }) }
+      return url.includes('/messages:send') && JSON.parse(opts.body).message.token === 'gone' ? { ok: false, status: 404, json: async () => ({ error: { status: 'NOT_FOUND' } }) } : { ok: true, json: async () => ({}) }
+    }
+    const fcm = createFcm({ serviceAccount: { private_key: privateKey, project_id: 'proj', client_email: 'sa@x' }, fetchImpl })
+    expect(await fcm.send('t1', { title: 'T', body: 'B', url: '/x', tag: 'g' })).toBe('ok')
+    expect(await fcm.send('gone', { title: 'T', body: 'B' })).toBe('gone')
+    expect(calls.filter(([u]) => u.includes('oauth2'))).toHaveLength(1)
+    const [url, opts] = calls[1]
+    expect(url).toBe('https://fcm.googleapis.com/v1/projects/proj/messages:send')
+    expect(opts.headers.Authorization).toBe('Bearer tok')
+    expect(JSON.parse(opts.body).message).toMatchObject({ token: 't1', notification: { title: 'T', body: 'B' }, data: { url: '/x' } })
+  })
+})

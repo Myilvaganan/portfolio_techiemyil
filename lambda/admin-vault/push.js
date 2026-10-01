@@ -4,6 +4,8 @@
 //   POST /admin/push/subscribe  { subscription } { ok }
 //   POST /admin/push/unsubscribe { endpoint }    { ok }
 //   POST /admin/push/test                        { sent }
+//   POST /admin/push/fcm/register   { token }    { ok }   (Android app, via Firebase Cloud Messaging)
+//   POST /admin/push/fcm/unregister { token }    { ok }
 //
 // A scheduled EventBridge rule invokes the Lambda with { source: 'aws.events', detail-type: 'Scheduled Event' }
 // twice a day; `runScheduled` then works out what is worth a notification and sends it to every subscribed device.
@@ -14,10 +16,14 @@
 
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const webpush = require('web-push')
+const { createFcm } = require('./fcm')
 
 const ROOT = '_data'
 const SUBS_KEY = `${ROOT}/push/subscriptions.json`
 const MAX_SUBS = 10
+const FCM_TOKENS_KEY = `${ROOT}/push/fcm-tokens.json`
+// The Firebase service-account key lives in the private vault bucket, not in the code or the Lambda environment.
+const FCM_ACCOUNT_KEY = `${ROOT}/push/fcm-service-account.json`
 
 const DAY = 86_400_000
 const daysBetween = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY)
@@ -65,7 +71,7 @@ function buildAlerts({ today, slot, cardStatements = [], lifeItems = [], trades 
   return alerts
 }
 
-function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:admin@techiemyil.com', now = () => new Date() }) {
+function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:admin@techiemyil.com', now = () => new Date(), fcmFactory = createFcm }) {
   const ready = Boolean(publicKey && privateKey)
   if (ready) webpush.setVapidDetails(subject, publicKey, privateKey)
 
@@ -80,10 +86,41 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   }
   const putJson = (key, value) => s3.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: JSON.stringify(value), ContentType: 'application/json' }))
 
+  let fcmPromise = null
+  /** The FCM sender, or null when no service account has been uploaded. */
+  function fcm() {
+    fcmPromise ??= getJson(FCM_ACCOUNT_KEY, null).then((sa) => (sa?.private_key ? fcmFactory({ serviceAccount: sa }) : null)).catch((err) => {
+      fcmPromise = null
+      throw err
+    })
+    return fcmPromise
+  }
+
+  async function sendFcm(alerts) {
+    const sender = await fcm()
+    if (!sender || !alerts.length) return 0
+    const tokens = await getJson(FCM_TOKENS_KEY, [])
+    const dead = new Set()
+    let sent = 0
+    for (const token of tokens) {
+      for (const a of alerts) {
+        const r = await sender.send(token, a)
+        if (r === 'ok') sent++
+        else if (r === 'gone') dead.add(token)
+      }
+    }
+    if (dead.size) await putJson(FCM_TOKENS_KEY, tokens.filter((t) => !dead.has(t)))
+    return sent
+  }
+
   const validSub = (s) => s && typeof s.endpoint === 'string' && /^https:\/\//.test(s.endpoint) && s.endpoint.length < 1000 && s.keys && typeof s.keys.p256dh === 'string' && typeof s.keys.auth === 'string'
 
   /** Send to every device; devices the push service reports as gone (404/410) are removed. */
   async function sendAll(alerts) {
+    return (await sendWeb(alerts)) + (await sendFcm(alerts))
+  }
+
+  async function sendWeb(alerts) {
     if (!ready || !alerts.length) return 0
     const subs = await getJson(SUBS_KEY, [])
     const dead = new Set()
@@ -128,6 +165,25 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   async function route({ method, path, payload }) {
     if (!path.startsWith('/admin/push')) return null
     if (method === 'GET' && path === '/admin/push/key') return { statusCode: 200, body: { publicKey: ready ? publicKey : null } }
+    const validToken = (t) => typeof t === 'string' && /^[\w:-]{20,4096}$/.test(t)
+    if (method === 'POST' && path === '/admin/push/fcm/register') {
+      const token = payload?.token
+      if (!validToken(token)) return { statusCode: 400, body: { error: 'Invalid device token.' } }
+      if (!(await fcm())) return { statusCode: 503, body: { error: 'Notifications are not set up on the server yet.' } }
+      const tokens = (await getJson(FCM_TOKENS_KEY, [])).filter((t) => t !== token)
+      tokens.push(token)
+      await putJson(FCM_TOKENS_KEY, tokens.slice(-MAX_SUBS))
+      return { statusCode: 200, body: { ok: true } }
+    }
+    if (method === 'POST' && path === '/admin/push/fcm/unregister') {
+      const token = typeof payload?.token === 'string' ? payload.token : ''
+      await putJson(FCM_TOKENS_KEY, (await getJson(FCM_TOKENS_KEY, [])).filter((t) => t !== token))
+      return { statusCode: 200, body: { ok: true } }
+    }
+    if (method === 'POST' && path === '/admin/push/test') {
+      const sent = await sendAll([{ tag: 'test', title: 'Notifications are on', body: 'You’ll get card bills, deadlines and loss-limit alerts here.', url: '/' }])
+      return { statusCode: 200, body: { sent } }
+    }
     if (!ready) return { statusCode: 503, body: { error: 'Notifications are not set up on the server yet.' } }
     if (method === 'POST' && path === '/admin/push/subscribe') {
       const sub = payload?.subscription
@@ -141,10 +197,6 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
       const endpoint = typeof payload?.endpoint === 'string' ? payload.endpoint : ''
       await putJson(SUBS_KEY, (await getJson(SUBS_KEY, [])).filter((s) => s.endpoint !== endpoint))
       return { statusCode: 200, body: { ok: true } }
-    }
-    if (method === 'POST' && path === '/admin/push/test') {
-      const sent = await sendAll([{ tag: 'test', title: 'Notifications are on', body: 'You’ll get card bills, deadlines and loss-limit alerts here.', url: '/' }])
-      return { statusCode: 200, body: { sent } }
     }
     return { statusCode: 404, body: { error: 'Not found.' } }
   }

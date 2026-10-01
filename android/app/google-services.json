@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "158879978434",
+    "project_id": "techiemyil-admin",
+    "storage_bucket": "techiemyil-admin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:158879978434:android:4dd0d89eaf6ede3154fc5b",
+        "android_client_info": {
+          "package_name": "com.techiemyil.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvHfU1A0c-Tr7WfgkMItJ4n5azWcwAcbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
