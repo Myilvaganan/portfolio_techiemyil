@@ -893,7 +893,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
         </div>
       </aside>
 
-      <div className="relative z-[1] lg:pl-64">
+      <div className="relative z-[1] overflow-x-clip lg:pl-64">
         <header className="aurum-header glitter sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/75 px-5 backdrop-blur-md sm:px-8 lg:px-10">
 {skin === 'noir' && pathname === '/' ? <CoinPill /> : <HeaderTitle />}
           <GlobalSearch pages={SEARCH_PAGES} />

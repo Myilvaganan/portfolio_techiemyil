@@ -1835,3 +1835,35 @@ html.admin .color-tile .text-xs {
 html.admin .color-tile > span[aria-hidden].absolute.inset-y-0 {
   display: none;
 }
+
+/* The bottom bar never moves or resizes: the page slide-in (a short sideways offset) can't widen the screen because
+   nothing is allowed to overflow it sideways, and the bar is pinned to the screen edges on its own compositor layer. */
+html.admin,
+html.admin body {
+  overflow-x: clip;
+  max-width: 100%;
+}
+html.admin nav[aria-label='Main'] {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  transform: translateZ(0);
+  contain: layout paint style;
+  will-change: transform;
+}
+/* A page that's shorter or taller than the last one must not make the scrollbar appear or vanish (that changes the
+   width for a moment): keep its space reserved, and on phones don't draw it at all — you scroll by touch. */
+html.admin {
+  scrollbar-gutter: stable;
+}
+@media (pointer: coarse) {
+  html.admin {
+    scrollbar-width: none;
+  }
+  html.admin::-webkit-scrollbar,
+  html.admin body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
