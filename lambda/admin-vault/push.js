@@ -106,7 +106,7 @@ function buildMedAlerts({ today, istHour, meds }) {
   const taken = new Set(meds.taken?.[today] ?? [])
   const due = (meds.items ?? []).filter((m) => m.active !== false && m.hours.includes(istHour) && !taken.has(`${m.id}@${istHour}`))
   if (!due.length) return []
-  return [{ tag: `meds-${today}-${istHour}`, title: '💊 Time for your medicine', body: due.map((m) => `${m.name}${m.dose ? ` · ${m.dose}` : ''}`).join('\n'), url: '/health-plus' }]
+  return [{ tag: `meds-${today}-${istHour}`, title: '💊 Time for your medicine', body: due.map((m) => `${m.name}${m.dose ? ` · ${m.dose}` : ''}`).join('\n'), url: '/medicines' }]
 }
 
 /** Pure: family dates today, tomorrow or in three days (by English date), and star birthdays today. */

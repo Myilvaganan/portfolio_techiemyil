@@ -94,6 +94,58 @@ export interface ProfileDoc {
   photo: string
 }
 
+export type TaskWhen = 'today' | 'week' | 'someday'
+export interface Task {
+  id: string
+  title: string
+  when: TaskWhen
+  done: boolean
+  doneOn: string
+  created: string
+}
+export interface TasksDoc {
+  tasks: Task[]
+  sessions: { date: string; minutes: number; task: string }[]
+}
+export interface GateDay {
+  sleep: number
+  mood: number
+  rulesRead: boolean
+  plan: string
+  checks: number[]
+}
+export interface MoodDay {
+  sleepH: number
+  quality: number
+  mood: number
+  energy: number
+  note: string
+}
+export interface Med {
+  id: string
+  name: string
+  dose: string
+  hours: number[]
+  active: boolean
+}
+export interface Person {
+  id: string
+  name: string
+  relation: string
+  kind: 'birthday' | 'anniversary' | 'memorial' | 'other'
+  date: string
+  star: number
+  tamilMonth: number
+}
+export interface Receipt {
+  id: string
+  date: string
+  merchant: string
+  amount: number
+  category: string
+  note: string
+}
+
 export interface GrowthDocs {
   guardrails: GuardrailRules
   habits: HabitsDoc
@@ -105,6 +157,12 @@ export interface GrowthDocs {
   profile: ProfileDoc
   household: HouseholdDoc
   diary: DiaryDoc
+  tasks: TasksDoc
+  gate: { days: Record<string, GateDay> }
+  mood: { days: Record<string, MoodDay> }
+  meds: { items: Med[]; taken: Record<string, string[]>; reminders: boolean }
+  family: { people: Person[] }
+  receipts: { items: Receipt[] }
   calendar: { place: string; rasi: number; star: number; notify: boolean }
 }
 export type GrowthDoc = keyof GrowthDocs
@@ -117,6 +175,12 @@ export const EMPTY_DOCS: GrowthDocs = {
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
   household: { manual: [] },
+  tasks: { tasks: [], sessions: [] },
+  gate: { days: {} },
+  mood: { days: {} },
+  meds: { items: [], taken: {}, reminders: true },
+  family: { people: [] },
+  receipts: { items: [] },
   diary: { method: '', salt: '', check: null, entries: [] },
   calendar: { place: 'Chennai', rasi: -1, star: -1, notify: true },
   profile: { displayName: '', fullName: '', email: '', phone: '', dob: '', city: '', occupation: '', bio: '', photo: '' },
@@ -177,3 +241,6 @@ export function useGrowthDoc<K extends GrowthDoc>(doc: K) {
 
   return { value, loading, saving, error, save }
 }
+
+/** Read a receipt photo (data URL) into merchant, date, amount and category. */
+export const scanReceipt = async (image: string): Promise<{ merchant: string; date: string; amount: number; category: string }> => call('/admin/receipt/scan', 'POST', { image })

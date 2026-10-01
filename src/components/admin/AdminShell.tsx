@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BedDouble, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
@@ -52,6 +52,13 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/profile': 'profile photo picture name personal info settings account',
   '/tamil-calendar': 'tamil calendar panchangam thithi nakshatra rahu kalam nalla neram festival pradosham ekadasi amavasai pournami rasi palan horoscope',
   '/diary': 'diary journal notes daily notes private personal locked',
+  '/today': 'today plan agenda daily list check-in',
+  '/focus': 'tasks todo focus pomodoro timer deep work',
+  '/sleep-mood': 'sleep mood energy log',
+  '/medicines': 'medicine tablet vitamin supplement reminder',
+  '/family': 'birthday anniversary family dates star natchathiram',
+  '/receipts': 'receipt bill photo scan cash expense',
+  '/goal-timeline': 'goal net worth debt free timeline projection',
   '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
@@ -77,6 +84,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', k: 'nav.dashboard', to: '/', icon: LayoutDashboard },
+      { label: 'Today', k: 'nav.today', to: '/today', icon: Sun },
+      { label: 'Tasks & Focus', k: 'nav.focus', to: '/focus', icon: Timer },
       { label: 'Ask My Data', k: 'nav.ask', to: '/chat', icon: Sparkles },
     ],
   },
@@ -99,6 +108,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Bank Statements', k: 'nav.bank', to: '/bank-statements', icon: Landmark },
       { label: 'Credit Cards', k: 'nav.cards', to: '/credit-cards', icon: CreditCard },
       { label: 'Budgets', k: 'nav.budgets', to: '/budgets', icon: PiggyBank },
+      { label: 'Receipts', k: 'nav.receipts', to: '/receipts', icon: Receipt },
       { label: 'Cash Flow', k: 'nav.cashFlow', to: '/cash-flow', icon: Waves },
       { label: 'Household', k: 'nav.household', to: '/household', icon: Home },
       { label: 'Subscriptions', k: 'nav.subscriptions', to: '/subscriptions', icon: Repeat },
@@ -109,6 +119,7 @@ const NAV_SECTIONS: NavSection[] = [
     k: 'nav.wealth',
     items: [
       { label: 'Net Worth', k: 'nav.netWorth', to: '/net-worth', icon: Scale },
+      { label: 'Goal timeline', k: 'nav.goalTimeline', to: '/goal-timeline', icon: Milestone },
       { label: 'Investments', k: 'nav.investments', to: '/investments', icon: LineChart },
       { label: 'Portfolio Rebalance', k: 'nav.rebalance', to: '/portfolio-rebalance', icon: PieChart },
       { label: 'Goals', k: 'nav.goals', to: '/goals', icon: Target },
@@ -124,6 +135,8 @@ const NAV_SECTIONS: NavSection[] = [
     k: 'nav.health',
     items: [
       { label: 'Health Report', k: 'nav.healthReport', to: '/health-report', icon: HeartPulse },
+      { label: 'Sleep & Mood', k: 'nav.sleepMood', to: '/sleep-mood', icon: BedDouble },
+      { label: 'Medicines', k: 'nav.medicines', to: '/medicines', icon: Pill },
       { label: 'Mind & Money', k: 'nav.mindMoney', to: '/mind-money', icon: Brain },
     ],
   },
@@ -135,6 +148,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
       { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
       { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },
+      { label: 'Family dates', k: 'nav.family', to: '/family', icon: Cake },
       { label: 'Tamil Calendar', k: 'nav.tamilCalendar', to: '/tamil-calendar', icon: CalendarDays },
       { label: 'Diary', k: 'nav.diary', to: '/diary', icon: BookLock },
     ],

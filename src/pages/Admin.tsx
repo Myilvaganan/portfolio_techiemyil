@@ -39,6 +39,13 @@ const Runway = page(() => import('@/pages/admin/Runway'), 'Runway')
 const LifeAdmin = page(() => import('@/pages/admin/LifeAdmin'), 'LifeAdmin')
 const Habits = page(() => import('@/pages/admin/Habits'), 'Habits')
 const Water = page(() => import('@/pages/admin/Water'), 'Water')
+const GoalTimeline = page(() => import('@/pages/admin/GoalTimeline'), 'GoalTimeline')
+const Receipts = page(() => import('@/pages/admin/Receipts'), 'Receipts')
+const Family = page(() => import('@/pages/admin/Family'), 'Family')
+const Medicines = page(() => import('@/pages/admin/Medicines'), 'Medicines')
+const SleepMood = page(() => import('@/pages/admin/SleepMood'), 'SleepMood')
+const Focus = page(() => import('@/pages/admin/Focus'), 'Focus')
+const Today = page(() => import('@/pages/admin/Today'), 'Today')
 const Diary = page(() => import('@/pages/admin/Diary'), 'Diary')
 const TamilCalendar = page(() => import('@/pages/admin/TamilCalendar'), 'TamilCalendar')
 const Profile = page(() => import('@/pages/admin/Profile'), 'Profile')
@@ -95,6 +102,13 @@ export function Admin() {
                 <Route path="life-admin" element={<LifeAdmin />} />
                 <Route path="habits" element={<Habits />} />
                 <Route path="water" element={<Water />} />
+                <Route path="goal-timeline" element={<GoalTimeline />} />
+                <Route path="receipts" element={<Receipts />} />
+                <Route path="family" element={<Family />} />
+                <Route path="medicines" element={<Medicines />} />
+                <Route path="sleep-mood" element={<SleepMood />} />
+                <Route path="focus" element={<Focus />} />
+                <Route path="today" element={<Today />} />
                 <Route path="diary" element={<Diary />} />
                 <Route path="tamil-calendar" element={<TamilCalendar />} />
                 <Route path="profile" element={<Profile />} />
