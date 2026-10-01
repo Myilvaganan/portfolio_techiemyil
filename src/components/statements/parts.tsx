@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { motion } from 'framer-motion'
 import { Nfc } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -41,7 +42,7 @@ export function Kpi({
 }) {
   return (
     <Reveal delay={delay} y={18}>
-      <GlassCard hover className={cn('h-full p-4 transition-colors duration-500', tone && TONE_SURFACE[tone])}>
+      <GlassCard hover className={cn('h-full p-4 transition-colors duration-500', tile(label, tone).className)} style={tile(label, tone).style}>
         <div className="flex items-center justify-between gap-2">
           <p className="label-caps">{label}</p>
           <IconBadge icon={kpiIcon(label)} seed={label} size="sm" className="h-7 w-7 rounded-lg" />

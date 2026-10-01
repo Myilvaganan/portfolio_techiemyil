@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import { tile } from '@/lib/tiles'
 import { useSearchParams } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -87,7 +88,7 @@ function FileIcon({ filename, small }: { filename: string; small?: boolean }) {
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: typeof HardDrive }) {
   return (
-    <GlassCard className="p-5">
+    <GlassCard className={cn('p-5', tile(label).className)} style={tile(label).style}>
       <div className="flex items-start justify-between">
         <div>
           <p className="label-caps">{label}</p>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { tile, toneFromClass } from '@/lib/tiles'
 import { Star } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { FitValue } from '@/components/viz/FitValue'
@@ -52,7 +53,7 @@ export function Kpi({
   className?: string
 }) {
   return (
-    <GlassCard hover={false} className={cn('p-3 sm:p-4 xl:p-3', className)}>
+    <GlassCard hover={false} className={cn('p-3 sm:p-4 xl:p-3', tile(label, toneFromClass(valueClassName)).className, className)} style={tile(label, toneFromClass(valueClassName)).style}>
       <div className="flex items-center justify-between gap-2">
         <p className={labelClass}>{label}</p>
         <IconBadge icon={kpiIcon(label)} seed={label} size="sm" className="h-7 w-7 rounded-lg" />

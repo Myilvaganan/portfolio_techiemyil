@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Link2, PlugZap, RefreshCw, Unplug, Wallet } from 'lucide-react'
@@ -84,7 +85,7 @@ function PctNote({ value, pct, children }: { value: number; pct: number; childre
 
 function Kpi({ label, children, sub, className }: { label: string; children: ReactNode; sub?: ReactNode; className?: string }) {
   return (
-    <GlassCard hover={false} className={cn('p-5', className)}>
+    <GlassCard hover={false} className={cn('p-5', tile(label).className, className)} style={tile(label).style}>
       <p className="label-caps">{label}</p>
       <div className="mt-2 font-display text-2xl font-semibold text-text">{children}</div>
       {sub && <div className="mt-1.5 text-xs text-text-secondary">{sub}</div>}

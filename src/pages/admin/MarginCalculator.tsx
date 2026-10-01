@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { tile, toneFromClass } from '@/lib/tiles'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
 import { ReportMenu } from '@/components/viz/ReportMenu'
@@ -82,7 +83,7 @@ function Stat({
     // @container lets the numbers size themselves against this card's own width
     // (cqw), so a long value like $2,189,000 shrinks instead of overflowing when
     // the cards sit three across.
-    <div className={cn('@container min-w-0 rounded-xl border border-border bg-surface-2 p-2.5 text-center', className)}>
+    <div className={cn('@container min-w-0 rounded-xl border border-border bg-surface-2 p-2.5 text-center', tile(label, toneFromClass(valueClassName)).className, className)} style={tile(label, toneFromClass(valueClassName)).style}>
       <p className="text-2xs uppercase leading-tight tracking-wide text-text-secondary">{label}</p>
       <p
         className={cn(

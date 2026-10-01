@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { Link } from 'react-router-dom'
@@ -219,7 +220,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen, manual, onTo
 
 function Kpi({ label, value, sub, accent }: { label: string; value: string; sub?: ReactNode; accent?: string }) {
   return (
-    <GlassCard hover={false} className="relative overflow-hidden px-4 py-2.5">
+    <GlassCard hover={false} className={cn('relative overflow-hidden px-4 py-2.5', tile(label).className)} style={tile(label).style}>
       {accent && <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: accent }} />}
       <p className="label-caps">{label}</p>
       <p className="mt-0.5 font-mono text-xl font-semibold text-text">{value}</p>

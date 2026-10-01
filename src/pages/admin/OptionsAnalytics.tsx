@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { tile, toneFromClass } from '@/lib/tiles'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { Link, useInRouterContext } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, FileUp, NotebookPen, RefreshCw, Trash2 } from 'lucide-react'
@@ -118,7 +119,7 @@ function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactN
 
 function Kpi({ label, value, fit, sub, valueClassName }: { label: string; value: ReactNode; fit: string; sub?: ReactNode; valueClassName?: string }) {
   return (
-    <GlassCard hover={false} className="p-4">
+    <GlassCard hover={false} className={cn('p-4', tile(label, toneFromClass(valueClassName)).className)} style={tile(label, toneFromClass(valueClassName)).style}>
       <p className="label-caps">{label}</p>
       <FitValue max={20} text={fit} className={cn('mt-1.5 whitespace-nowrap font-mono font-semibold leading-tight text-text', valueClassName)}>
         {value}

@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Calculator } from 'lucide-react'
 import { Chips } from '@/components/statements/parts'
@@ -32,7 +33,7 @@ type Tab = 'prepay' | 'extra' | 'close' | 'target' | 'compare'
 
 function Stat({ label, value, sub, tone, big }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad' | 'warn'; big?: boolean }) {
   return (
-    <div className={cn('rounded-xl border p-3.5', tone === 'good' ? 'border-positive/35 bg-positive/[0.08]' : tone === 'bad' ? 'border-error/35 bg-error/[0.08]' : tone === 'warn' ? 'border-amber-500/35 bg-amber-500/[0.08]' : 'border-border bg-surface-2')}>
+    <div className={cn('rounded-xl border p-3.5', tile(label, tone).className)} style={tile(label, tone).style}>
       <p className="text-[11px] uppercase tracking-wide text-text-secondary">{label}</p>
       <p className={cn('mt-1 font-mono font-semibold', big ? 'text-xl' : 'text-base', tone === 'good' && 'text-positive', tone === 'bad' && 'text-error', tone === 'warn' && 'text-amber-500', !tone && 'text-text')}>{value}</p>
       {sub && <p className="mt-0.5 text-[11px] text-text-secondary">{sub}</p>}

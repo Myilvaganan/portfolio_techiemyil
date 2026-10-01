@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { tile, toneFromClass } from '@/lib/tiles'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { cn } from '@/lib/utils'
@@ -35,7 +36,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 function Kpi({ label, value, sub, valueClassName }: { label: string; value: string; sub?: string; valueClassName?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface-2 p-3 xl:px-3 xl:py-1.5">
+    <div className={cn('rounded-xl border border-border bg-surface-2 p-3', tile(label, toneFromClass(valueClassName)).className)} style={tile(label, toneFromClass(valueClassName)).style}>
       <p className="label-caps">{label}</p>
       <p className={cn('mt-1 font-mono text-xl font-bold text-text xl:mt-0 xl:text-lg', valueClassName)}>{value}</p>
       {sub && <p className="mt-0.5 text-2xs text-text-secondary/70 xl:mt-0">{sub}</p>}

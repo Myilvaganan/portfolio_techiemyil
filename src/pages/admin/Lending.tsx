@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { PageBadge } from '@/components/admin/AdminShell'
 import * as Dialog from '@radix-ui/react-dialog'
 import { motion } from 'framer-motion'
@@ -454,7 +455,7 @@ function Calculator_({ entries, selectedId, onSelect, onSaveLoan, today }: { ent
 
 function Kpi({ label, value, sub, tone, big }: { label: string; value: string; sub?: string; tone?: 'good' | 'bad'; big?: boolean }) {
   return (
-    <GlassCard hover={false} className="relative overflow-hidden px-4 py-3">
+    <GlassCard hover={false} className={cn('relative overflow-hidden px-4 py-3', tile(label, tone).className)} style={tile(label, tone).style}>
       {tone && <span aria-hidden className={cn('absolute inset-y-0 left-0 w-1', tone === 'bad' ? 'bg-error' : 'bg-positive')} />}
       <p className="label-caps">{label}</p>
       <p className={cn('mt-0.5 font-mono font-semibold text-text', big ? 'text-2xl' : 'text-xl', tone === 'bad' && 'text-error', tone === 'good' && 'text-positive')}>{value}</p>

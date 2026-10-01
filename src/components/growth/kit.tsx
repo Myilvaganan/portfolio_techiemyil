@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { tile } from '@/lib/tiles'
 import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { haptic } from '@/lib/native'
 import { AlertTriangle } from 'lucide-react'
@@ -49,7 +50,7 @@ const TONE: Record<Tone, string> = {
 
 export function Stat({ label, value, sub, tone = 'neutral', className }: { label: string; value: ReactNode; sub?: ReactNode; tone?: Tone; className?: string }) {
   return (
-    <GlassCard hover={false} className={cn('p-4', className)}>
+    <GlassCard hover={false} className={cn('p-4', tile(label, tone).className, className)} style={tile(label, tone).style}>
       <p className="label-caps">{label}</p>
       <p className={cn('mt-1.5 font-mono text-2xl font-semibold tracking-tight', TONE[tone])}>{value}</p>
       {sub && <p className="mt-1 text-xs text-text-secondary">{sub}</p>}
