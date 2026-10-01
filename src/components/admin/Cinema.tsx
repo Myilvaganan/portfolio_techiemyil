@@ -67,22 +67,22 @@ export function CinemaBanner({ slides, onOpen, className = '' }: { slides: Cinem
     function frame(now: number) {
       raf = 0
       const t = (now - start) / 1000
-      // Sky: deep indigo at the top warming to a rose horizon.
+      // Sky in the brand colours: near-black at the top warming to a gold horizon.
       const sky = ctx!.createLinearGradient(0, 0, 0, h)
-      sky.addColorStop(0, '#2b2d62')
-      sky.addColorStop(0.55, '#7a6aa6')
-      sky.addColorStop(1, '#e2b8b4')
+      sky.addColorStop(0, '#0b0a09')
+      sky.addColorStop(0.55, '#3a2c17')
+      sky.addColorStop(1, '#b8924d')
       ctx!.fillStyle = sky
       ctx!.fillRect(0, 0, w, h)
       // Drifting cloud banks.
       const d = t * 6
-      cloud(((w * 0.2 + d) % (w * 1.6)) - w * 0.3, h * 0.35, h * 0.9, 'rgba(255,214,222,0.28)')
-      cloud(((w * 0.9 + d * 0.7) % (w * 1.6)) - w * 0.3, h * 0.75, h * 1.0, 'rgba(255,236,226,0.32)')
-      cloud(((w * 0.55 + d * 0.45) % (w * 1.6)) - w * 0.3, h * 0.15, h * 0.7, 'rgba(120,110,190,0.35)')
+      cloud(((w * 0.2 + d) % (w * 1.6)) - w * 0.3, h * 0.35, h * 0.9, 'rgba(232,196,120,0.22)')
+      cloud(((w * 0.9 + d * 0.7) % (w * 1.6)) - w * 0.3, h * 0.75, h * 1.0, 'rgba(246,224,170,0.26)')
+      cloud(((w * 0.55 + d * 0.45) % (w * 1.6)) - w * 0.3, h * 0.15, h * 0.7, 'rgba(120,92,48,0.35)')
       // Stars twinkle.
       for (const s of stars) {
         const a = 0.35 + 0.65 * Math.abs(Math.sin(t * s.s + s.p))
-        ctx!.fillStyle = `rgba(255,255,255,${a * (1 - s.y * 0.6)})`
+        ctx!.fillStyle = `rgba(255,240,205,${a * (1 - s.y * 0.6)})`
         ctx!.beginPath()
         ctx!.arc(s.x * w, s.y * h * 0.8, s.r, 0, Math.PI * 2)
         ctx!.fill()
@@ -135,7 +135,7 @@ export function CinemaBanner({ slides, onOpen, className = '' }: { slides: Cinem
             className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white"
           >
             <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/75">{slide.eyebrow}</span>
-            <span className="mt-2 bg-gradient-to-b from-white to-[#e7dcff] bg-clip-text font-display text-4xl font-medium leading-tight text-transparent drop-shadow-[0_2px_18px_rgba(140,120,255,0.45)] sm:text-5xl">
+            <span className="mt-2 bg-gradient-to-b from-white to-[#e6c983] bg-clip-text font-display text-4xl font-medium leading-tight text-transparent drop-shadow-[0_2px_18px_rgba(214,179,106,0.5)] sm:text-5xl">
               {slide.title}
             </span>
             {slide.sub && <span className="mt-2 max-w-sm text-sm text-white/80">{slide.sub}</span>}
