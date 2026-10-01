@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Flame, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flame, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Empty, Field, Loading, Notice, PageHero, Panel, inputCls } from '@/components/growth/kit'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,7 @@ import { useSources } from '@/lib/growth/sources'
 import { checkGuardrails } from '@/lib/growth/guardrails'
 import { dayState, lastDays, rate, streak, toggle, type AutoData } from '@/lib/growth/habits'
 import { todayStr } from '@/lib/journal'
+import { monthGrid, shiftMonth } from '@/lib/growth/water'
 
 const useS = defineStrings(
   {
@@ -21,7 +22,7 @@ const useS = defineStrings(
     streak: (n: number) => `${n}-day streak`,
     rate: (n: string) => `${n} of the last 30 days`,
     today: 'Today',
-    tapToday: 'Tap today’s dot to tick it',
+    tapToday: 'Tap a day to tick it',
     add: 'Add a habit',
     name: 'Habit',
     namePh: 'e.g. Read 20 minutes',
@@ -90,8 +91,10 @@ export function Habits() {
   const [name, setName] = useState('')
   const [kind, setKind] = useState<HabitAuto>('')
   const today = todayStr()
-  const days = useMemo(() => lastDays(today, 35), [today])
-  const last30 = days.slice(-30)
+  const [month, setMonth] = useState(today.slice(0, 7))
+  const grid = useMemo(() => monthGrid(month), [month])
+  const last30 = useMemo(() => lastDays(today, 30), [today])
+  const monthLabel = new Date(`${month}-01T00:00:00`).toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-IN', { month: 'long', year: 'numeric' })
 
   const auto: AutoData | null = useMemo(() => {
     if (loading || !data.settings) return null
@@ -115,6 +118,19 @@ export function Habits() {
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-3">
             {habits.length === 0 && <Empty title={s.empty} />}
+            {habits.length > 0 && (
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-2 py-1.5">
+                <button type="button" aria-label="Previous month" onClick={() => setMonth(shiftMonth(month, -1))} className="rounded-full p-2 text-text-secondary hover:text-text">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button type="button" onClick={() => setMonth(today.slice(0, 7))} className="font-display text-base font-semibold text-text">
+                  {monthLabel}
+                </button>
+                <button type="button" aria-label="Next month" disabled={month >= today.slice(0, 7)} onClick={() => setMonth(shiftMonth(month, 1))} className="rounded-full p-2 text-text-secondary hover:text-text disabled:opacity-30">
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
             <AnimatePresence initial={false}>
               {habits.map((h, hi) => {
                 const st = streak(h, today, doc.value, auto)
@@ -142,32 +158,40 @@ export function Habits() {
                           </button>
                         </div>
                       </div>
-                      {/* Five weeks of dots, oldest first; today is the last dot. */}
-                      <div className="mt-4 grid grid-flow-col grid-rows-1 gap-1.5 sm:gap-2" style={{ gridTemplateColumns: 'repeat(35, minmax(0, 1fr))' }}>
-                        {days.map((d, i) => {
-                          const state = dayState(h, d, doc.value, auto)
+                      {/* The month as a calendar: weekday headers, the date in each day, today ringed. Manual habits can be
+                          ticked for any day up to today. */}
+                      <div className="mt-4 grid grid-cols-7 gap-1.5 text-center sm:gap-2">
+                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                          <span key={i} className="text-2xs font-semibold text-text-secondary">{d}</span>
+                        ))}
+                        {grid.map((d, i) => {
+                          if (!d) return <span key={`b${i}`} />
+                          const future = d > today
+                          const state = future ? 'unknown' : dayState(h, d, doc.value, auto)
                           const isToday = d === today
-                          const clickable = !h.auto && isToday
+                          const clickable = !h.auto && !future
                           return (
                             <motion.button
                               key={d}
                               type="button"
                               disabled={!clickable}
                               title={`${d} · ${state}`}
-                              aria-label={isToday ? `${s.today}: ${h.name}` : d}
+                              aria-label={`${h.name}, ${d}${isToday ? ` (${s.today})` : ''}`}
                               aria-pressed={clickable ? state === 'done' : undefined}
                               onClick={() => clickable && doc.save(toggle(doc.value, h.id, d))}
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              whileTap={clickable ? { scale: 0.8 } : undefined}
-                              transition={{ delay: i * 0.008, type: 'spring', stiffness: 500, damping: 30 }}
+                              initial={{ scale: 0.6, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              whileTap={clickable ? { scale: 0.85 } : undefined}
+                              transition={{ delay: i * 0.006, type: 'spring', stiffness: 500, damping: 30 }}
                               className={cn(
-                                'aspect-square w-full rounded-full',
-                                state === 'done' ? 'bg-accent shadow-[0_0_8px_rgb(var(--aurum-glow)/0.55)]' : state === 'missed' ? 'bg-surface-10' : 'border border-dashed border-border bg-transparent',
-                                isToday && 'ring-2 ring-accent/60 ring-offset-2 ring-offset-card',
+                                'flex aspect-square min-h-[2.5rem] w-full items-center justify-center rounded-xl text-sm font-semibold transition-colors',
+                                future ? 'text-text-secondary/30' : state === 'done' ? 'bg-accent text-[#0b0a09] shadow-[0_0_10px_rgb(var(--aurum-glow)/0.5)]' : state === 'missed' ? 'bg-surface-5 text-text-secondary' : 'border border-dashed border-border text-text-secondary',
+                                isToday && 'ring-2 ring-accent ring-offset-2 ring-offset-card',
                                 clickable && 'cursor-pointer',
                               )}
-                            />
+                            >
+                              {Number(d.slice(8))}
+                            </motion.button>
                           )
                         })}
                       </div>
