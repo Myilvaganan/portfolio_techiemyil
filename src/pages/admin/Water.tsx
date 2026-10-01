@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BellRing, ChevronLeft, ChevronRight, Droplets, Flame, GlassWater, Minus, Plus } from 'lucide-react'
 import { Field, Loading, Notice, PageHero, Panel, Pill, Stat, inputCls } from '@/components/growth/kit'
@@ -155,6 +156,16 @@ export function Water() {
     doc.save(addWater(w, today, ml))
   }
   const set = (patch: Partial<typeof w>) => doc.save({ ...w, ...patch })
+
+  // ?add=1 (from the home-screen shortcut or widget) adds one glass as soon as the log has loaded.
+  const [params, setParams] = useSearchParams()
+  const quickAdded = useRef(false)
+  useEffect(() => {
+    if (doc.loading || quickAdded.current || params.get('add') !== '1') return
+    quickAdded.current = true
+    add(w.glassMl)
+    setParams({}, { replace: true })
+  })
 
   if (doc.loading) return <Loading label={s.loading} />
 

@@ -4,4 +4,9 @@
     <string name="title_activity_main">Techie Myil Admin</string>
     <string name="package_name">com.techiemyil.admin</string>
     <string name="custom_url_scheme">com.techiemyil.admin</string>
+    <string name="sc_today">Today</string>
+    <string name="sc_water">Add water</string>
+    <string name="sc_note">New note</string>
+    <string name="sc_receipt">Scan receipt</string>
+    <string name="widget_description">Quick actions: Today, add water, a note, a receipt</string>
 </resources>

@@ -11,6 +11,8 @@ import { useGrowthDoc } from '@/lib/growthApi'
 import { useSources } from '@/lib/growth/sources'
 import { monthFigures, prevMonth, takeaways, type MonthFigures, type Takeaway } from '@/lib/growth/review'
 import { monthLabel, todayStr } from '@/lib/journal'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { lifeMonthReport } from '@/lib/lifeReport'
 
 const useS = defineStrings(
   {
@@ -119,6 +121,11 @@ export function MonthlyReview() {
   const m = useMoney()
   const doc = useGrowthDoc('reviews')
   const rules = useGrowthDoc('guardrails')
+  const habitsDoc = useGrowthDoc('habits')
+  const waterDoc = useGrowthDoc('water')
+  const tasksDoc = useGrowthDoc('tasks')
+  const moodDoc = useGrowthDoc('mood')
+  const receiptsDoc = useGrowthDoc('receipts')
   const { data, loading, errors } = useSources(['bank', 'card', 'trades', 'tags', 'budgets', 'snapshots', 'health', 'settings'])
   const [month, setMonth] = useState(prevMonth(todayStr().slice(0, 7)))
   const [commitment, setCommitment] = useState('')
@@ -170,6 +177,13 @@ export function MonthlyReview() {
         lede={s.lede}
         actions={
           <div className="flex items-center gap-1.5">
+            {figures && (
+              <ReportMenu
+                label="Life report"
+                filename={`life-report-${month}`}
+                report={() => lifeMonthReport({ month, label: monthLabel(month), f: figures.cur, habits: habitsDoc.value, water: waterDoc.value, tasks: tasksDoc.value, mood: moodDoc.value.days, receipts: receiptsDoc.value.items })}
+              />
+            )}
             <button type="button" aria-label="Previous month" onClick={() => shift(-1)} className="rounded-full border border-border p-2 text-text-secondary hover:text-text">
               <ChevronLeft className="h-4 w-4" />
             </button>

@@ -18,8 +18,9 @@
     { "src": "/favicon/admin-maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Trading Journal", "url": "/trading-journal" },
-    { "name": "Budgets", "url": "/budgets" },
-    { "name": "Ask AI", "url": "/chat" }
+    { "name": "Today", "url": "/today", "icons": [{ "src": "/favicon/admin-192x192.png", "sizes": "192x192" }] },
+    { "name": "Add water", "url": "/water?add=1", "icons": [{ "src": "/favicon/admin-192x192.png", "sizes": "192x192" }] },
+    { "name": "New note", "url": "/diary", "icons": [{ "src": "/favicon/admin-192x192.png", "sizes": "192x192" }] },
+    { "name": "Scan receipt", "url": "/receipts", "icons": [{ "src": "/favicon/admin-192x192.png", "sizes": "192x192" }] }
   ]
 }

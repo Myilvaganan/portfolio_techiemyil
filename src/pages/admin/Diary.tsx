@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookLock, KeyRound, Lock, NotebookPen, Plus, Search, ShieldCheck, Trash2, Grid3x3 } from 'lucide-react'
+import { BookLock, Mic, MicOff, KeyRound, Lock, NotebookPen, Plus, Search, ShieldCheck, Trash2, Grid3x3 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Empty, Loading, Notice, PageHero, Panel, inputCls } from '@/components/growth/kit'
 import { PatternPad } from '@/components/diary/PatternPad'
@@ -22,6 +22,48 @@ interface Entry {
   body: string
   mood: string
   updatedAt: string
+}
+
+type Recognition = { lang: string; continuous: boolean; interimResults: boolean; start: () => void; stop: () => void; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>; resultIndex: number }) => void; onend: () => void }
+
+/**
+ * Speak instead of type, where the browser offers speech recognition (Chrome, and the installed web app). Note: Chrome
+ * sends the audio to Google's speech service to turn it into text; only the text is kept, encrypted with the entry.
+ */
+function MicButton({ onText }: { onText: (text: string) => void }) {
+  const Ctor = (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }).SpeechRecognition ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition
+  const [on, setOn] = useState(false)
+  const [lang, setLang] = useState<'en-IN' | 'ta-IN'>('en-IN')
+  const rec = useRef<Recognition | null>(null)
+  if (!Ctor) return null
+  const toggle = () => {
+    if (on) {
+      rec.current?.stop()
+      return
+    }
+    const r = new Ctor()
+    r.lang = lang
+    r.continuous = true
+    r.interimResults = false
+    r.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) onText(e.results[i][0].transcript.trim())
+    }
+    r.onend = () => setOn(false)
+    rec.current = r
+    r.start()
+    setOn(true)
+    haptic(10)
+  }
+  return (
+    <span className="inline-flex items-center gap-1">
+      <button type="button" onClick={toggle} title="Dictate (Chrome uses Google’s speech service; only the text is kept)" className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm', on ? 'animate-pulse bg-error/15 text-error' : 'bg-surface-3 text-text-secondary')}>
+        {on ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {on ? 'Stop' : 'Speak'}
+      </button>
+      {!on && (
+        <button type="button" onClick={() => setLang(lang === 'en-IN' ? 'ta-IN' : 'en-IN')} className="rounded-full px-2 py-1 text-xs text-text-secondary">{lang === 'en-IN' ? 'EN' : 'தமிழ்'}</button>
+      )}
+    </span>
+  )
 }
 
 const MOODS = ['😄', '🙂', '😐', '😔', '😤', '🙏']
@@ -276,6 +318,7 @@ export function Diary() {
                         <Trash2 className="h-4 w-4" /> Delete
                       </button>
                     )}
+                    <MicButton onText={(t) => setDraft((d) => (d ? { ...d, body: d.body ? `${d.body} ${t}` : t } : d))} />
                     <span className="ml-auto flex items-center gap-1 text-xs text-text-secondary"><ShieldCheck className="h-3.5 w-3.5 text-positive" /> Encrypted</span>
                   </div>
                 </Panel>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="today" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_today">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.techiemyil.admin" android:targetClass="com.techiemyil.admin.MainActivity" android:data="https://admin.techiemyil.com/today" />
+    </shortcut>
+    <shortcut android:shortcutId="water" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_water">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.techiemyil.admin" android:targetClass="com.techiemyil.admin.MainActivity" android:data="https://admin.techiemyil.com/water?add=1" />
+    </shortcut>
+    <shortcut android:shortcutId="note" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_note">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.techiemyil.admin" android:targetClass="com.techiemyil.admin.MainActivity" android:data="https://admin.techiemyil.com/diary" />
+    </shortcut>
+    <shortcut android:shortcutId="receipt" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_receipt">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.techiemyil.admin" android:targetClass="com.techiemyil.admin.MainActivity" android:data="https://admin.techiemyil.com/receipts" />
+    </shortcut>
+</shortcuts>
