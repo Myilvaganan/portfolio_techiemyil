@@ -25,3 +25,7 @@ lambda/**/*.zip
 *.sln
 *.sw?
 src/ContractNotes/
+
+# Android build output
+*.apk
+*.apk.idsig
