@@ -31,7 +31,19 @@ export interface DayFacts {
 
 const tIndex = (d: Date) => tithiAt(d).index
 
+// Each day is worked out once per place and remembered: the calendar, Today, Home and the top strip all reuse it.
+const factsCache = new Map<string, DayFacts>()
 export function dayFacts(date: string, place: Place): DayFacts {
+  const key = `${date}|${place.name}`
+  const hit = factsCache.get(key)
+  if (hit) return hit
+  const f = computeFacts(date, place)
+  if (factsCache.size > 800) factsCache.clear()
+  factsCache.set(key, f)
+  return f
+}
+
+function computeFacts(date: string, place: Place): DayFacts {
   const { sunrise, sunset } = sunTimes(date, place)
   const midnight = new Date(Date.parse(`${date}T00:00:00Z`) - IST_OFFSET_MIN * 60000 + 24 * 3600000)
   return {

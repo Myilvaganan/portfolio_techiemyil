@@ -1778,10 +1778,9 @@ html.admin .aurum-backdrop::before {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
     radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-text) 10%, transparent) 0.8px, transparent 1.2px);
   background-size: 160px 160px, 26px 26px;
-  opacity: 0.35;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.15) 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.15) 100%);
-  mix-blend-mode: soft-light;
+  /* No blend modes or masks here: on a full-screen fixed layer they make the phone recomposite the whole screen
+     (footer included) on every change, which shows up as lag and flicker. Plain opacity is free. */
+  opacity: 0.12;
 }
 /* A soft vignette and one faint light from the top. */
 html.admin .aurum-backdrop::after {

@@ -200,6 +200,12 @@ function buildNudges({ today, istHour, docs }) {
       out.push({ tag: `food-${today}-day`, title: `🍽️ ${kcal} kcal today`, body: `${eaten.length} item${eaten.length === 1 ? '' : 's'} logged. Add dinner if you haven’t.`, url: '/calories' })
     }
   }
+  // Sunday 9 AM: weigh in, unless a weight was logged in the last six days.
+  if (istHour === 9 && wd === 0 && docs.healthLogs) {
+    const since = addDays(today, -6)
+    const recent = docs.healthLogs.some((l) => l.weight != null && l.date >= since)
+    if (!recent) out.push({ tag: `weight-${today}`, title: '⚖️ Weekly weigh-in', body: 'Step on the scale before breakfast and log it — one number a week keeps your trend honest.', url: '/health-report' })
+  }
   if (istHour === 22 && diary?.check) out.push({ tag: `diary-${today}`, title: '📔 A minute for your diary', body: 'How did today go?', url: '/diary' })
   return out
 }
@@ -318,7 +324,8 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
       const names = ['tasks', 'meds', 'gate', 'mood', 'food', 'habits', 'diary']
       const loaded = await Promise.all(names.map((n) => getJson(`${ROOT}/growth/${n}.json`, null)))
       const docs = Object.fromEntries(names.map((n, i) => [n, loaded[i]]))
-      alerts.push(...buildNudges({ today, istHour, docs: { ...docs, reminders } }))
+      const healthLogs = istHour === 9 ? (await getJson(`${ROOT}/health/logs.json`, null))?.logs ?? [] : null
+      alerts.push(...buildNudges({ today, istHour, docs: { ...docs, reminders, healthLogs } }))
     }
     const water1 = buildWaterAlert({ today, istHour, water })
     if (water1) alerts.push(water1)

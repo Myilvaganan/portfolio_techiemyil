@@ -9,6 +9,8 @@ import { useSources } from '@/lib/growth/sources'
 import { latestWeight } from '@/lib/growth/water'
 import { lastDays } from '@/lib/growth/habits'
 import { todayStr } from '@/lib/journal'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { calorieMonthReport } from '@/lib/healthReports'
 import { ACTIVITY, MEALS, dayTotals, insights, logStreak, targets, topFoods } from '@/lib/calories'
 
 // Type what you ate or snap a photo; the AI splits it into items with calories and macros, you check and save. The
@@ -92,6 +94,7 @@ export function Calories() {
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<FoodItem[] | null>(null)
   const [setup, setSetup] = useState(false)
+  const [reportMonth, setReportMonth] = useState(todayStr().slice(0, 7))
   const fileRef = useRef<HTMLInputElement>(null)
 
   const { profile, entries } = doc.value
@@ -153,7 +156,17 @@ export function Calories() {
 
   return (
     <div className="w-full min-w-0 space-y-5">
-      <PageHero eyebrow="Health" title="Calories" lede="Type what you ate or snap a photo — the AI works out calories and macros. Your day against your target, and what to improve." />
+      <PageHero
+        eyebrow="Health"
+        title="Calories"
+        lede="Type what you ate or snap a photo — the AI works out calories and macros. Your day against your target, and what to improve."
+        actions={
+          <div className="flex items-center gap-2">
+            <input type="month" aria-label="Report month" className={cn(inputCls, 'w-auto py-1.5 text-xs')} value={reportMonth} max={today.slice(0, 7)} onChange={(e) => setReportMonth(e.target.value)} />
+            <ReportMenu label="Monthly report" filename={`calorie-report-${reportMonth}`} report={() => calorieMonthReport({ month: reportMonth, label: new Date(`${reportMonth}-01T00:00:00`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), entries, profile, logs: data.health ?? [], today })} />
+          </div>
+        }
+      />
       {(error || doc.error) && <Notice tone="bad">{error || doc.error}</Notice>}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

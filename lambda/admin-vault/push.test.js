@@ -133,4 +133,10 @@ describe('android (FCM) devices', () => {
     expect(medDueOn({ weekdays: [0] }, '2026-10-05')).toBe(false)
     expect(medDueOn({}, '2026-10-05')).toBe(true)
   })
+
+  it('reminds to weigh in on Sunday morning unless weighed this week', () => {
+    const sunday = '2026-10-04'
+    expect(buildNudges({ today: sunday, istHour: 9, docs: { healthLogs: [{ date: '2026-09-20', weight: 80 }] } })[0].title).toBe('⚖️ Weekly weigh-in')
+    expect(buildNudges({ today: sunday, istHour: 9, docs: { healthLogs: [{ date: '2026-10-01', weight: 80 }] } })).toEqual([])
+  })
 })

@@ -90,7 +90,18 @@ export function istTime(d: Date) {
 }
 export const istDateOf = (d: Date) => new Date(d.getTime() + IST_OFFSET_MIN * 60000).toISOString().slice(0, 10)
 
+const sunCache = new Map<string, { sunrise: Date; sunset: Date; nextSunrise: Date }>()
 export function sunTimes(date: string, place: Place) {
+  const key = `${date}|${place.lat},${place.lon}`
+  const hit = sunCache.get(key)
+  if (hit) return hit
+  const v = computeSunTimes(date, place)
+  if (sunCache.size > 800) sunCache.clear()
+  sunCache.set(key, v)
+  return v
+}
+
+function computeSunTimes(date: string, place: Place) {
   const obs = new A.Observer(place.lat, place.lon, 0)
   const start = istMidnight(date)
   const rise = A.SearchRiseSet(A.Body.Sun, obs, +1, start, 1)?.date ?? new Date(start.getTime() + 6 * 3600000)

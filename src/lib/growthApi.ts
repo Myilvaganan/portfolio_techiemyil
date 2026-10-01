@@ -252,9 +252,18 @@ export const fetchDoc = async <K extends GrowthDoc>(doc: K): Promise<GrowthDocs[
 export const saveDoc = async <K extends GrowthDoc>(doc: K, value: GrowthDocs[K]): Promise<GrowthDocs[K]> => (await call('/admin/growth', 'POST', { doc, value })).value
 
 /** Load one document, edit it locally, save it back. */
+// The last value of each document, so revisiting a page (or a card on Home) paints instantly with no loading flash;
+// a fresh copy is fetched in the background and swapped in.
+const docCache = new Map<GrowthDoc, unknown>()
+
 export function useGrowthDoc<K extends GrowthDoc>(doc: K) {
-  const [value, setValue] = useState<GrowthDocs[K]>(EMPTY_DOCS[doc])
-  const [loading, setLoading] = useState(true)
+  const cached = docCache.get(doc) as GrowthDocs[K] | undefined
+  const [value, setValueRaw] = useState<GrowthDocs[K]>(cached ?? EMPTY_DOCS[doc])
+  const setValue = (v: GrowthDocs[K]) => {
+    docCache.set(doc, v)
+    setValueRaw(v)
+  }
+  const [loading, setLoading] = useState(!cached)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

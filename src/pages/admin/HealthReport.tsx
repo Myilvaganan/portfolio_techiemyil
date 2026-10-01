@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ReportMenu } from '@/components/viz/ReportMenu'
+import { healthMonthReport } from '@/lib/healthReports'
+import { useGrowthDoc } from '@/lib/growthApi'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { MotionConfig, motion } from 'framer-motion'
 import { AlertTriangle, Camera, HeartPulse, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
@@ -88,6 +91,12 @@ export function HealthReport() {
   const [reports, setReports] = useState<Report[]>([])
   const [goal, setGoal] = useState<Goal | null>(null)
   const [logs, setLogs] = useState<DailyLog[]>([])
+  const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7))
+  const foodDoc = useGrowthDoc('food')
+  const waterDoc = useGrowthDoc('water')
+  const moodDoc = useGrowthDoc('mood')
+  const medsDoc = useGrowthDoc('meds')
+  const habitsDoc = useGrowthDoc('habits')
   const [loading, setLoading] = useState(true)
   const [reportsLoaded, setReportsLoaded] = useState(false)
   const [goalLoaded, setGoalLoaded] = useState(false)
@@ -269,6 +278,12 @@ export function HealthReport() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            <input type="month" aria-label="Report month" className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs text-text" value={reportMonth} max={new Date().toISOString().slice(0, 7)} onChange={(e) => setReportMonth(e.target.value)} />
+            <ReportMenu
+              label="Monthly health report"
+              filename={`health-report-${reportMonth}`}
+              report={() => healthMonthReport({ month: reportMonth, label: new Date(`${reportMonth}-01T00:00:00`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), today: new Date().toISOString().slice(0, 10), logs, food: foodDoc.value, water: waterDoc.value, mood: moodDoc.value.days, meds: medsDoc.value, habits: habitsDoc.value })}
+            />
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" aria-label="Report photo" onChange={(e) => void onPhotos(e.target.files)} />
             <button
               type="button"
