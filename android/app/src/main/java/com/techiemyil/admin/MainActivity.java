@@ -9,6 +9,10 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // No native scroll indicator down the right edge, and no overscroll glow: the app scrolls like a native app.
+        getBridge().getWebView().setVerticalScrollBarEnabled(false);
+        getBridge().getWebView().setHorizontalScrollBarEnabled(false);
+        getBridge().getWebView().setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
         openLink(getIntent());
     }
 
