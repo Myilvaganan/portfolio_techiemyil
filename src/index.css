@@ -1758,10 +1758,9 @@ html.admin[data-theme$='light'] .orb {
   background-image: radial-gradient(120% 120% at 30% 20%, rgba(255, 255, 255, 1), rgba(241, 243, 247, 0.6) 70%);
 }
 
-/* ---------- Background pattern ----------
-   A fine dot grid with faint graph-paper lines over two soft abstract shapes.
-   Drawn in the theme's text colour at a few percent opacity, so it suits every theme; one fixed layer that never
-   repaints while scrolling. */
+/* ---------- Background: CRED-style quiet premium ----------
+   No visible pattern: a very fine film grain for texture, the faintest dot field that fades out down the page, and a
+   soft vignette that pulls the eye to the centre. One fixed layer, painted once. */
 html.admin.noir .aurum-backdrop {
   display: block;
   background: none;
@@ -1773,28 +1772,34 @@ html.admin .aurum-backdrop::after {
   inset: 0;
   pointer-events: none;
 }
+/* Film grain (an SVG turbulence tile) + a hairline dot field near the top. */
 html.admin .aurum-backdrop::before {
-  /* Graph paper: a fine dot grid, with faint lines every fourth dot. */
-  --dot: color-mix(in srgb, var(--color-text) 16%, transparent);
-  --line: color-mix(in srgb, var(--color-text) 6%, transparent);
   background-image:
-    radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 1.5px),
-    linear-gradient(to right, var(--line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-  background-size:
-    22px 22px,
-    88px 88px,
-    88px 88px;
-  background-position: 0 0;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-text) 10%, transparent) 0.8px, transparent 1.2px);
+  background-size: 160px 160px, 26px 26px;
+  opacity: 0.35;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.15) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.15) 100%);
+  mix-blend-mode: soft-light;
 }
+/* A soft vignette and one faint light from the top. */
 html.admin .aurum-backdrop::after {
   background:
-    radial-gradient(28rem 28rem at 110% 8%, color-mix(in srgb, var(--color-text) 6%, transparent), transparent 70%),
-    radial-gradient(22rem 22rem at -10% 85%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 70%),
-    conic-gradient(from 210deg at 100% 100%, transparent 0 25%, color-mix(in srgb, var(--color-text) 3%, transparent) 25% 30%, transparent 30%);
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--color-text) 5%, transparent), transparent 60%),
+    radial-gradient(150% 120% at 50% 40%, transparent 55%, color-mix(in srgb, #000 22%, transparent) 100%);
+}
+html.admin[data-theme$='light'] .aurum-backdrop::after {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(150% 120% at 50% 40%, transparent 60%, rgba(15, 23, 42, 0.05) 100%);
 }
 html.admin .aurum-backdrop {
-  -webkit-mask-image: radial-gradient(140% 90% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 55%, #000 100%);
-  mask-image: radial-gradient(140% 90% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 55%, #000 100%);
   transform: translateZ(0);
+}
+
+/* Cards, CRED-style: hairline border, a whisper of light on the top edge, no glow. */
+html.admin.noir .royal-card,
+html.admin.noir .depth {
+  border-color: color-mix(in srgb, var(--color-text) 9%, transparent) !important;
 }
