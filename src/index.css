@@ -192,9 +192,11 @@
     letter-spacing: -0.015em;
   }
 
+  /* Selected text: a soft tint of the theme's accent under the normal text colour, so it reads in every theme
+     (in Noir the accent is pure black or white, which made solid highlights unreadable). */
   ::selection {
-    background-color: var(--color-accent);
-    color: #05130a;
+    background-color: color-mix(in srgb, var(--color-accent) 28%, transparent);
+    color: var(--color-text);
   }
 
   :focus-visible {
@@ -611,7 +613,7 @@ html.has-custom-cursor [data-native-cursor] label {
   background: radial-gradient(circle, rgba(214, 169, 60, 0.9), rgba(168, 116, 26, 0));
 }
 :root[data-theme='royal-light'] ::selection {
-  background-color: #e0b84a;
+  background-color: rgba(224, 184, 74, 0.45);
   color: #22162f;
 }
 
