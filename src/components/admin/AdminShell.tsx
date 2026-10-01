@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BellRing, Droplets, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BellRing, Droplets, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -22,7 +22,10 @@ import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTi
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
 import { useNativePushTaps, usePush } from '@/lib/push'
+import { useDismissedNotices } from '@/lib/dismissed'
 import { useLocale } from '@/lib/locale'
+import { useSkin, type Skin } from '@/hooks/useSkin'
+import { NoirSplash } from './Cinema'
 
 interface NavItem {
   label: string
@@ -159,6 +162,8 @@ interface ScaleProps {
   scale: UiScaleId
   onScale: (id: UiScaleId) => void
   lock: AppLock
+  skin: Skin
+  onSkin: (s: Skin) => void
 }
 
 /** Push notifications on this device: card bills, deadlines and loss-limit alerts. */
@@ -220,6 +225,23 @@ function HideNumbersRow() {
       </span>
       <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', hidden ? 'bg-accent' : 'bg-surface-15')}>
         <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', hidden ? 'translate-x-[18px]' : 'translate-x-0.5')} />
+      </span>
+    </button>
+  )
+}
+
+/** Noir (monochrome, CRED-like) or the older gold look. */
+function SkinRow({ skin, onSkin }: { skin: Skin; onSkin: (s: Skin) => void }) {
+  const on = skin === 'noir'
+  return (
+    <button type="button" role="switch" aria-checked={on} onClick={() => onSkin(on ? 'aurum' : 'noir')} className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left">
+      <IconBadge icon={Gem} seed="skin" size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-text">Noir look</span>
+        <span className="block truncate text-xs text-text-secondary">Monochrome, premium; off for gold</span>
+      </span>
+      <span className={cn('relative h-6 w-10 shrink-0 rounded-full transition-colors', on ? 'bg-accent' : 'bg-surface-15')}>
+        <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', on ? 'translate-x-[18px]' : 'translate-x-0.5')} />
       </span>
     </button>
   )
@@ -298,7 +320,7 @@ function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
   )
 }
 
-function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
+function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogout: () => void } & ScaleProps) {
   const [open, setOpen] = useState(false)
   const ref = useOutsideClick(() => setOpen(false))
   const navigate = useNavigate()
@@ -324,7 +346,8 @@ function ProfileMenu({ onLogout, scale, onScale, lock }: { onLogout: () => void 
             <LocalePicker />
             <HideNumbersRow />
             <NotificationsRow />
-                  <AppLockRow lock={lock} />
+            <SkinRow skin={skin} onSkin={onSkin} />
+            <AppLockRow lock={lock} />
           </div>
           <button
             type="button"
@@ -391,7 +414,8 @@ function NotificationBell() {
   const ref = useOutsideClick(() => setOpen(false))
   const navigate = useNavigate()
   const { pulse, refresh } = useAdminPulse()
-  const notices = useMemo(() => (pulse ? noticesFrom(pulse, signed) : []), [pulse])
+  const { visible, dismiss, restoreAll, count: hiddenCount } = useDismissedNotices()
+  const notices = useMemo(() => visible(pulse ? noticesFrom(pulse, signed) : []), [pulse, visible])
   const urgent = notices.some((n) => n.tone !== 'info')
   const [permission, setPermission] = useState(() => (canNotify() ? Notification.permission : 'denied'))
   useDesktopAlerts(notices)
@@ -423,14 +447,14 @@ function NotificationBell() {
           ) : (
             <ul className="divide-y divide-border">
               {notices.map((n) => (
-                <li key={n.id}>
+                <li key={n.id} className="flex items-start">
                   <button
                     type="button"
                     onClick={() => {
                       setOpen(false)
                       navigate(n.to)
                     }}
-                    className="flex w-full items-start gap-2.5 px-4 py-3 text-left hover:bg-surface-3"
+                    className="flex min-w-0 flex-1 items-start gap-2.5 py-3 pl-4 pr-1 text-left hover:bg-surface-3"
                   >
                     <AlertTriangle className={cn('mt-0.5 h-4 w-4 shrink-0', n.tone === 'bad' ? 'text-error' : n.tone === 'warn' ? 'text-amber-500' : 'text-accent')} />
                     <span className="min-w-0">
@@ -438,9 +462,17 @@ function NotificationBell() {
                       <span className="block text-xs text-text-secondary">{n.detail}</span>
                     </span>
                   </button>
+                  <button type="button" onClick={() => dismiss(n)} aria-label={`Dismiss: ${n.title}`} className="m-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-5 hover:text-text">
+                    <X className="h-4 w-4" />
+                  </button>
                 </li>
               ))}
             </ul>
+          )}
+          {hiddenCount > 0 && (
+            <button type="button" onClick={restoreAll} className="w-full border-t border-border px-4 py-2.5 text-left text-xs text-text-secondary hover:bg-surface-3 hover:text-text">
+              Show {hiddenCount} dismissed alert{hiddenCount === 1 ? '' : 's'} again
+            </button>
           )}
           {permission === 'default' && (
             <button
@@ -473,7 +505,7 @@ const tabTap = () => {
 }
 
 /** Native-app style navigation for phones: five tabs, with sheets for Finance and everything else. */
-function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void } & ScaleProps) {
+function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogout: () => void } & ScaleProps) {
   const t = useT()
   const { pathname } = useLocation()
   const navigate = useNavigate()
@@ -514,27 +546,40 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               onDragEnd={(_, info) => {
                 if (info.offset.y > 90 || info.velocity.y > 500) setSheet(null)
               }}
-              className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-border bg-card px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3"
+              className="nav-sheet fixed inset-x-0 bottom-0 z-50 max-h-[86vh] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-border bg-card px-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3"
             >
               <div onPointerDown={(e) => dragControls.start(e)} className="-mx-4 -mt-3 mb-1 flex cursor-grab touch-none justify-center px-4 pb-4 pt-3">
                 <div className="h-1 w-10 rounded-full bg-surface-15" />
               </div>
+              {sheet === 'more' && (
+                <div className="mb-6 flex items-center gap-4 border-b border-border pb-6 pt-2">
+                  <Avatar name={personal.brand} src={profilePhoto} size="lg" className="h-16 w-16" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-lg font-semibold uppercase tracking-wide text-text">{personal.brand}</p>
+                    <p className="text-sm text-text-secondary">administrator · private vault</p>
+                  </div>
+                </div>
+              )}
               {sections.map((section, idx) => (
-                <div key={section.label ?? idx} className="mb-4">
-                  {section.k && sections.length > 1 && <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">{t(section.k)}</p>}
-                  <div className="grid grid-cols-3 gap-2.5">
+                <div key={section.label ?? idx} className="mb-7">
+                  {section.k && <p className="mb-4 px-1 text-[11px] font-bold uppercase tracking-[0.2em] text-text-secondary">{t(section.k)}</p>}
+                  <div className="grid grid-cols-4 gap-x-2 gap-y-5">
                     {section.items.map((item) => (
                       <NavLink
                         key={item.to}
                         to={item.to}
                         end={item.to === '/'}
                         onClick={markTabNavigation}
-                        className={({ isActive }) =>
-                          cn('btn-3d flex flex-col items-center gap-2 rounded-2xl border border-border px-2 py-3.5 text-center text-xs font-medium transition-transform duration-150 active:scale-95', isActive ? 'border-accent/40 bg-accent/15 text-accent' : 'bg-surface-2 text-text')
-                        }
+                        className={({ isActive }) => cn('group flex flex-col items-center gap-2 text-center text-[11px] leading-tight', isActive ? 'text-accent' : 'text-text')}
                       >
-                        <IconBadge icon={item.icon} seed={item.to} size="md" />
-                        <span className="leading-tight">{t(item.k)}</span>
+                        {({ isActive }) => (
+                          <>
+                            <span className={cn('flex h-14 w-14 items-center justify-center rounded-full border transition-transform duration-150 group-active:scale-90', isActive ? 'border-accent bg-surface-3' : 'border-border')}>
+                              <item.icon className="h-[22px] w-[22px]" strokeWidth={1.5} />
+                            </span>
+                            <span>{t(item.k)}</span>
+                          </>
+                        )}
                       </NavLink>
                     ))}
                   </div>
@@ -542,10 +587,12 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
               ))}
               {sheet === 'more' && (
                 <div className="mb-4 space-y-3">
+                  <p className="px-1 pt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-text-secondary">Settings</p>
                   <SizePicker scale={scale} onScale={onScale} />
-            <LocalePicker />
+                  <LocalePicker />
                   <HideNumbersRow />
-            <NotificationsRow />
+                  <NotificationsRow />
+                  <SkinRow skin={skin} onSkin={onSkin} />
                   <AppLockRow lock={lock} />
                 </div>
               )}
@@ -583,7 +630,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock }: { onLogout: () => void
         <NavLink to="/chat" onClick={tabTap} aria-label="Ask AI" className="relative flex flex-1 select-none flex-col items-center justify-end pb-1.5 pt-2 text-[10px] font-medium">
           {({ isActive }) => (
             <>
-              <span className={cn('-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
+              <span className={cn('tab-orb -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.45),inset_0_-4px_6px_rgba(0,0,0,0.25),0_12px_22px_-4px_rgba(217,70,239,0.6)] ring-4 ring-bg transition-transform duration-150 active:scale-90', isActive && !sheet && 'scale-105')}>
                 <Sparkles className="h-6 w-6" />
               </span>
               <span className={cn('mt-0.5', isActive && !sheet ? 'text-accent' : 'text-text-secondary')}>{t('nav.askAi')}</span>
@@ -638,6 +685,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   const pull = useTouchGestures({ onRefresh: refresh, onBack: back })
 
   useNativeFeel()
+  const { skin, setSkin } = useSkin()
   const direction = useNavDirection()
   const isPhone = typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
   const motionFor = isPhone ? SLIDE[direction] : SLIDE.tab
@@ -651,6 +699,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   return (
     <div className="touch-app relative min-h-screen bg-bg">
       <div className="aurum-backdrop" aria-hidden />
+      {skin === 'noir' && <NoirSplash />}
       {lock.enabled && lock.locked && <LockScreen onUnlock={lock.unlock} />}
       {!online && (
         <div role="status" className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black">
@@ -727,13 +776,13 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
       <div className="relative z-[1] lg:pl-64">
         <header className="aurum-header glitter sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-bg/75 px-5 backdrop-blur-md sm:px-8 lg:px-10">
-<HeaderTitle />
+{skin === 'noir' && pathname === '/' ? <CoinPill /> : <HeaderTitle />}
           <GlobalSearch pages={SEARCH_PAGES} />
 
           <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
+            <ThemeToggle simple={skin === 'noir'} className={skin === 'noir' && pathname === '/' ? 'hidden sm:flex' : undefined} />
             <NotificationBell />
-            <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} />
+            <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} skin={skin} onSkin={setSkin} />
           </div>
         </header>
 
@@ -743,11 +792,11 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
             const el = document.querySelector<HTMLElement>('main.aurum-page')
             if (el) el.style.transform = 'none'
           }}
-          className="aurum-page overflow-x-clip space-y-6 px-5 py-6 pb-32 sm:px-8 sm:py-8 lg:px-10 lg:pb-10">
+          className="aurum-page overflow-x-clip space-y-6 px-5 py-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-8 sm:pt-8 lg:px-10 lg:pb-10">
           {children}
         </motion.main>
       </div>
-      <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} />
+      <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} skin={skin} onSkin={setSkin} />
     </div>
   )
 }
@@ -782,6 +831,34 @@ function HeaderTitleInner() {
         </motion.span>
       </AnimatePresence>
     </div>
+  )
+}
+
+/** Phone home only: a gold pill in the top bar with a slow marquee of what matters today (CRED's coin pill). */
+function CoinPill() {
+  const navigate = useNavigate()
+  const { pulse } = useAdminPulse()
+  const { visible } = useDismissedNotices()
+  const items = useMemo(() => {
+    const out: string[] = []
+    if (pulse?.todayPnl != null) out.push(`Today ${signed(pulse.todayPnl)}`)
+    if (pulse?.nextEmi) out.push(`EMI ${formatInr(pulse.nextEmi.amount)} ${pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days}d`}`)
+    if (pulse?.monthPnl != null) out.push(`Month ${signed(pulse.monthPnl)}`)
+    for (const n of pulse ? visible(noticesFrom(pulse, signed)).slice(0, 3) : []) out.push(n.title)
+    return out.length ? out : [personal.brand]
+  }, [pulse, visible])
+  const text = items.join('   ·   ')
+  return (
+    <button type="button" onClick={() => navigate('/monthly-review')} className="noir-coin-pill relative flex h-10 min-w-0 max-w-[15rem] flex-1 items-center gap-2 overflow-hidden rounded-full pl-1.5 pr-3 lg:hidden" aria-label={text}>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e9c77b] to-[#a67c2e] font-display text-[10px] font-semibold italic text-white shadow-inner">TM</span>
+      <span className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+        <span className="noir-marquee text-sm font-semibold" aria-hidden>
+          <span className="pr-8">{text}</span>
+          <span className="pr-8">{text}</span>
+        </span>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 opacity-60" />
+    </button>
   )
 }
 

@@ -1647,3 +1647,22 @@ html.admin.noir header.aurum-header button[aria-label='Profile menu'] {
   border-radius: 9999px;
   border: 2px solid var(--color-border);
 }
+
+/* Noir logo: the monogram replaces the neon and gold marks; the name is set in spaced capitals. */
+.logo-noir {
+  display: none;
+}
+html.admin.noir .logo-noir {
+  display: inline-flex;
+}
+html.admin.noir .logo-default,
+html.admin.noir .logo-royal {
+  display: none !important;
+}
+html.admin.noir .logo-name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}

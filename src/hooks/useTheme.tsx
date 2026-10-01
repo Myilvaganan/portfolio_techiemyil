@@ -20,7 +20,8 @@ const ADMIN_THEME_COLOR = { dark: '#07080c', light: '#f5f6f8', 'royal-light': '#
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (THEMES.includes(stored as Theme)) return stored as Theme
-  return 'royal'
+  // The admin app opens on white paper (its Noir look); the portfolio keeps royal.
+  return IS_ADMIN_HOST ? 'light' : 'royal'
 }
 
 interface ThemeContextValue {

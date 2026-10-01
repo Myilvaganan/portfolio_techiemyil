@@ -21,15 +21,15 @@ export const markTabNavigation = () => {
 /** Which way the last navigation went, from React Router's history index. */
 export function useNavDirection(): NavDirection {
   const location = useLocation()
-  const last = useRef<number>((window.history.state?.idx as number) ?? 0)
-  const [dir, setDir] = useState<NavDirection>('tab')
-  useEffect(() => {
+  // Worked out during render, not in an effect: the new screen must mount with its final slide. Changing the slide
+  // after mount left the page stuck part-way off screen.
+  const last = useRef<{ key: string; idx: number; dir: NavDirection }>({ key: location.key, idx: (window.history.state?.idx as number) ?? 0, dir: 'tab' })
+  if (last.current.key !== location.key) {
     const idx = (window.history.state?.idx as number) ?? 0
-    setDir(nextIsTab ? 'tab' : idx < last.current ? 'back' : 'forward')
+    last.current = { key: location.key, idx, dir: nextIsTab ? 'tab' : idx < last.current.idx ? 'back' : 'forward' }
     nextIsTab = false
-    last.current = idx
-  }, [location.key])
-  return dir
+  }
+  return last.current.dir
 }
 
 export const SLIDE = {

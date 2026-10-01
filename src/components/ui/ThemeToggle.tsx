@@ -13,16 +13,18 @@ const NEXT: Record<Theme, { next: Theme; label: string }> = {
 // The icon shows the theme you will get by clicking.
 const ICON = { dark: Sun, light: Gem, 'royal-light': Crown, royal: Moon } as const
 
-export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, cycleTheme } = useTheme()
-  const Icon = ICON[theme]
+/** `simple` flips only between light and dark (the admin's Noir look has no royal variants). */
+export function ThemeToggle({ className, simple = false }: { className?: string; simple?: boolean }) {
+  const { theme, cycleTheme, toggleTheme } = useTheme()
+  const Icon = simple ? (theme === 'light' ? Moon : Sun) : ICON[theme]
+  const label = simple ? (theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme') : NEXT[theme].label
 
   return (
     <button
       type="button"
       data-cursor="hover"
-      onClick={cycleTheme}
-      aria-label={NEXT[theme].label}
+      onClick={simple ? toggleTheme : cycleTheme}
+      aria-label={label}
       className={cn(
         'btn-3d glitter relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface-3 text-text-secondary transition-colors hover:border-accent/40 hover:text-text',
         isRoyal(theme) && 'royal-shine',

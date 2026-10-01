@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Greeting } from '@/components/admin/Greeting'
-import { IconBadge } from '@/components/ui/Avatar'
+import { CinemaBanner, NoirTitle, type CinemaSlide } from '@/components/admin/Cinema'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Home, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, Tags, TrendingUp, Wallet } from 'lucide-react'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { Button } from '@/components/ui/Button'
+import { personal } from '@/data/personal'
+import { AlertTriangle, ChevronRight, X, Home, Sparkles, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, TrendingUp, Wallet } from 'lucide-react'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
 import { formatInr } from '@/lib/kite'
 import { cn } from '@/lib/utils'
 import { downloadBackup } from '@/lib/platformApi'
 import { noticesFrom } from '@/lib/pulse'
 import { useAdminPulse } from '@/hooks/useAdminPulse'
+import { useDismissedNotices } from '@/lib/dismissed'
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -22,28 +21,6 @@ function formatBytes(bytes: number): string {
     unitIndex += 1
   }
   return `${value.toFixed(1)} ${units[unitIndex]}`
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  icon: typeof HardDrive
-}) {
-  return (
-    <GlassCard className="p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="label-caps">{label}</p>
-          <p className="mt-2 font-display text-2xl font-semibold text-text">{value}</p>
-        </div>
-        <IconBadge icon={Icon} seed={label} size="md" />
-      </div>
-    </GlassCard>
-  )
 }
 
 const QUICK_ACTIONS = [
@@ -66,19 +43,56 @@ const QUICK_ACTIONS = [
 const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '-' : ''}${formatInr(Math.abs(n))}`
 const toneOf = (n: number | null) => (n === null || n === 0 ? 'text-text' : n > 0 ? 'text-positive' : 'text-error')
 
-function PulseCard({ label, value, sub, icon: Icon, valueClass, onClick }: { label: string; value: string; sub?: string; icon: typeof HardDrive; valueClass?: string; onClick: () => void }) {
+function greetingFor(hour: number) {
+  if (hour >= 5 && hour < 12) return 'Good morning'
+  if (hour >= 12 && hour < 17) return 'Good afternoon'
+  if (hour >= 17 && hour < 21) return 'Good evening'
+  return hour >= 21 ? 'Good night' : 'Working late'
+}
+
+/** A section label in spaced capitals, with an optional "view all" link on the right (CRED style). */
+function SectionLabel({ children, action, onAction }: { children: string; action?: string; onAction?: () => void }) {
   return (
-    <button type="button" data-cursor="hover" onClick={onClick} className="rounded-2xl text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent">
-      <GlassCard className="h-full p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="label-caps">{label}</p>
-            <p className={cn('mt-1.5 truncate font-mono text-xl font-semibold text-text', valueClass)}>{value}</p>
-            {sub && <p className="mt-0.5 truncate text-xs text-text-secondary">{sub}</p>}
-          </div>
-          <IconBadge icon={Icon} seed={label} size="sm" />
-        </div>
-      </GlassCard>
+    <div className="mb-4 flex items-center justify-between">
+      <h2 className="noir-eyebrow !font-sans !text-xs !font-bold !tracking-[0.2em]">{children}</h2>
+      {action && (
+        <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-sm text-text-secondary transition-colors hover:text-text">
+          {action}
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** One card in the Money Matters rail: a thin icon, a spaced-capitals label, and the figure with a chevron. */
+function MoneyCard({ label, value, sub, icon: Icon, valueClass, onClick }: { label: string; value: string; sub?: string; icon: typeof HardDrive; valueClass?: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-[46%] min-w-[150px] max-w-[220px] flex-col justify-between rounded-[18px] border border-border bg-card p-4 text-left transition-[transform,border-color] duration-200 hover:border-text/30 active:scale-[0.97]"
+    >
+      <Icon className="h-6 w-6 text-text" strokeWidth={1.5} />
+      <span className="mt-8 block">
+        <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-text-secondary">{label}</span>
+        <span className={cn('mt-1 flex items-center gap-1 text-lg font-semibold text-text', valueClass)}>
+          <span className="truncate">{value}</span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-text-secondary" />
+        </span>
+        {sub && <span className="mt-0.5 block truncate text-xs text-text-secondary">{sub}</span>}
+      </span>
+    </button>
+  )
+}
+
+/** A row like CRED's profile list: label on the left, value and an arrow on the right. */
+function ListRow({ label, value, onClick }: { label: string; value: string; onClick?: () => void }) {
+  return (
+    <button type="button" onClick={onClick} disabled={!onClick} className="flex w-full items-center gap-3 border-b border-border py-4 text-left last:border-b-0">
+      <span className="flex-1 text-[15px] text-text">{label}</span>
+      <span className="text-[15px] font-medium text-text">{value}</span>
+      {onClick && <ChevronRight className="h-4 w-4 text-text-secondary" />}
     </button>
   )
 }
@@ -90,25 +104,15 @@ export function DashboardHome() {
   const { pulse } = useAdminPulse()
   const [backingUp, setBackingUp] = useState(false)
   const [backupNote, setBackupNote] = useState('')
-  const notices = pulse ? noticesFrom(pulse, signed) : []
-  // Show alerts briefly, then let them go (the bell keeps them); only show again when the set changes.
-  const noticeKey = notices.map((n) => n.id).join('|')
-  const [showNotices, setShowNotices] = useState(false)
-  useEffect(() => {
-    if (!noticeKey) return
-    try {
-      if (sessionStorage.getItem('notices_seen') === noticeKey) return
-      sessionStorage.setItem('notices_seen', noticeKey)
-    } catch { /* storage unavailable: just show */ }
-    setShowNotices(true)
-  }, [noticeKey])
+  const { visible, dismiss } = useDismissedNotices()
+  const notices = visible(pulse ? noticesFrom(pulse, signed) : [])
 
   async function backup() {
     setBackingUp(true)
     setBackupNote('')
     try {
       const b = await downloadBackup()
-      setBackupNote(`Saved ${Object.keys(b.files).length} data files and a list of ${b.documents.length} documents.`)
+      setBackupNote(`Saved ${Object.keys(b.files).length} data files and a list of ${b.documents.length} documents. Older versions of every file are also kept in the vault for 90 days.`)
     } catch (e) {
       setBackupNote((e as Error).message)
     } finally {
@@ -132,120 +136,113 @@ export function DashboardHome() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
   }).length
 
+  const now = new Date()
+  const firstName = personal.brand.split(' ')[0]
+  const lead = notices.find((n) => n.tone !== 'info') ?? notices[0]
+
+  // The banner plays today's highlights as a short film.
+  const slides: CinemaSlide[] = [{ eyebrow: now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }), title: 'Introducing today', to: '/monthly-review' }]
+  if (pulse?.todayPnl != null) slides.push({ eyebrow: "Today's P&L", title: signed(pulse.todayPnl), sub: `${pulse.todayTrades} trade${pulse.todayTrades === 1 ? '' : 's'} across all books`, to: '/trading-journal' })
+  if (pulse?.monthPnl != null) slides.push({ eyebrow: 'This month', title: signed(pulse.monthPnl), sub: 'Options + Forex, before tax', to: '/trading-journal' })
+  if (pulse?.nextEmi) slides.push({ eyebrow: 'Next EMI', title: formatInr(pulse.nextEmi.amount), sub: `${pulse.nextEmi.loan} · ${pulse.nextEmi.days === 0 ? 'due today' : `in ${pulse.nextEmi.days} days`}`, to: '/loans' })
+  if (pulse?.siteViews != null) slides.push({ eyebrow: 'Website this month', title: `${pulse.siteViews.toLocaleString('en-IN')} views`, to: '/site' })
+
   return (
-    <div className="space-y-6">
-      <Greeting
-        actions={
-          <>
-          <Button variant="secondary" size="sm" magnetic={false} className="w-full px-3 sm:w-auto sm:px-5" onClick={() => void backup()} disabled={backingUp}>
-            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />}
-            Download backup
-          </Button>
-          <Button variant="secondary" size="sm" magnetic={false} className="w-full px-3 sm:w-auto sm:px-5" onClick={() => window.open('/', '_blank')}>
-            Visit Website
-            <ExternalLink className="h-4 w-4" />
-          </Button>
+    <div className="space-y-10">
+      <section aria-label="Greeting">
+        <p className="noir-eyebrow">{lead ? 'Now live' : now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <div className="mt-3 flex items-center justify-between gap-4">
+          <h1 className="min-w-0 font-display text-[1.9rem] font-medium leading-[1.15] text-text sm:text-4xl">
+            <NoirTitle text={lead ? lead.title : `${greetingFor(now.getHours())}, ${firstName}.`} />
+          </h1>
+          <button
+            type="button"
+            onClick={() => navigate(lead ? lead.to : '/chat')}
+            className="shrink-0 rounded-[10px] border-[1.5px] border-text px-5 py-3 text-sm font-semibold text-text transition-transform active:scale-95"
+          >
+            {lead ? 'Review now' : 'Ask AI'}
+          </button>
+        </div>
+        {lead && <p className="mt-2 text-sm text-text-secondary">{lead.detail}</p>}
+      </section>
 
-          </>
-        }
-      />
-      {backupNote && <p role="status" className="-mt-3 text-xs text-text-secondary">{backupNote} Older versions of every file are also kept in the vault for 90 days.</p>}
+      <CinemaBanner slides={slides} onOpen={navigate} />
 
-      {notices.length > 0 && showNotices && (
-        <ul className="animate-[fadeout_0.5s_ease-in_6s_forwards] space-y-2" aria-label="Needs attention" onAnimationEnd={() => setShowNotices(false)}>
-          {notices.map((n) => (
-            <li key={n.id}>
-              <button
-                type="button"
-                data-cursor="hover"
-                onClick={() => navigate(n.to)}
-                className={cn(
-                  'flex w-full items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors',
-                  n.tone === 'bad' ? 'border-error/40 bg-error/10' : n.tone === 'warn' ? 'border-amber-500/40 bg-amber-500/10' : 'border-accent/30 bg-accent/[0.06]',
-                )}
-              >
-                <AlertTriangle className={cn('mt-0.5 h-4 w-4 shrink-0', n.tone === 'bad' ? 'text-error' : n.tone === 'warn' ? 'text-amber-500' : 'text-accent')} />
-                <span>
-                  <span className="font-semibold text-text">{n.title}</span> <span className="text-text-secondary">{n.detail}</span>
+      <section>
+        <SectionLabel>Money matters</SectionLabel>
+        <div className="noir-rail -mx-5 px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
+          <MoneyCard label="Today's P&L" icon={TrendingUp} value={pulse?.todayPnl != null ? signed(pulse.todayPnl) : '—'} valueClass={toneOf(pulse?.todayPnl ?? null)} sub={pulse ? `${pulse.todayTrades} trades today` : 'Loading…'} onClick={() => navigate('/trading-journal')} />
+          <MoneyCard label="This month" icon={BarChart3} value={pulse?.monthPnl != null ? signed(pulse.monthPnl) : '—'} valueClass={toneOf(pulse?.monthPnl ?? null)} sub="before tax" onClick={() => navigate('/trading-journal')} />
+          <MoneyCard label="Next EMI" icon={CalendarClock} value={pulse?.nextEmi ? formatInr(pulse.nextEmi.amount) : '—'} sub={pulse?.nextEmi ? (pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days} days`) : 'none due'} onClick={() => navigate('/loans')} />
+          <MoneyCard label="Loans" icon={Wallet} value={pulse?.loansOutstanding != null ? formatInr(pulse.loansOutstanding) : '—'} valueClass={pulse?.overdueEmis ? 'text-error' : undefined} sub={pulse?.overdueEmis ? `${pulse.overdueEmis} overdue` : 'outstanding'} onClick={() => navigate('/loans')} />
+          <MoneyCard label="Weight" icon={HeartPulse} value={pulse?.latestWeight ? `${pulse.latestWeight.kg.toFixed(1)} kg` : '—'} sub={pulse?.inbodyDaysSince != null ? `InBody ${pulse.inbodyDaysSince}d ago` : 'no test yet'} onClick={() => navigate('/health-report')} />
+          <MoneyCard label="Website" icon={Eye} value={pulse?.siteViews != null ? pulse.siteViews.toLocaleString('en-IN') : '—'} sub={pulse?.unreadMessages ? `${pulse.unreadMessages} unread` : 'views this month'} onClick={() => navigate('/site')} />
+        </div>
+      </section>
+
+      {notices.length > 0 && (
+        <section aria-label="Needs attention">
+          <SectionLabel>{`Needs attention (${notices.length})`}</SectionLabel>
+          <ul className="space-y-3">
+            {notices.map((n) => (
+              <li key={n.id} className="flex items-center gap-3 rounded-[18px] border border-border bg-card p-4">
+                <span className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border', n.tone === 'bad' ? 'text-error' : n.tone === 'warn' ? 'text-amber-500' : 'text-text')}>
+                  <AlertTriangle className="h-5 w-5" strokeWidth={1.6} />
                 </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold text-text">{n.title}</span>
+                  <span className="block truncate text-xs text-text-secondary">{n.detail}</span>
+                </span>
+                <button type="button" onClick={() => navigate(n.to)} className="shrink-0 rounded-[10px] bg-text px-4 py-2.5 text-xs font-semibold text-bg transition-transform active:scale-95">
+                  Open
+                </button>
+                <button type="button" onClick={() => dismiss(n)} aria-label={`Dismiss: ${n.title}`} className="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-5 hover:text-text">
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        <PulseCard
-          label="Today's P&L"
-          icon={TrendingUp}
-          value={pulse?.todayPnl != null ? signed(pulse.todayPnl) : '—'}
-          valueClass={toneOf(pulse?.todayPnl ?? null)}
-          sub={pulse ? `${pulse.todayTrades} trade${pulse.todayTrades === 1 ? '' : 's'} today · all books` : 'Loading…'}
-          onClick={() => navigate('/trading-journal')}
-        />
-        <PulseCard
-          label="This month"
-          icon={BarChart3}
-          value={pulse?.monthPnl != null ? signed(pulse.monthPnl) : '—'}
-          valueClass={toneOf(pulse?.monthPnl ?? null)}
-          sub="Options + Forex, before tax"
-          onClick={() => navigate('/trading-journal')}
-        />
-        <PulseCard
-          label="Next EMI"
-          icon={CalendarClock}
-          value={pulse?.nextEmi ? formatInr(pulse.nextEmi.amount) : '—'}
-          sub={pulse?.nextEmi ? `${pulse.nextEmi.loan} · ${pulse.nextEmi.days === 0 ? 'today' : `in ${pulse.nextEmi.days} days`}` : 'No upcoming EMI found'}
-          onClick={() => navigate('/loans')}
-        />
-        <PulseCard
-          label="Loans outstanding"
-          icon={Wallet}
-          value={pulse?.loansOutstanding != null ? formatInr(pulse.loansOutstanding) : '—'}
-          sub={pulse?.overdueEmis ? `${pulse.overdueEmis} overdue` : 'All paid on time'}
-          valueClass={pulse?.overdueEmis ? 'text-error' : undefined}
-          onClick={() => navigate('/loans')}
-        />
-        <PulseCard
-          label="Latest weight"
-          icon={HeartPulse}
-          value={pulse?.latestWeight ? `${pulse.latestWeight.kg.toFixed(1)} kg` : '—'}
-          sub={pulse?.inbodyDaysSince != null ? `InBody ${pulse.inbodyDaysSince} days ago` : 'No InBody test yet'}
-          onClick={() => navigate('/health-report')}
-        />
-        <PulseCard
-          label="Website this month"
-          icon={Eye}
-          value={pulse?.siteViews != null ? pulse.siteViews.toLocaleString('en-IN') : '—'}
-          sub={pulse?.unreadMessages ? `${pulse.unreadMessages} unread message${pulse.unreadMessages === 1 ? '' : 's'}` : 'page views'}
-          onClick={() => navigate('/site')}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Documents" value={loading ? '—' : String(documents.length)} icon={FolderOpen} />
-        <StatCard label="Total Size" value={loading ? '—' : formatBytes(totalSize)} icon={HardDrive} />
-        <StatCard label="Categories" value={loading ? '—' : String(categories)} icon={Tags} />
-        <StatCard label="Uploaded This Month" value={loading ? '—' : String(thisMonth)} icon={TrendingUp} />
-      </div>
-
-      <div>
-        <h2 className="mb-4 section-title">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+      <section>
+        <SectionLabel>For you</SectionLabel>
+        <div className="grid grid-cols-4 gap-x-2 gap-y-6 sm:grid-cols-6 lg:grid-cols-7">
+          <button type="button" onClick={() => navigate('/chat')} className="group flex flex-col items-center gap-2.5 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
+              <Sparkles className="h-6 w-6 text-text" strokeWidth={1.5} />
+            </span>
+            <span className="text-xs leading-tight text-text">Ask AI</span>
+          </button>
           {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.to}
-              type="button"
-              data-cursor="hover"
-              onClick={() => navigate(action.to)}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card/70 px-3 py-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-accent/30"
-            >
-              <IconBadge icon={action.icon} seed={action.to} size="lg" />
-              <span className="text-sm font-medium text-text">{action.label}</span>
+            <button key={action.to} type="button" onClick={() => navigate(action.to)} className="group flex flex-col items-center gap-2.5 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
+                <action.icon className="h-6 w-6 text-text" strokeWidth={1.5} />
+              </span>
+              <span className="text-xs leading-tight text-text">{action.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
+
+      <section>
+        <SectionLabel action="manage" onAction={() => navigate('/documents')}>Your vault</SectionLabel>
+        <div className="rounded-[18px] border border-border bg-card px-4">
+          <ListRow label="documents" value={loading ? '—' : String(documents.length)} onClick={() => navigate('/documents')} />
+          <ListRow label="total size" value={loading ? '—' : formatBytes(totalSize)} />
+          <ListRow label="categories" value={loading ? '—' : String(categories)} />
+          <ListRow label="uploaded this month" value={loading ? '—' : String(thisMonth)} />
+          <button type="button" onClick={() => void backup()} disabled={backingUp} className="flex w-full items-center gap-3 border-b border-border py-4 text-left">
+            <span className="flex-1 text-[15px] text-text">download backup</span>
+            {backingUp ? <Loader2 className="h-4 w-4 animate-spin text-text-secondary" /> : <DatabaseBackup className="h-4 w-4 text-text-secondary" />}
+          </button>
+          <button type="button" onClick={() => window.open('/', '_blank')} className="flex w-full items-center gap-3 py-4 text-left">
+            <span className="flex-1 text-[15px] text-text">visit website</span>
+            <ExternalLink className="h-4 w-4 text-text-secondary" />
+          </button>
+        </div>
+        {backupNote && <p role="status" className="mt-2 text-xs text-text-secondary">{backupNote}</p>}
+      </section>
     </div>
   )
 }

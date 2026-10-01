@@ -88,7 +88,7 @@ const BADGE_SIZES = {
 /** A colourful gradient tile holding an icon. `seed` picks the colour, so the same page or topic is always the same colour. */
 export function IconBadge({ icon: Icon, seed, size = 'md', className }: { icon: LucideIcon; seed: string; size?: keyof typeof BADGE_SIZES; className?: string }) {
   return (
-    <span aria-hidden className={cn('flex shrink-0 items-center justify-center bg-gradient-to-br text-white ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-3px_5px_rgba(0,0,0,0.25),0_8px_14px_-5px_rgba(0,0,0,0.55)]', BADGE_SIZES[size], colorFor(seed), className)}>
+    <span aria-hidden className={cn('icon-badge flex shrink-0 items-center justify-center bg-gradient-to-br text-white ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-3px_5px_rgba(0,0,0,0.25),0_8px_14px_-5px_rgba(0,0,0,0.55)]', BADGE_SIZES[size], colorFor(seed), className)}>
       <Icon />
     </span>
   )
