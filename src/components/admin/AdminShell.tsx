@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
 import { BellRing, Droplets, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
+import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -324,7 +325,6 @@ function SizePicker({ scale, onScale }: Pick<ScaleProps, 'scale' | 'onScale'>) {
 function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogout: () => void } & ScaleProps) {
   const [open, setOpen] = useState(false)
   const ref = useOutsideClick(() => setOpen(false))
-  const navigate = useNavigate()
 
   return (
     <div className="relative" ref={ref}>
@@ -336,8 +336,9 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
       >
         <Avatar name={personal.brand} src={profilePhoto} size="sm" className="h-full w-full ring-0" />
       </button>
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+      <AnimatePresence>
+        {open && (
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
           <div className="border-b border-border px-4 py-3">
             <p className="text-sm font-medium text-text">{personal.brand}</p>
             <p className="text-xs text-text-secondary">Administrator</p>
@@ -354,7 +355,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
             type="button"
             onClick={() => {
               setOpen(false)
-              navigate('/')
+              openExternal(SITE_URL)
             }}
             className="flex w-full items-center px-4 py-2.5 text-left text-sm text-text-secondary hover:bg-surface-3 hover:text-text"
           >
@@ -372,8 +373,9 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
             <LogOut className="h-3.5 w-3.5" />
             Log out
           </button>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -441,8 +443,9 @@ function NotificationBell() {
           </span>
         )}
       </button>
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+      <AnimatePresence>
+        {open && (
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
           {notices.length === 0 ? (
             <p className="p-4 text-center text-sm text-text-secondary">You&apos;re all caught up.</p>
           ) : (
@@ -484,8 +487,9 @@ function NotificationBell() {
               Turn on desktop alerts for losses and due EMIs
             </button>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -509,7 +513,6 @@ const tabTap = () => {
 function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogout: () => void } & ScaleProps) {
   const t = useT()
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const [sheet, setSheet] = useState<null | 'finance' | 'trading' | 'more'>(null)
   // Only the grab handle drags the sheet closed, so swiping inside it scrolls the list as normal.
   const dragControls = useDragControls()
@@ -599,7 +602,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
               )}
               {sheet === 'more' && (
                 <div className="grid grid-cols-2 gap-2.5">
-                  <button type="button" onClick={() => navigate('/')} className="rounded-2xl border border-border bg-surface-2 py-3 text-xs font-medium text-text">
+                  <button type="button" onClick={() => openExternal(SITE_URL)} className="rounded-2xl border border-border bg-surface-2 py-3 text-xs font-medium text-text">
                     Visit Website
                   </button>
                   <button
@@ -716,7 +719,9 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
       )}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card/85 backdrop-blur-xl lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-5">
-          <Logo />
+          <Link to="/" aria-label="Home">
+            <Logo />
+          </Link>
         </div>
 
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
@@ -818,7 +823,9 @@ function HeaderTitleInner() {
   const title = useTitleScrolledAway(pathname)
   return (
     <div className="relative flex min-w-0 items-center gap-2.5 lg:hidden">
-      <Logo showName={false} />
+      <Link to="/" aria-label="Home" className="shrink-0">
+        <Logo showName={false} />
+      </Link>
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={title ?? 'brand'}

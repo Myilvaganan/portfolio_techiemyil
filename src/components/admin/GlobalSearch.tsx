@@ -37,7 +37,11 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
     setLoading(false)
   }
 
-  const hits = useMemo(() => searchAll(index ?? { pages, documents: [], trades: [], notes: {}, reports: [] }, query, 12), [index, pages, query])
+  const found = useMemo(() => searchAll(index ?? { pages, documents: [], trades: [], notes: {}, reports: [] }, query, 12), [index, pages, query])
+  // Before anything is typed, suggest the main pages so the box is never blank.
+  const suggestions = useMemo(() => pages.slice(0, 10).map((p) => ({ kind: 'page' as const, title: p.label, detail: 'Open page', to: p.to })), [pages])
+  const typed = query.trim() !== ''
+  const hits = typed ? found : suggestions
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -94,12 +98,12 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
     >
       <Search className="h-[18px] w-[18px]" />
     </button>
-    <div ref={boxRef} className={cn(mobileOpen ? 'fixed inset-x-0 top-0 z-[65] block bg-bg p-3 shadow-xl [&>svg:first-child]:left-[1.625rem]' : 'relative hidden max-w-md flex-1 sm:block')}>
+    <div ref={boxRef} className={cn(mobileOpen ? 'search-sheet fixed inset-0 z-[75] flex flex-col bg-bg px-3 pb-3 pt-[calc(0.75rem+var(--inset-top,0px))] [&>svg:first-child]:left-[1.625rem] [&>svg:first-child]:top-[calc(0.75rem+var(--inset-top,0px)+1.3rem)]' : 'relative hidden max-w-md flex-1 sm:block')}>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
       <input
         ref={inputRef}
         role="combobox"
-        aria-expanded={open && query.trim() !== ''}
+        aria-expanded={open}
         aria-controls={listId}
         aria-label="Search everything"
         value={query}
@@ -116,8 +120,9 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
         placeholder="Search trades, notes, documents…  ⌘K"
         className={cn('w-full rounded-full border border-border bg-surface-2 py-2.5 pl-10 text-sm text-text outline-none transition-colors focus:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent/40', mobileOpen ? 'pr-11' : 'pr-4')}
       />
-      {open && query.trim() !== '' && (
-        <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[60vh] overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-2xl">
+      {(open || mobileOpen) && (
+        <ul id={listId} role="listbox" className={cn('overflow-y-auto rounded-xl border border-border bg-card p-1.5', mobileOpen ? 'mt-3 min-h-0 flex-1 overscroll-contain' : 'absolute left-0 right-0 top-full z-30 mt-2 max-h-[60vh] shadow-2xl')}>
+          {!typed && <li className="px-3 pb-1 pt-2 label-caps">Jump to</li>}
           {hits.length === 0 ? (
             <li className="flex items-center gap-2 px-3 py-3 text-sm text-text-secondary">
               {loading ? (
@@ -153,7 +158,7 @@ export function GlobalSearch({ pages }: { pages: SearchIndex['pages'] }) {
         </ul>
       )}
       {mobileOpen && (
-        <button type="button" aria-label="Close search" onClick={() => { setMobileOpen(false); setOpen(false); setQuery('') }} className="absolute right-6 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-text-secondary hover:text-text sm:hidden">
+        <button type="button" aria-label="Close search" onClick={() => { setMobileOpen(false); setOpen(false); setQuery('') }} className="absolute right-6 top-[calc(0.75rem+var(--inset-top,0px)+0.55rem)] rounded-full p-1.5 text-text-secondary hover:text-text sm:hidden">
           <X className="h-4 w-4" />
         </button>
       )}
