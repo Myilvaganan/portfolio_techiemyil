@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "android:sync": "cap sync android",
-    "android:apk": "cd android && ./gradlew assembleDebug"
+    "android:apk": "cd android && ./gradlew assembleDebug",
+    "android:release": "bash scripts/androidRelease.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
