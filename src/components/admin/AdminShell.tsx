@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
 import { BellRing, Droplets, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import tmLogo from '@/assets/images/logo.webp'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
@@ -850,7 +851,7 @@ function CoinPill() {
   const text = items.join('   ·   ')
   return (
     <button type="button" onClick={() => navigate('/monthly-review')} className="noir-coin-pill relative flex h-10 min-w-0 max-w-[15rem] flex-1 items-center gap-2 overflow-hidden rounded-full pl-1.5 pr-3 lg:hidden" aria-label={text}>
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e9c77b] to-[#a67c2e] font-display text-[10px] font-semibold italic text-white shadow-inner">TM</span>
+      <img src={tmLogo} alt="" aria-hidden="true" className="h-7 w-7 shrink-0 rounded-full" width={28} height={28} />
       <span className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
         <span className="noir-marquee text-sm font-semibold" aria-hidden>
           <span className="pr-8">{text}</span>
