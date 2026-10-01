@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { buildAlerts, istDate } = require('./push')
+const { buildAlerts, buildWaterAlert, istDate } = require('./push')
 
 describe('push alerts', () => {
   it('uses the Indian date', () => {
@@ -86,5 +86,16 @@ describe('android (FCM) devices', () => {
     expect(url).toBe('https://fcm.googleapis.com/v1/projects/proj/messages:send')
     expect(opts.headers.Authorization).toBe('Bearer tok')
     expect(JSON.parse(opts.body).message).toMatchObject({ token: 't1', notification: { title: 'T', body: 'B' }, data: { url: '/x' } })
+  })
+
+  it('nudges for water only when behind pace, and sums up at the end of the day', () => {
+    const water = { targetMl: 3000, customMl: 0, startHour: 8, endHour: 21, reminders: true, logs: { '2026-10-01': 500 } }
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 7, water })).toBeNull()
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 9, water })).toBeNull()
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 14, water }).title).toMatch(/water/)
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 15, water })).toBeNull() // odd hour from the start: no nudge
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 21, water }).body).toBe('0.5 L of 3.0 L today — 2.5 L to go before bed.')
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 15, water: { ...water, reminders: false } })).toBeNull()
+    expect(buildWaterAlert({ today: '2026-10-01', istHour: 15, water: { ...water, logs: { '2026-10-01': 3000 } } })).toBeNull()
   })
 })

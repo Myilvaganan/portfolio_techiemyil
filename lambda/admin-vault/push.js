@@ -13,6 +13,7 @@
 //   • a credit-card bill due within 3 days
 //   • a Life Admin deadline due within 3 days, or overdue
 //   • the daily trading loss limit hit today (afternoon run, after the Indian market close)
+//   • water: a separate hourly rule ({ job: 'water' }), every two hours from your start time plus a last call, nudges when you're behind the day's water target
 
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const webpush = require('web-push')
@@ -69,6 +70,30 @@ function buildAlerts({ today, slot, cardStatements = [], lifeItems = [], trades 
     }
   }
   return alerts
+}
+
+/**
+ * Pure: the water reminder for this hour, or none. Through the day the target is paced evenly between startHour and
+ * endHour; a reminder goes out only when you're behind that pace, and the last run of the day says how much is left.
+ */
+function buildWaterAlert({ today, istHour, water }) {
+  if (!water || water.reminders === false) return null
+  const target = water.customMl || water.targetMl
+  if (!target) return null
+  const start = water.startHour ?? 8
+  const end = water.endHour ?? 21
+  if (istHour < start || istHour > end) return null
+  const drunk = water.logs?.[today] || 0
+  if (drunk >= target) return null
+  const L = (ml) => `${(ml / 1000).toFixed(1)} L`
+  const url = '/water'
+  if (istHour >= end - 1) {
+    return { tag: `water-${today}-final`, title: 'Finish your water target', body: `${L(drunk)} of ${L(target)} today — ${L(target - drunk)} to go before bed.`, url }
+  }
+  if ((istHour - start) % 2) return null // a nudge every two hours, not every hour
+  const pace = Math.round((target * (istHour - start)) / Math.max(1, end - start))
+  if (drunk >= pace - 150) return null
+  return { tag: `water-${today}-${istHour}`, title: 'Time for water 💧', body: `${L(drunk)} of ${L(target)} so far — about ${L(pace - drunk)} behind. Have a glass now.`, url }
 }
 
 function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:admin@techiemyil.com', now = () => new Date(), fcmFactory = createFcm }) {
@@ -140,7 +165,17 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
     return sent
   }
 
-  async function runScheduled() {
+  async function runWater() {
+    const t = now()
+    const today = istDate(t)
+    const istHour = new Date(t.getTime() + 5.5 * 3600_000).getUTCHours()
+    const water = await getJson(`${ROOT}/growth/water.json`, null)
+    const alert = buildWaterAlert({ today, istHour, water })
+    return { job: 'water', sent: alert ? await sendAll([alert]) : 0 }
+  }
+
+  async function runScheduled(event) {
+    if (event?.job === 'water') return runWater()
     const today = istDate(now())
     const istHour = new Date(now().getTime() + 5.5 * 3600_000).getUTCHours()
     const slot = istHour < 12 ? 'morning' : 'evening'
@@ -204,4 +239,4 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   return { route, runScheduled }
 }
 
-module.exports = { createPushApi, buildAlerts, istDate }
+module.exports = { createPushApi, buildAlerts, buildWaterAlert, istDate }

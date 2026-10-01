@@ -38,6 +38,7 @@ const DebtFree = page(() => import('@/pages/admin/DebtFree'), 'DebtFree')
 const Runway = page(() => import('@/pages/admin/Runway'), 'Runway')
 const LifeAdmin = page(() => import('@/pages/admin/LifeAdmin'), 'LifeAdmin')
 const Habits = page(() => import('@/pages/admin/Habits'), 'Habits')
+const Water = page(() => import('@/pages/admin/Water'), 'Water')
 const Chat = page(() => import('@/pages/admin/Chat'), 'Chat')
 const Security = page(() => import('@/pages/admin/Security'), 'Security')
 const SiteInsights = page(() => import('@/pages/admin/SiteInsights'), 'SiteInsights')
@@ -90,6 +91,7 @@ export function Admin() {
                 <Route path="runway" element={<Runway />} />
                 <Route path="life-admin" element={<LifeAdmin />} />
                 <Route path="habits" element={<Habits />} />
+                <Route path="water" element={<Water />} />
                 <Route path="security" element={<Security />} />
                 <Route path="site" element={<SiteInsights />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

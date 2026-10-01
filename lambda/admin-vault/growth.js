@@ -71,6 +71,25 @@ const SANITIZERS = {
   debt(v) {
     return { extraPerMonth: amount(v?.extraPerMonth), strategy: v?.strategy === 'snowball' ? 'snowball' : 'avalanche' }
   },
+  water(v) {
+    const logs = {}
+    for (const [date, ml] of Object.entries(v?.logs && typeof v.logs === 'object' ? v.logs : {}).slice(-800)) {
+      if (isDate(date) && int(ml, 20000) > 0) logs[date] = ml
+    }
+    const hour = (h, d) => (Number.isInteger(h) && h >= 0 && h <= 23 ? h : d)
+    return {
+      weightKg: amount(v?.weightKg, 400),
+      activity: ['low', 'moderate', 'high'].includes(v?.activity) ? v.activity : 'moderate',
+      hot: v?.hot === true,
+      customMl: int(v?.customMl, 10000),
+      targetMl: int(v?.targetMl, 10000),
+      glassMl: int(v?.glassMl, 2000) || 250,
+      reminders: v?.reminders !== false,
+      startHour: hour(v?.startHour, 8),
+      endHour: hour(v?.endHour, 21),
+      logs,
+    }
+  },
   subscriptions(v) {
     return {
       cancelled: list(v?.cancelled, 200).map((c) => ({ key: text(c?.key, 80), date: isDate(c?.date) ? c.date : '', yearly: amount(c?.yearly) })).filter((c) => c.key),

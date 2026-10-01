@@ -561,7 +561,7 @@ async function handleKiteLogout(payload) {
 
 exports.handler = async (event) => {
   // The twice-daily EventBridge schedule (not an HTTP request): send any due notifications.
-  if (event && event.source === 'aws.events') return pushApi.runScheduled()
+  if (event && event.source === 'aws.events') return pushApi.runScheduled(event)
 
   const method = getMethod(event)
   const path = getPath(event)

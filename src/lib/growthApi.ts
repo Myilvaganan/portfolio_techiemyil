@@ -44,6 +44,24 @@ export interface SubscriptionsDoc {
   ignored: string[]
 }
 
+export type WaterActivity = 'low' | 'moderate' | 'high'
+export interface WaterDoc {
+  /** 0 = use the latest weight from the Health log. */
+  weightKg: number
+  activity: WaterActivity
+  hot: boolean
+  /** 0 = use the weight-based target. */
+  customMl: number
+  /** The target in force, saved so the server's reminders use the same number as the page. */
+  targetMl: number
+  glassMl: number
+  reminders: boolean
+  startHour: number
+  endHour: number
+  /** Millilitres drunk per day. */
+  logs: Record<string, number>
+}
+
 export interface GrowthDocs {
   guardrails: GuardrailRules
   habits: HabitsDoc
@@ -51,6 +69,7 @@ export interface GrowthDocs {
   reviews: ReviewsDoc
   debt: DebtDoc
   subscriptions: SubscriptionsDoc
+  water: WaterDoc
 }
 export type GrowthDoc = keyof GrowthDocs
 
@@ -61,6 +80,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   reviews: { months: {} },
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
+  water: { weightKg: 0, activity: 'moderate', hot: false, customMl: 0, targetMl: 0, glassMl: 250, reminders: true, startHour: 8, endHour: 21, logs: {} },
 }
 
 async function call(path: string, method = 'GET', body?: unknown) {
