@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
 import { useProfile } from '@/lib/profile'
+import { MorningBrief } from './MorningBrief'
 import { useGrowthDoc } from '@/lib/growthApi'
 import { todayStr } from '@/lib/journal'
 import { dayDivisions, istTime, nallaNeram } from '@/lib/panchang/core'
@@ -915,6 +916,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           {children}
         </motion.main>
       </div>
+      <MorningBrief />
       <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} skin={skin} onSkin={setSkin} />
     </div>
     </SettingsContext.Provider>
