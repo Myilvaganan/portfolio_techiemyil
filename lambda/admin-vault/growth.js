@@ -35,7 +35,7 @@ const SANITIZERS = {
   },
   habits(v) {
     const habits = list(v?.habits, 12)
-      .map((h) => ({ id: id(h?.id), name: text(h?.name, 60), auto: HABIT_AUTO.includes(h?.auto) ? h.auto : '', target: amount(h?.target, 1e6) }))
+      .map((h) => ({ id: id(h?.id), name: text(h?.name, 60), auto: HABIT_AUTO.includes(h?.auto) ? h.auto : '', target: amount(h?.target, 1e6), color: typeof h?.color === 'string' && /^#[0-9a-f]{6}$/i.test(h.color) ? h.color : '' }))
       .filter((h) => h.name)
     const ids = new Set(habits.map((h) => h.id))
     const checks = {}

@@ -17,6 +17,8 @@ export interface Habit {
   name: string
   auto: HabitAuto
   target: number
+  /** #rrggbb; empty = a colour from the palette by position. */
+  color?: string
 }
 export interface HabitsDoc {
   habits: Habit[]
