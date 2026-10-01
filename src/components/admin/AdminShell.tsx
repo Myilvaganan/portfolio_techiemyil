@@ -616,13 +616,14 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
                 <div className="h-1 w-10 rounded-full bg-surface-15" />
               </div>
               {sheet === 'more' && (
-                <div className="mb-6 flex items-center gap-4 border-b border-border pb-6 pt-2">
+                <Link to="/profile" onClick={tabTap} className="mb-6 flex items-center gap-4 border-b border-border pb-6 pt-2 active:opacity-80">
                   <MeAvatar size="lg" className="h-16 w-16" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-lg font-semibold uppercase tracking-wide text-text"><MeName /></p>
-                    <p className="text-sm text-text-secondary">administrator · private vault</p>
+                    <p className="text-sm font-medium text-accent">View profile</p>
                   </div>
-                </div>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-text-secondary" />
+                </Link>
               )}
               {sections.map((section, idx) => (
                 <div key={section.label ?? idx} className="mb-7">
