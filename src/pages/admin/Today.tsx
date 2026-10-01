@@ -7,7 +7,7 @@ import { FestiveIcon, ICON_TONE } from '@/components/calendar/FestiveIcon'
 import { cn } from '@/lib/utils'
 import { haptic } from '@/lib/native'
 import { useMoney } from '@/lib/privacy'
-import { useGrowthDoc, type GateDay } from '@/lib/growthApi'
+import { medDueOn, useGrowthDoc, type GateDay } from '@/lib/growthApi'
 import { useSources } from '@/lib/growth/sources'
 import { todayStr } from '@/lib/journal'
 import { useProfile } from '@/lib/profile'
@@ -86,7 +86,7 @@ export function Today() {
 
   const todayTasks = tasks.value.tasks.filter((t) => t.when === 'today' && (!t.done || t.doneOn === today))
   const manualHabits = habits.value.habits.filter((h) => !h.auto)
-  const medSlots = meds.value.items.filter((x) => x.active).flatMap((x) => x.hours.map((h) => ({ med: x, hour: h, key: `${x.id}@${h}` })))
+  const medSlots = meds.value.items.filter((x) => x.active && medDueOn(x, today)).flatMap((x) => x.hours.map((h) => ({ med: x, hour: h, key: `${x.id}@${h}` })))
   const taken = new Set(meds.value.taken[today] ?? [])
   const lifeDue = life.value.items.filter((i) => !i.done && daysTo(today, i.dueDate) <= 7)
   const familySoon = family.value.people.filter((p) => p.date).map((p) => {

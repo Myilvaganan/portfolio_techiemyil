@@ -160,7 +160,17 @@ const SANITIZERS = {
   },
   meds(v) {
     const items = list(v?.items, 30)
-      .map((m) => ({ id: id(m?.id), name: text(m?.name, 60), dose: text(m?.dose, 40), hours: list(m?.hours, 6).filter((h) => Number.isInteger(h) && h >= 0 && h <= 23), active: m?.active !== false }))
+      .map((m) => ({
+        id: id(m?.id),
+        name: text(m?.name, 60),
+        dose: text(m?.dose, 40),
+        hours: list(m?.hours, 6).filter((h) => Number.isInteger(h) && h >= 0 && h <= 23),
+        active: m?.active !== false,
+        // How often: every day, every N days from the start date, or on chosen weekdays (0 = Sunday).
+        every: Number.isInteger(m?.every) && m.every >= 1 && m.every <= 60 ? m.every : 1,
+        weekdays: list(m?.weekdays, 7).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
+        start: isDate(m?.start) ? m.start : '',
+      }))
       .filter((m) => m.name && m.hours.length)
     const ids = new Set(items.map((m) => m.id))
     const taken = {}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate } = require('./push')
+const { medDueOn, buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate } = require('./push')
 
 describe('push alerts', () => {
   it('uses the Indian date', () => {
@@ -124,5 +124,13 @@ describe('android (FCM) devices', () => {
     expect(buildNudges({ today, istHour: 8, docs }).map((a) => a.title)).toEqual(['☀️ Your day', '🛡️ Trading check-in'])
     expect(buildNudges({ today, istHour: 14, docs }).map((a) => a.title)).toEqual(['🍛 Log your meals'])
     expect(buildNudges({ today, istHour: 21, docs }).map((a) => a.title)).toEqual(['🔥 Keep your streaks', '🍽️ 200 kcal today'])
+  })
+
+  it('knows which days a medicine is due', () => {
+    expect(medDueOn({ every: 2, start: '2026-10-01' }, '2026-10-03')).toBe(true)
+    expect(medDueOn({ every: 2, start: '2026-10-01' }, '2026-10-02')).toBe(false)
+    expect(medDueOn({ weekdays: [0] }, '2026-10-04')).toBe(true)
+    expect(medDueOn({ weekdays: [0] }, '2026-10-05')).toBe(false)
+    expect(medDueOn({}, '2026-10-05')).toBe(true)
   })
 })

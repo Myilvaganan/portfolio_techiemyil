@@ -101,11 +101,20 @@ function buildWaterAlert({ today, istHour, water }) {
 
 const addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10)
 
+/** Is a medicine due on this date? Daily, every N days from its start, or on chosen weekdays. */
+function medDueOn(m, date) {
+  if (m.weekdays?.length) return m.weekdays.includes(new Date(`${date}T00:00:00Z`).getUTCDay())
+  const every = m.every || 1
+  if (every === 1 || !m.start) return true
+  const days = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${m.start}T00:00:00Z`)) / DAY)
+  return days >= 0 && days % every === 0
+}
+
 /** Pure: medicines due this hour that aren't ticked yet. */
 function buildMedAlerts({ today, istHour, meds }) {
   if (!meds || meds.reminders === false) return []
   const taken = new Set(meds.taken?.[today] ?? [])
-  const due = (meds.items ?? []).filter((m) => m.active !== false && m.hours.includes(istHour) && !taken.has(`${m.id}@${istHour}`))
+  const due = (meds.items ?? []).filter((m) => m.active !== false && medDueOn(m, today) && m.hours.includes(istHour) && !taken.has(`${m.id}@${istHour}`))
   if (!due.length) return []
   return [{ tag: `meds-${today}-${istHour}`, title: '💊 Time for your medicine', body: due.map((m) => `${m.name}${m.dose ? ` · ${m.dose}` : ''}`).join('\n'), url: '/medicines' }]
 }
@@ -166,7 +175,7 @@ function buildNudges({ today, istHour, docs }) {
   if (istHour === 8) {
     const openTasks = (tasks?.tasks ?? []).filter((t) => t.when === 'today' && !t.done).length
     const dueRem = (reminders?.items ?? []).filter((r) => !r.done && r.date <= today).length
-    const medDoses = (meds?.items ?? []).filter((m) => m.active !== false).reduce((s, m) => s + m.hours.length, 0)
+    const medDoses = (meds?.items ?? []).filter((m) => m.active !== false && medDueOn(m, today)).reduce((s, m) => s + m.hours.length, 0)
     const parts = [openTasks && `${openTasks} task${openTasks === 1 ? '' : 's'}`, dueRem && `${dueRem} reminder${dueRem === 1 ? '' : 's'}`, medDoses && `${medDoses} medicine dose${medDoses === 1 ? '' : 's'}`].filter(Boolean)
     if (parts.length) out.push({ tag: `today-${today}`, title: '☀️ Your day', body: `${parts.join(' · ')} today. Tap to see the list.`, url: '/today' })
   }
@@ -381,4 +390,4 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   return { route, runScheduled }
 }
 
-module.exports = { createPushApi, buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate }
+module.exports = { medDueOn, createPushApi, buildAlerts, buildWaterAlert, buildNudges, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate }

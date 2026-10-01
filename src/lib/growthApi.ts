@@ -127,6 +127,20 @@ export interface Med {
   dose: string
   hours: number[]
   active: boolean
+  /** 1 = daily, 2 = every other day, N = every N days from `start`. Ignored when `weekdays` is set. */
+  every: number
+  /** Days of the week it's taken (0 = Sunday); empty = use `every`. */
+  weekdays: number[]
+  start: string
+}
+
+/** Is this medicine due on the date? */
+export function medDueOn(m: Pick<Med, 'every' | 'weekdays' | 'start'>, date: string) {
+  if (m.weekdays?.length) return m.weekdays.includes(new Date(`${date}T00:00:00Z`).getUTCDay())
+  const every = m.every || 1
+  if (every === 1 || !m.start) return true
+  const days = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${m.start}T00:00:00Z`)) / 86_400_000)
+  return days >= 0 && days % every === 0
 }
 export interface Person {
   id: string

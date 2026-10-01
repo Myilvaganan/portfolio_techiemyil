@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown, Flame, GlassWater, ListTodo, Pill as PillIcon, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { haptic } from '@/lib/native'
-import { useGrowthDoc } from '@/lib/growthApi'
+import { medDueOn, useGrowthDoc } from '@/lib/growthApi'
 import { todayStr } from '@/lib/journal'
 import { addWater } from '@/lib/growth/water'
 import { toggle as toggleHabit } from '@/lib/growth/habits'
@@ -40,7 +40,7 @@ export function TodayCard() {
     const out: Item[] = []
     const now = new Date().getHours()
     const taken = new Set(meds.value.taken[today] ?? [])
-    for (const x of meds.value.items.filter((m) => m.active).flatMap((m) => m.hours.map((h) => ({ m, h }))).sort((a, b) => a.h - b.h)) {
+    for (const x of meds.value.items.filter((m) => m.active && medDueOn(m, today)).flatMap((m) => m.hours.map((h) => ({ m, h }))).sort((a, b) => a.h - b.h)) {
       const key = `${x.m.id}@${x.h}`
       out.push({
         key: `med-${key}`,
