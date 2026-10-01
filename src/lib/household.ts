@@ -78,7 +78,7 @@ export interface HouseTxn {
   /** Spend is positive; a refund is negative. */
   amount: number
   description: string
-  source: 'bank' | 'card'
+  source: 'bank' | 'card' | 'manual'
 }
 
 export function classify(t: Pick<Txn, 'description' | 'merchant' | 'category'>): { group: HouseGroup; brand: string } | null {
@@ -107,6 +107,13 @@ export function householdTxns(bank: Txn[], card: Txn[]): HouseTxn[] {
   add(bank, 'bank')
   add(card, 'card')
   return out.sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/** Months marked paid by hand, as payments on the 1st of that month, so every total and strip includes them. */
+export function manualTxns(manual: { id: string; group: string; month: string; amount: number }[]): HouseTxn[] {
+  return manual
+    .filter((m) => m.group in GROUP)
+    .map((m) => ({ id: `manual-${m.id}`, date: `${m.month}-01`, group: m.group as HouseGroup, brand: 'Marked paid', amount: m.amount, description: 'Marked paid by hand', source: 'manual' as const }))
 }
 
 export const monthKey = (date: string) => date.slice(0, 7)

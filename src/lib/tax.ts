@@ -404,7 +404,7 @@ export function taxTxns(bank: Txn[], card: Txn[]): TaxTxn[] {
   add(card, 'card')
   for (const h of householdTxns(bank, card)) {
     if (!RENT_GROUPS.includes(h.group) || h.amount <= 0) continue
-    out.push({ id: `rent-${h.id}`, date: h.date, kind: 'rent', description: h.description, merchant: `${GROUP[h.group].label} · ${h.brand}`, amount: h.amount, credit: false, source: h.source, fy: fyOf(h.date) })
+    out.push({ id: `rent-${h.id}`, date: h.date, kind: 'rent', description: h.description, merchant: `${GROUP[h.group].label} · ${h.brand}`, amount: h.amount, credit: false, source: h.source === 'card' ? 'card' : 'bank', fy: fyOf(h.date) })
   }
   return out.sort((a, b) => a.date.localeCompare(b.date))
 }

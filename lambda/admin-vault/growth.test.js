@@ -37,3 +37,8 @@ it('profile keeps text fields and only a small image data URL', async () => {
   expect(v).toMatchObject({ displayName: 'Myil', dob: '', photo: '', email: 'a@b.c' })
   expect(SANITIZERS.profile({ photo: 'data:image/jpeg;base64,AAAA' }).photo).toBe('data:image/jpeg;base64,AAAA')
 })
+
+it('household keeps manual paid marks for known groups only', () => {
+  const v = SANITIZERS.household({ manual: [{ id: 'abcd1', group: 'rentSalem', month: '2026-09', amount: 12000 }, { group: 'hack', month: '2026-09' }, { group: 'rentBengaluru', month: '2026-13' }] })
+  expect(v.manual).toEqual([{ id: 'abcd1', group: 'rentSalem', month: '2026-09', amount: 12000 }])
+})

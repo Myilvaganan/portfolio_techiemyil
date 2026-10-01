@@ -20,6 +20,7 @@ const id = (v) => (typeof v === 'string' && /^[a-z0-9-]{4,32}$/.test(v) ? v : cr
 const list = (v, max) => (Array.isArray(v) ? v.slice(0, max) : [])
 
 const HABIT_AUTO = ['', 'no-delivery', 'steps', 'rules', 'sleep']
+const HOUSE_GROUPS = ['rentSalem', 'rentBengaluru', 'rentOther', 'electricity', 'cookingGas', 'fuel', 'bikeService', 'food', 'quickCommerce', 'rides', 'shopping']
 const LIFE_CATEGORIES = ['identity', 'vehicle', 'insurance', 'tax', 'home', 'finance', 'health', 'other']
 
 const SANITIZERS = {
@@ -70,6 +71,13 @@ const SANITIZERS = {
   },
   debt(v) {
     return { extraPerMonth: amount(v?.extraPerMonth), strategy: v?.strategy === 'snowball' ? 'snowball' : 'avalanche' }
+  },
+  household(v) {
+    return {
+      manual: list(v?.manual, 500)
+        .map((m) => ({ id: id(m?.id), group: HOUSE_GROUPS.includes(m?.group) ? m.group : '', month: isMonth(m?.month) ? m.month : '', amount: amount(m?.amount, 1e7) }))
+        .filter((m) => m.group && m.month),
+    }
   },
   profile(v) {
     const photo = typeof v?.photo === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v.photo) && v.photo.length <= 200_000 ? v.photo : ''

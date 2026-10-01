@@ -10,7 +10,9 @@ import { cn } from '@/lib/utils'
 import { useMoney } from '@/lib/privacy'
 import { fetchStatements } from '@/lib/statementsApi'
 import { todayStr } from '@/lib/journal'
-import { GROUP, GROUPS, groupStats, householdTxns, lastMonths, monthKey, nextRentDue, type GroupStats, type HouseGroup, type HouseTxn, type Section } from '@/lib/household'
+import { useGrowthDoc } from '@/lib/growthApi'
+import { haptic } from '@/lib/native'
+import { GROUP, GROUPS, groupStats, householdTxns, lastMonths, manualTxns, monthKey, nextRentDue, type GroupStats, type HouseGroup, type HouseTxn, type Section } from '@/lib/household'
 
 const ICONS: Record<HouseGroup, LucideIcon> = {
   rentSalem: Home,
@@ -62,18 +64,42 @@ function MiniBars({ values, months, color, format }: { values: number[]; months:
   )
 }
 
-function PaidStrip({ paid, months }: { paid: boolean[]; months: string[] }) {
+/** Paid / missed per month. Tap a missed month to mark it paid by hand; tap a hand-marked month to undo. */
+function PaidStrip({ paid, months, manual, onToggle }: { paid: boolean[]; months: string[]; manual: Set<string>; onToggle?: (month: string) => void }) {
   return (
     <div className="flex gap-1" aria-label="Months paid">
-      {paid.map((p, i) => (
-        <span
-          key={months[i]}
-          title={`${monthShort(months[i])} ${months[i].slice(0, 4)}: ${p ? 'paid' : 'no payment found'}`}
-          className={cn('flex h-5 flex-1 items-center justify-center rounded text-2xs font-semibold uppercase', p ? 'bg-positive/20 text-positive' : 'bg-error/10 text-error/70')}
-        >
-          {monthShort(months[i]).slice(0, 1)}
-        </span>
-      ))}
+      {paid.map((p, i) => {
+        const m = months[i]
+        const byHand = manual.has(m)
+        const can = onToggle && (!p || byHand)
+        return (
+          <span
+            key={m}
+            role={can ? 'button' : undefined}
+            tabIndex={can ? 0 : undefined}
+            title={`${monthShort(m)} ${m.slice(0, 4)}: ${byHand ? 'marked paid — tap to undo' : p ? 'paid' : 'no payment found — tap to mark paid'}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (can) onToggle(m)
+            }}
+            onKeyDown={(e) => {
+              if (can && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggle(m)
+              }
+            }}
+            className={cn(
+              'flex h-7 flex-1 items-center justify-center rounded-md text-2xs font-semibold uppercase transition-transform active:scale-90',
+              p ? 'bg-positive/20 text-positive' : 'bg-error/10 text-error/70',
+              byHand && 'border border-dashed border-positive/60',
+              can && 'cursor-pointer',
+            )}
+          >
+            {monthShort(m).slice(0, 3)}
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -91,7 +117,7 @@ function Delta({ now, before }: { now: number; before: number }) {
   )
 }
 
-function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: GroupStats; trend: GroupStats; trendMonths: string[]; single: boolean; active: boolean; onOpen: () => void }) {
+function GroupCard({ s, trend, trendMonths, single, active, onOpen, manual, onToggle }: { s: GroupStats; trend: GroupStats; trendMonths: string[]; single: boolean; active: boolean; onOpen: () => void; manual: Set<string>; onToggle: (month: string) => void }) {
   const m = useMoney()
   const g = GROUP[s.id]
   const Icon = ICONS[s.id]
@@ -153,7 +179,7 @@ function GroupCard({ s, trend, trendMonths, single, active, onOpen }: { s: Group
               </div>
             </div>
 
-            <div className="mt-2.5">{g.monthly ? <PaidStrip paid={trend.paid} months={trendMonths} /> : <MiniBars values={trend.byMonth} months={trendMonths} color={g.color} format={(n) => m.inr(n)} />}</div>
+            <div className="mt-2.5">{g.monthly ? <PaidStrip paid={trend.paid} months={trendMonths} manual={manual} onToggle={onToggle} /> : <MiniBars values={trend.byMonth} months={trendMonths} color={g.color} format={(n) => m.inr(n)} />}</div>
 
             {g.monthly ? (
               <p className="mt-2.5 text-2xs text-text-secondary">
@@ -252,7 +278,8 @@ function Details({ group, txns, months, onClose }: { group: HouseGroup; txns: Ho
 /** Where the household money goes: both rented houses, bills, the bike, and the delivery and shopping apps. */
 export function Household() {
   const m = useMoney()
-  const [txns, setTxns] = useState<HouseTxn[] | null>(null)
+  const [bankTxns, setTxns] = useState<HouseTxn[] | null>(null)
+  const marks = useGrowthDoc('household')
   const [error, setError] = useState<string | null>(null)
   const [range, setRange] = useState<number>(1)
   const [open, setOpen] = useState<HouseGroup | null>(null)
@@ -269,6 +296,15 @@ export function Household() {
     }
   }, [])
 
+  const txns = useMemo(() => (bankTxns ? [...bankTxns, ...manualTxns(marks.value.manual)].sort((a, b) => a.date.localeCompare(b.date)) : null), [bankTxns, marks.value.manual])
+  const manualFor = (group: HouseGroup) => new Set(marks.value.manual.filter((m) => m.group === group).map((m) => m.month))
+  /** Mark a month paid by hand (at the last amount paid), or undo a hand mark. */
+  function toggleManual(group: HouseGroup, month: string, lastAmount: number) {
+    haptic(10)
+    const manual = marks.value.manual
+    const existing = manual.find((m) => m.group === group && m.month === month)
+    void marks.save({ manual: existing ? manual.filter((m) => m !== existing) : [...manual, { id: Math.random().toString(36).slice(2, 10), group, month, amount: lastAmount }] })
+  }
   const months = useMemo(() => lastMonths(current, range), [current, range])
   // The cards' little charts always show at least the last six months, even when the totals cover only this month.
   const trendMonths = useMemo(() => lastMonths(current, Math.max(range, 6)), [current, range])
@@ -283,7 +319,7 @@ export function Household() {
   const apps = by(['food', 'quickCommerce', 'rides', 'shopping'])
   const total = sum(stats, 'total')
   const slices = stats.filter((s) => s.total > 0).map((s) => ({ label: GROUP[s.id].label, value: s.total, color: GROUP[s.id].color }))
-  const latest = txns?.[txns.length - 1]?.date
+  const latest = bankTxns?.[bankTxns.length - 1]?.date
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4">
@@ -354,7 +390,7 @@ export function Household() {
                   .map((g) => stats.find((s) => s.id === g.id)!)
                   .filter((s) => s.id !== 'rentOther' || s.count > 0)
                   .map((s) => (
-                    <GroupCard key={s.id} s={s} trend={trendStats.find((t) => t.id === s.id)!} trendMonths={trendMonths} single={range === 1} active={open === s.id} onOpen={() => setOpen(open === s.id ? null : s.id)} />
+                    <GroupCard key={s.id} s={s} trend={trendStats.find((t) => t.id === s.id)!} trendMonths={trendMonths} single={range === 1} active={open === s.id} onOpen={() => setOpen(open === s.id ? null : s.id)} manual={manualFor(s.id)} onToggle={(month) => toggleManual(s.id, month, (bankTxns ?? []).filter((t) => t.group === s.id).at(-1)?.amount ?? 0)} />
                   ))}
               </div>
               {open && <Details group={open} txns={txns} months={months} onClose={() => setOpen(null)} />}

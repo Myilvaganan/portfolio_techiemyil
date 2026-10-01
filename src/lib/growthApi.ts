@@ -62,6 +62,11 @@ export interface WaterDoc {
   logs: Record<string, number>
 }
 
+export interface HouseholdDoc {
+  /** Months marked paid by hand (cash, another account, or an app that doesn't show in statements). */
+  manual: { id: string; group: string; month: string; amount: number }[]
+}
+
 export interface ProfileDoc {
   displayName: string
   fullName: string
@@ -84,6 +89,7 @@ export interface GrowthDocs {
   subscriptions: SubscriptionsDoc
   water: WaterDoc
   profile: ProfileDoc
+  household: HouseholdDoc
 }
 export type GrowthDoc = keyof GrowthDocs
 
@@ -94,6 +100,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   reviews: { months: {} },
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
+  household: { manual: [] },
   profile: { displayName: '', fullName: '', email: '', phone: '', dob: '', city: '', occupation: '', bio: '', photo: '' },
   water: { weightKg: 0, activity: 'moderate', hot: false, customMl: 0, targetMl: 0, glassMl: 250, reminders: true, startHour: 8, endHour: 21, logs: {} },
 }
