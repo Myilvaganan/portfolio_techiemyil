@@ -44,9 +44,11 @@ function AppShell() {
   useVisitNotify()
 
   if (isAdmin) {
+    // On phones the sparkles (and their tap bursts) cost scroll smoothness, so the admin skips them there.
+    const touch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
     return (
       <>
-        <RoyalSparkles />
+        {!touch && <RoyalSparkles />}
         <Suspense fallback={null}>
           <Routes>
             <Route path="/*" element={<Admin />} />

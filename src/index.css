@@ -1194,3 +1194,42 @@ html.admin body:has([role='dialog'][data-state='open']) nav[aria-label='Main'],
 html.admin body:has([role='alertdialog'][data-state='open']) nav[aria-label='Main'] {
   transform: translateY(calc(100% + 56px));
 }
+
+/* ---------- Smooth scrolling on phones ----------
+   Live blur, see-through layers, big soft shadows and always-running twinkles make the phone repaint on every scroll
+   frame. On touch screens the admin keeps the same look with solid surfaces and lighter shadows, so scrolling stays
+   on the GPU's fast path. */
+@media (pointer: coarse) {
+  html.admin .royal-card,
+  html.admin [class*='backdrop-blur'],
+  html.admin .glass-panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  html.admin .royal-card {
+    background-color: var(--color-card) !important;
+    box-shadow: 0 1px 0 0 var(--card-inset-highlight) inset, 0 4px 14px -10px rgba(0, 0, 0, 0.45) !important;
+  }
+  html.admin header.aurum-header {
+    background-color: var(--color-bg) !important;
+  }
+  html.admin nav[aria-label='Main'] {
+    background-color: var(--color-card) !important;
+  }
+  html.admin .glitter::before,
+  html.admin .glitter::after,
+  html.admin .royal-shine::after,
+  html.admin .royal-star,
+  html.admin .royal-dust {
+    animation: none !important;
+    display: none !important;
+  }
+  /* The ambient glow gets its own GPU layer so it never repaints during a scroll. */
+  html.admin .aurum-backdrop {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  html.admin body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
