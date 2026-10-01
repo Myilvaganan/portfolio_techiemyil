@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
-import { Haptics, ImpactStyle } from '@capacitor/haptics'
+import { Haptics } from '@capacitor/haptics'
 
 // App-like behaviour for the installed admin on a phone (built for Android / Chrome, harmless on desktop):
 //   • screens slide forward/back like native navigation, tab switches just fade
@@ -66,13 +66,20 @@ export function setHapticLevel(level: HapticLevel) {
 }
 
 /** A short tap of feedback. `ms` hints how firm it should be (bigger = firmer). */
+let lastBuzz = 0
 export function haptic(ms = 8) {
   const level = getHapticLevel()
   if (level === 'off') return
+  // A tap that also opens a page would otherwise buzz two or three times in a row; within 120 ms it's one buzz.
+  const now = Date.now()
+  if (now - lastBuzz < 120) return
+  lastBuzz = now
   try {
     if (Capacitor.isNativePlatform()) {
-      const firm = ms >= 30 || level === 'strong' ? ImpactStyle.Heavy : ms >= 12 || level === 'medium' ? ImpactStyle.Medium : ImpactStyle.Light
-      void Haptics.impact({ style: level === 'light' ? ImpactStyle.Light : firm }).catch(() => {})
+      // A short one-shot pulse at full amplitude: Android always plays it, unlike the faint "impact" waveforms that
+      // many phones (OnePlus included) mute or barely render.
+      const base = level === 'light' ? 12 : level === 'strong' ? 35 : 20
+      void Haptics.vibrate({ duration: Math.round(base + Math.min(ms, 40) * 0.4) }).catch(() => {})
       return
     }
     navigator.vibrate?.(Math.round(ms * (level === 'strong' ? 2.5 : level === 'light' ? 0.8 : 1.5)))
