@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BellRing, Droplets, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { BellRing, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
-import profilePhoto from '@/assets/images/profile.jpg'
+import { useProfile } from '@/lib/profile'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 import { clearStoredToken } from '@/lib/adminAuth'
@@ -49,6 +49,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/runway': 'emergency fund months job loss stress test savings',
   '/life-admin': 'passport licence insurance puc kyc deadline expiry renewal advance tax itr',
   '/habits': 'streak routine daily checklist workout reading',
+  '/profile': 'profile photo picture name personal info settings account',
   '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
@@ -140,6 +141,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Document Manager', k: 'nav.documents', to: '/documents', icon: FolderOpen },
       { label: 'Website', k: 'nav.website', to: '/site', icon: Globe },
+      { label: 'Profile', k: 'nav.profile', to: '/profile', icon: UserRound },
       { label: 'Security', k: 'nav.security', to: '/security', icon: ShieldCheck },
     ],
   },
@@ -160,6 +162,32 @@ function useOutsideClick(onOutside: () => void) {
 }
 
 type AppLock = ReturnType<typeof useAppLock>
+const SettingsContext = createContext<ScaleProps | null>(null)
+
+/** The same settings as the profile menu, for the Profile page. */
+export function ProfileSettings() {
+  const ctx = useContext(SettingsContext)
+  if (!ctx) return null
+  return (
+    <div className="space-y-4">
+      <SizePicker scale={ctx.scale} onScale={ctx.onScale} />
+      <LocalePicker />
+      <HideNumbersRow />
+      <NotificationsRow />
+      <SkinRow skin={ctx.skin} onSkin={ctx.onSkin} />
+      <AppLockRow lock={ctx.lock} />
+    </div>
+  )
+}
+
+/** The owner's photo wherever an avatar is shown. */
+function MeAvatar(props: { size: 'sm' | 'md' | 'lg'; className?: string }) {
+  const { name, photo } = useProfile()
+  return <Avatar name={name} src={photo} {...props} />
+}
+function MeName() {
+  return <>{useProfile().name}</>
+}
 interface ScaleProps {
   scale: UiScaleId
   onScale: (id: UiScaleId) => void
@@ -334,15 +362,19 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
         onClick={() => setOpen((v) => !v)}
         aria-label="Profile menu" className="btn-3d glitter flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 p-0.5 transition-colors hover:border-accent/40"
       >
-        <Avatar name={personal.brand} src={profilePhoto} size="sm" className="h-full w-full ring-0" />
+        <MeAvatar size="sm" className="h-full w-full ring-0" />
       </button>
       <AnimatePresence>
         {open && (
         <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-medium text-text">{personal.brand}</p>
-            <p className="text-xs text-text-secondary">Administrator</p>
-          </div>
+          <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 border-b border-border px-4 py-3 hover:bg-surface-3">
+            <MeAvatar size="md" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-text"><MeName /></span>
+              <span className="block text-xs text-accent">View profile</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-text-secondary" />
+          </Link>
           <div className="space-y-3 border-b border-border p-3">
             <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
@@ -557,9 +589,9 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
               </div>
               {sheet === 'more' && (
                 <div className="mb-6 flex items-center gap-4 border-b border-border pb-6 pt-2">
-                  <Avatar name={personal.brand} src={profilePhoto} size="lg" className="h-16 w-16" />
+                  <MeAvatar size="lg" className="h-16 w-16" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-lg font-semibold uppercase tracking-wide text-text">{personal.brand}</p>
+                    <p className="truncate text-lg font-semibold uppercase tracking-wide text-text"><MeName /></p>
                     <p className="text-sm text-text-secondary">administrator · private vault</p>
                   </div>
                 </div>
@@ -701,6 +733,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   }, [])
 
   return (
+    <SettingsContext.Provider value={{ scale, onScale: setScale, lock, skin, onSkin: setSkin }}>
     <div className="touch-app relative min-h-screen bg-bg">
       <div className="aurum-backdrop" aria-hidden />
       {skin === 'noir' && <NoirSplash />}
@@ -768,9 +801,9 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
 
         <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5">
-            <Avatar name={personal.brand} src={profilePhoto} size="md" />
+            <MeAvatar size="md" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-text">{personal.brand}</p>
+              <p className="truncate text-sm font-medium text-text"><MeName /></p>
               <p className="flex items-center gap-1 text-xs text-text-secondary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Administrator
@@ -804,6 +837,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
       </div>
       <MobileTabBar onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} skin={skin} onSkin={setSkin} />
     </div>
+    </SettingsContext.Provider>
   )
 }
 

@@ -31,3 +31,9 @@ test('the handler rejects unknown documents and stores sanitized values', async 
   const g = await api({ method: 'GET', path: '/admin/growth', query: { doc: 'habits' } })
   assert.deepStrictEqual(g.body.value, { habits: [], checks: {} })
 })
+
+it('profile keeps text fields and only a small image data URL', async () => {
+  const v = SANITIZERS.profile({ displayName: '  Myil ', dob: '1990-02-30x', photo: 'javascript:alert(1)', email: 'a@b.c' })
+  expect(v).toMatchObject({ displayName: 'Myil', dob: '', photo: '', email: 'a@b.c' })
+  expect(SANITIZERS.profile({ photo: 'data:image/jpeg;base64,AAAA' }).photo).toBe('data:image/jpeg;base64,AAAA')
+})

@@ -71,6 +71,20 @@ const SANITIZERS = {
   debt(v) {
     return { extraPerMonth: amount(v?.extraPerMonth), strategy: v?.strategy === 'snowball' ? 'snowball' : 'avalanche' }
   },
+  profile(v) {
+    const photo = typeof v?.photo === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v.photo) && v.photo.length <= 200_000 ? v.photo : ''
+    return {
+      displayName: text(v?.displayName, 40),
+      fullName: text(v?.fullName, 80),
+      email: text(v?.email, 120),
+      phone: text(v?.phone, 30),
+      dob: isDate(v?.dob) ? v.dob : '',
+      city: text(v?.city, 60),
+      occupation: text(v?.occupation, 80),
+      bio: text(v?.bio, 300),
+      photo,
+    }
+  },
   water(v) {
     const logs = {}
     for (const [date, ml] of Object.entries(v?.logs && typeof v.logs === 'object' ? v.logs : {}).slice(-800)) {

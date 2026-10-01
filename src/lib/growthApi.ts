@@ -62,6 +62,19 @@ export interface WaterDoc {
   logs: Record<string, number>
 }
 
+export interface ProfileDoc {
+  displayName: string
+  fullName: string
+  email: string
+  phone: string
+  dob: string
+  city: string
+  occupation: string
+  bio: string
+  /** A small square JPEG as a data URL; empty = the built-in photo. */
+  photo: string
+}
+
 export interface GrowthDocs {
   guardrails: GuardrailRules
   habits: HabitsDoc
@@ -70,6 +83,7 @@ export interface GrowthDocs {
   debt: DebtDoc
   subscriptions: SubscriptionsDoc
   water: WaterDoc
+  profile: ProfileDoc
 }
 export type GrowthDoc = keyof GrowthDocs
 
@@ -80,6 +94,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   reviews: { months: {} },
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
+  profile: { displayName: '', fullName: '', email: '', phone: '', dob: '', city: '', occupation: '', bio: '', photo: '' },
   water: { weightKg: 0, activity: 'moderate', hot: false, customMl: 0, targetMl: 0, glassMl: 250, reminders: true, startHour: 8, endHour: 21, logs: {} },
 }
 

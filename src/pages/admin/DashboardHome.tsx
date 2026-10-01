@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useProfile } from '@/lib/profile'
 import { CinemaBanner, NoirTitle, type CinemaSlide } from '@/components/admin/Cinema'
 import { useNavigate } from 'react-router-dom'
-import { personal } from '@/data/personal'
 import { AlertTriangle, ChevronRight, X, Home, Sparkles, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, TrendingUp, Wallet } from 'lucide-react'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
 import { formatInr } from '@/lib/kite'
@@ -137,7 +137,7 @@ export function DashboardHome() {
   }).length
 
   const now = new Date()
-  const firstName = personal.brand.split(' ')[0]
+  const { firstName } = useProfile()
   const lead = notices.find((n) => n.tone !== 'info') ?? notices[0]
 
   // The banner plays today's highlights as a short film.
