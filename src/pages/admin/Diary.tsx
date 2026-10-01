@@ -13,7 +13,7 @@ import { CHECK_VALUE, deriveKey, newSalt, open, seal, verify } from '@/lib/diary
 import { todayStr } from '@/lib/journal'
 
 // Daily notes and a personal diary, end-to-end encrypted. The key lives only in memory while the page is open and
-// unlocked; leaving the page, hiding the app or five idle minutes lock it again.
+// unlocked; one unlock lasts 30 minutes (across pages and app switches), and closing the app locks it again.
 
 type Kind = 'note' | 'diary'
 interface Entry {
@@ -96,7 +96,10 @@ function MicButton({ onText }: { onText: (text: string) => void }) {
 }
 
 const MOODS = ['😄', '🙂', '😐', '😔', '😤', '🙏']
-const IDLE_MS = 5 * 60_000
+/** How long one unlock lasts. The key stays in memory only (never stored), so closing the app also locks it. */
+const UNLOCK_MS = 30 * 60_000
+let session: { key: CryptoKey; until: number } | null = null
+const sessionKey = () => (session && Date.now() < session.until ? session.key : null)
 const newId = () => Math.random().toString(36).slice(2, 12)
 
 function LockScreen({ doc, onUnlock }: { doc: DiaryDoc; onUnlock: (key: CryptoKey) => void }) {
@@ -194,7 +197,11 @@ function Setup({ onCreate }: { onCreate: (method: 'password' | 'pattern', secret
 
 export function Diary() {
   const doc = useGrowthDoc('diary')
-  const [key, setKey] = useState<CryptoKey | null>(null)
+  const [key, setKeyState] = useState<CryptoKey | null>(sessionKey)
+  const setKey = useCallback((k: CryptoKey | null) => {
+    session = k ? { key: k, until: Date.now() + UNLOCK_MS } : null
+    setKeyState(k)
+  }, [])
   const [entries, setEntries] = useState<Entry[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -203,29 +210,23 @@ export function Diary() {
   const idle = useRef<number | undefined>(undefined)
 
   const lock = useCallback(() => {
-    setKey(null)
+    session = null
+    setKeyState(null)
     setEntries([])
     setDraft(null)
     setSelected(null)
   }, [])
 
-  // Lock when the app is hidden or after five idle minutes.
+  // One unlock lasts 30 minutes, across pages and while the app is in the background; then it asks again.
   useEffect(() => {
-    if (!key) return
-    const reset = () => {
-      window.clearTimeout(idle.current)
-      idle.current = window.setTimeout(lock, IDLE_MS)
-    }
-    const onHide = () => document.visibilityState === 'hidden' && lock()
-    reset()
-    window.addEventListener('pointerdown', reset)
-    window.addEventListener('keydown', reset)
-    document.addEventListener('visibilitychange', onHide)
+    if (!key || !session) return
+    window.clearTimeout(idle.current)
+    idle.current = window.setTimeout(lock, Math.max(0, session.until - Date.now()))
+    const onShow = () => document.visibilityState === 'visible' && !sessionKey() && lock()
+    document.addEventListener('visibilitychange', onShow)
     return () => {
       window.clearTimeout(idle.current)
-      window.removeEventListener('pointerdown', reset)
-      window.removeEventListener('keydown', reset)
-      document.removeEventListener('visibilitychange', onHide)
+      document.removeEventListener('visibilitychange', onShow)
     }
   }, [key, lock])
 
