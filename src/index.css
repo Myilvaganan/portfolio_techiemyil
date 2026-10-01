@@ -1848,7 +1848,7 @@ html.admin nav[aria-label='Main'] {
   right: 0 !important;
   width: 100% !important;
   transform: translateZ(0);
-  contain: layout paint style;
+  /* No paint containment here: the MYVA button rises above the bar and must not be clipped. */
   will-change: transform;
 }
 /* A page that's shorter or taller than the last one must not make the scrollbar appear or vanish (that changes the
