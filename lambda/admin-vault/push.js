@@ -19,7 +19,7 @@
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const webpush = require('web-push')
 const { createFcm } = require('./fcm')
-const { dailyNote } = require('./panchang.gen')
+const { dailyNote, starToday } = require('./panchang.gen')
 
 const ROOT = '_data'
 const SUBS_KEY = `${ROOT}/push/subscriptions.json`
@@ -96,6 +96,62 @@ function buildWaterAlert({ today, istHour, water }) {
   const pace = Math.round((target * (istHour - start)) / Math.max(1, end - start))
   if (drunk >= pace - 150) return null
   return { tag: `water-${today}-${istHour}`, title: 'Time for water 💧', body: `${L(drunk)} of ${L(target)} so far — about ${L(pace - drunk)} behind. Have a glass now.`, url }
+}
+
+const addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10)
+
+/** Pure: medicines due this hour that aren't ticked yet. */
+function buildMedAlerts({ today, istHour, meds }) {
+  if (!meds || meds.reminders === false) return []
+  const taken = new Set(meds.taken?.[today] ?? [])
+  const due = (meds.items ?? []).filter((m) => m.active !== false && m.hours.includes(istHour) && !taken.has(`${m.id}@${istHour}`))
+  if (!due.length) return []
+  return [{ tag: `meds-${today}-${istHour}`, title: '💊 Time for your medicine', body: due.map((m) => `${m.name}${m.dose ? ` · ${m.dose}` : ''}`).join('\n'), url: '/health-plus' }]
+}
+
+/** Pure: family dates today, tomorrow or in three days (by English date), and star birthdays today. */
+function buildFamilyAlerts({ today, people, star }) {
+  const out = []
+  const label = { birthday: 'birthday', anniversary: 'anniversary', memorial: 'remembrance day', other: 'day' }
+  for (const p of people ?? []) {
+    if (p.date) {
+      for (const [n, when] of [[0, 'today'], [1, 'tomorrow'], [3, 'in 3 days']]) {
+        if (addDays(today, n).slice(5) === p.date.slice(5)) {
+          const years = Number(today.slice(0, 4)) - Number(p.date.slice(0, 4))
+          out.push({ tag: `family-${p.id}-${today}`, title: `🎉 ${p.name}’s ${label[p.kind]} ${when}`, body: `${p.relation ? `${p.relation} · ` : ''}${years > 0 && years < 120 ? `${years} years` : p.date}`, url: '/family' })
+        }
+      }
+    }
+    if (star && p.star >= 0 && p.star === star.star && (p.tamilMonth < 0 || p.tamilMonth === star.tamilMonth)) {
+      out.push({ tag: `family-star-${p.id}-${today}`, title: `🪔 ${p.name}’s star birthday today`, body: 'Their natchathiram falls today.', url: '/family' })
+    }
+  }
+  return out
+}
+
+/** Pure: the Sunday-evening review of the last seven days. */
+function buildWeeklyReview({ today, trades = [], water, habits, tasks, mood, bank = [] }) {
+  const from = addDays(today, -6)
+  const inWeek = (d) => d >= from && d <= today
+  const wk = trades.filter((t) => inWeek(t.date))
+  const net = wk.reduce((s, t) => s + netOf(t), 0)
+  const target = water?.customMl || water?.targetMl || 0
+  const waterDays = target ? Object.entries(water?.logs ?? {}).filter(([d, ml]) => inWeek(d) && ml >= target).length : 0
+  const habitTicks = Object.entries(habits?.checks ?? {}).filter(([d]) => inWeek(d)).reduce((s, [, v]) => s + v.length, 0)
+  const tasksDone = (tasks?.tasks ?? []).filter((t) => t.done && inWeek(t.doneOn)).length
+  const focus = (tasks?.sessions ?? []).filter((x) => inWeek(x.date)).reduce((s, x) => s + x.minutes, 0)
+  const sleeps = Object.entries(mood?.days ?? {}).filter(([d, v]) => inWeek(d) && v.sleepH > 0).map(([, v]) => v.sleepH)
+  const avgSleep = sleeps.length ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : 0
+  const spend = bank.filter((t) => inWeek(t.date)).reduce((s, t) => s + (t.debit || 0), 0)
+  const lines = [
+    wk.length ? `Trading: ${net < 0 ? "−" : "+"}${inr(Math.abs(net))} across ${wk.length} trades` : 'Trading: no trades',
+    spend ? `Spent ${inr(spend)} from the bank` : null,
+    `Focus ${Math.floor(focus / 60)}h ${focus % 60}m · ${tasksDone} tasks done`,
+    `Habits ticked ${habitTicks}× · water target met ${waterDays}/7 days`,
+    avgSleep ? `Sleep ${avgSleep.toFixed(1)}h a night` : null,
+  ].filter(Boolean)
+  const tip = net < 0 ? 'Next week: trade only your A+ setups and stop at the daily limit.' : avgSleep && avgSleep < 6.5 ? 'Next week: protect your sleep — aim for 7 hours.' : waterDays < 4 && target ? 'Next week: keep a bottle at your desk and hit your water target.' : focus < 300 ? 'Next week: book one 25-minute focus block every morning.' : 'Great week — keep the streak going.'
+  return { tag: `weekly-${today}`, title: '📊 Your week in review', body: `${lines.join('\n')}\n${tip}`, url: '/monthly-review' }
 }
 
 function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:admin@techiemyil.com', now = () => new Date(), fcmFactory = createFcm }) {
@@ -181,6 +237,29 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
         console.error('calendar note failed', err)
       }
     }
+    const [meds, family] = await Promise.all([getJson(`${ROOT}/growth/meds.json`, null), istHour === 7 ? getJson(`${ROOT}/growth/family.json`, null) : null])
+    alerts.push(...buildMedAlerts({ today, istHour, meds }))
+    if (istHour === 7 && family?.people?.length) {
+      let star = null
+      try {
+        star = starToday(today, calendar?.place || 'Chennai')
+      } catch (err) {
+        console.error('star lookup failed', err)
+      }
+      alerts.push(...buildFamilyAlerts({ today, people: family.people, star }))
+    }
+    // Sunday 7 PM: the week in review.
+    if (istHour === 19 && new Date(`${today}T00:00:00Z`).getUTCDay() === 0) {
+      const months = [...new Set([today.slice(0, 7), addDays(today, -6).slice(0, 7)])]
+      const [journals, habits, tasks, mood, bank] = await Promise.all([
+        Promise.all(months.map((m) => getJson(`${ROOT}/journal/${m}.json`, null))),
+        getJson(`${ROOT}/growth/habits.json`, null),
+        getJson(`${ROOT}/growth/tasks.json`, null),
+        getJson(`${ROOT}/growth/mood.json`, null),
+        getJson(`${ROOT}/statements/bank/data.json`, null),
+      ])
+      alerts.push(buildWeeklyReview({ today, trades: journals.flatMap((j) => j?.trades ?? []), water, habits, tasks, mood, bank: bank?.transactions ?? [] }))
+    }
     const water1 = buildWaterAlert({ today, istHour, water })
     if (water1) alerts.push(water1)
     return { job: 'water', sent: alerts.length ? await sendAll(alerts) : 0 }
@@ -251,4 +330,4 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
   return { route, runScheduled }
 }
 
-module.exports = { createPushApi, buildAlerts, buildWaterAlert, istDate }
+module.exports = { createPushApi, buildAlerts, buildWaterAlert, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate }

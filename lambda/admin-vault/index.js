@@ -59,7 +59,7 @@ const inboxApi = createInboxApi({
 })
 const chatApi = createChatApi({ s3, bucket: S3_BUCKET, callOpenAI: (o) => statementsCallOpenAI({ ...o, model: statementsModel() }), model: undefined })
 const lendingApi = createLendingApi({ s3, bucket: S3_BUCKET })
-const growthApi = createGrowthApi({ s3, bucket: S3_BUCKET })
+const growthApi = createGrowthApi({ s3, bucket: S3_BUCKET, ai: statementsCallOpenAI, visionModel: () => process.env.OPENAI_MODEL_VISION || statementsModel() })
 const pushApi = createPushApi({ s3, bucket: S3_BUCKET, publicKey: process.env.VAPID_PUBLIC_KEY, privateKey: process.env.VAPID_PRIVATE_KEY })
 const financeApi = createFinanceApi({ s3, bucket: S3_BUCKET })
 const wealthApi = createWealthApi({ s3, bucket: S3_BUCKET })
@@ -668,7 +668,7 @@ exports.handler = async (event) => {
       if (result) return respond(result.statusCode, result.body)
     }
 
-    if (path === '/admin/growth') {
+    if (path === '/admin/growth' || path === '/admin/receipt/scan') {
       const result = await growthApi({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }

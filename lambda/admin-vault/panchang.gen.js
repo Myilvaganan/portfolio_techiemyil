@@ -21,7 +21,8 @@ var __toCommonJS = (mod2) => __copyProps(__defProp({}, "__esModule", { value: tr
 var note_exports = {};
 __export(note_exports, {
   dailyNote: () => dailyNote,
-  placeOf: () => placeOf
+  placeOf: () => placeOf,
+  starToday: () => starToday
 });
 module.exports = __toCommonJS(note_exports);
 
@@ -2980,10 +2981,15 @@ function dailyNote(date, s) {
   ].filter(Boolean);
   return { tag: `calendar-${date}`, title: `\u{1FA94} ${head}`, body: lines.join("\n"), url: `/tamil-calendar?date=${date}` };
 }
+function starToday(date, placeName = "Chennai") {
+  const f = dayFacts(date, placeOf(placeName));
+  return { tamilMonth: f.tamil.month, star: f.star };
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   dailyNote,
-  placeOf
+  placeOf,
+  starToday
 });
 /*! Bundled license information:
 

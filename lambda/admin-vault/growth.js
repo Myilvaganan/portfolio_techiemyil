@@ -85,6 +85,60 @@ const SANITIZERS = {
         .filter((e) => e.date && e.box),
     }
   },
+  tasks(v) {
+    return {
+      tasks: list(v?.tasks, 500)
+        .map((t) => ({ id: id(t?.id), title: text(t?.title, 160), when: ['today', 'week', 'someday'].includes(t?.when) ? t.when : 'today', done: t?.done === true, doneOn: isDate(t?.doneOn) ? t.doneOn : '', created: isDate(t?.created) ? t.created : '' }))
+        .filter((t) => t.title),
+      // Focus sessions: date + minutes (+ the task worked on).
+      sessions: list(v?.sessions, 3000)
+        .map((x) => ({ date: isDate(x?.date) ? x.date : '', minutes: int(x?.minutes, 600), task: text(x?.task, 160) }))
+        .filter((x) => x.date && x.minutes),
+    }
+  },
+  gate(v) {
+    const days = {}
+    for (const [date, d] of Object.entries(v?.days && typeof v.days === 'object' ? v.days : {}).slice(-400)) {
+      if (!isDate(date)) continue
+      days[date] = { sleep: int(d?.sleep, 5), mood: int(d?.mood, 5), rulesRead: d?.rulesRead === true, plan: text(d?.plan, 300), checks: list(d?.checks, 12).map((c) => int(c, 50)) }
+    }
+    return { days }
+  },
+  mood(v) {
+    const days = {}
+    for (const [date, d] of Object.entries(v?.days && typeof v.days === 'object' ? v.days : {}).slice(-800)) {
+      if (!isDate(date)) continue
+      days[date] = { sleepH: amount(d?.sleepH, 24), quality: int(d?.quality, 5), mood: int(d?.mood, 5), energy: int(d?.energy, 5), note: text(d?.note, 200) }
+    }
+    return { days }
+  },
+  meds(v) {
+    const items = list(v?.items, 30)
+      .map((m) => ({ id: id(m?.id), name: text(m?.name, 60), dose: text(m?.dose, 40), hours: list(m?.hours, 6).filter((h) => Number.isInteger(h) && h >= 0 && h <= 23), active: m?.active !== false }))
+      .filter((m) => m.name && m.hours.length)
+    const ids = new Set(items.map((m) => m.id))
+    const taken = {}
+    for (const [date, done] of Object.entries(v?.taken && typeof v.taken === 'object' ? v.taken : {}).slice(-200)) {
+      if (!isDate(date)) continue
+      const kept = list(done, 100).filter((x) => typeof x === 'string' && ids.has(x.split('@')[0]))
+      if (kept.length) taken[date] = kept
+    }
+    return { items, taken, reminders: v?.reminders !== false }
+  },
+  family(v) {
+    return {
+      people: list(v?.people, 200)
+        .map((p) => ({ id: id(p?.id), name: text(p?.name, 60), relation: text(p?.relation, 40), kind: ['birthday', 'anniversary', 'memorial', 'other'].includes(p?.kind) ? p.kind : 'birthday', date: isDate(p?.date) ? p.date : '', star: Number.isInteger(p?.star) && p.star >= -1 && p.star <= 26 ? p.star : -1, tamilMonth: Number.isInteger(p?.tamilMonth) && p.tamilMonth >= -1 && p.tamilMonth <= 11 ? p.tamilMonth : -1 }))
+        .filter((p) => p.name && (p.date || p.star >= 0)),
+    }
+  },
+  receipts(v) {
+    return {
+      items: list(v?.items, 2000)
+        .map((r) => ({ id: id(r?.id), date: isDate(r?.date) ? r.date : '', merchant: text(r?.merchant, 80), amount: amount(r?.amount, 1e8), category: text(r?.category, 40), note: text(r?.note, 200) }))
+        .filter((r) => r.date && r.amount),
+    }
+  },
   calendar(v) {
     const pick = (x, max) => (Number.isInteger(x) && x >= -1 && x <= max ? x : -1)
     return { place: text(v?.place, 40) || 'Chennai', rasi: pick(v?.rasi, 11), star: pick(v?.star, 26), notify: v?.notify !== false }
@@ -139,7 +193,21 @@ const SANITIZERS = {
 
 const DOCS = Object.keys(SANITIZERS)
 
-function createGrowthApi({ s3, bucket }) {
+const RECEIPT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['isReceipt', 'merchant', 'date', 'amount', 'category'],
+  properties: {
+    isReceipt: { type: 'boolean' },
+    merchant: { type: 'string' },
+    date: { type: ['string', 'null'] },
+    amount: { type: ['number', 'null'] },
+    category: { type: 'string', enum: ['Groceries', 'Food & Dining', 'Fuel', 'Shopping', 'Medical', 'Bills & Utilities', 'Travel', 'Home', 'Education', 'Other'] },
+  },
+}
+const RECEIPT_RULES = 'You read Indian shop receipts and bills. Return the merchant name, the bill date as YYYY-MM-DD (null if not printed), the final total paid in rupees (after tax and discounts; null if unreadable) and the best category. If the photo is not a receipt or bill, set isReceipt false.'
+
+function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined }) {
   const key = (doc) => `${ROOT}/${doc}.json`
 
   async function read(doc) {
@@ -152,7 +220,23 @@ function createGrowthApi({ s3, bucket }) {
     }
   }
 
+  async function scanReceipt(payload) {
+    const image = typeof payload?.image === 'string' ? payload.image : ''
+    if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image)) return { statusCode: 400, body: { error: 'Please choose a JPEG, PNG or WebP photo of the receipt.' } }
+    if (image.length > 4_500_000) return { statusCode: 413, body: { error: 'That photo is too large. Please use a smaller one.' } }
+    if (!ai) return { statusCode: 503, body: { error: 'Receipt reading is not set up.' } }
+    try {
+      const r = await ai({ model: visionModel(), system: RECEIPT_RULES, user: [{ type: 'input_text', text: 'Read this receipt.' }, { type: 'input_image', image_url: image, detail: 'high' }], name: 'receipt', schema: RECEIPT_SCHEMA, effort: 'low', timeoutMs: 25000, maxTokens: 800 })
+      if (!r?.isReceipt) return { statusCode: 422, body: { error: 'That doesn’t look like a receipt. Try a clearer, straight-on photo.' } }
+      return { statusCode: 200, body: { merchant: text(r.merchant, 80), date: isDate(r.date) ? r.date : '', amount: amount(r.amount ?? 0, 1e8), category: text(r.category, 40) } }
+    } catch (err) {
+      if (err.code && err.statusCode) return { statusCode: err.statusCode, body: { error: err.message } }
+      throw err
+    }
+  }
+
   return async function handle({ method, path, query, payload }) {
+    if (method === 'POST' && path === '/admin/receipt/scan') return scanReceipt(payload)
     if (path !== '/admin/growth') return null
     const doc = method === 'GET' ? query?.doc : payload?.doc
     if (!DOCS.includes(doc)) return { statusCode: 400, body: { error: 'Unknown document.' } }

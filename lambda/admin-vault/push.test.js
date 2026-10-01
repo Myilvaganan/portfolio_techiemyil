@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-const { buildAlerts, buildWaterAlert, istDate } = require('./push')
+const { buildAlerts, buildWaterAlert, buildMedAlerts, buildFamilyAlerts, buildWeeklyReview, istDate } = require('./push')
 
 describe('push alerts', () => {
   it('uses the Indian date', () => {
@@ -97,5 +97,23 @@ describe('android (FCM) devices', () => {
     expect(buildWaterAlert({ today: '2026-10-01', istHour: 21, water }).body).toBe('0.5 L of 3.0 L today — 2.5 L to go before bed.')
     expect(buildWaterAlert({ today: '2026-10-01', istHour: 15, water: { ...water, reminders: false } })).toBeNull()
     expect(buildWaterAlert({ today: '2026-10-01', istHour: 15, water: { ...water, logs: { '2026-10-01': 3000 } } })).toBeNull()
+  })
+
+  it('reminds about untaken medicines at their hour', () => {
+    const meds = { reminders: true, items: [{ id: 'vitd1', name: 'Vitamin D', dose: '1 tab', hours: [8, 21], active: true }], taken: { '2026-10-01': ['vitd1@8'] } }
+    expect(buildMedAlerts({ today: '2026-10-01', istHour: 8, meds })).toEqual([])
+    expect(buildMedAlerts({ today: '2026-10-01', istHour: 21, meds })[0].body).toBe('Vitamin D · 1 tab')
+  })
+
+  it('reminds about family dates and star birthdays', () => {
+    const people = [{ id: 'amma1', name: 'Amma', relation: 'Mother', kind: 'birthday', date: '1965-10-04', star: 9, tamilMonth: -1 }]
+    expect(buildFamilyAlerts({ today: '2026-10-01', people, star: null })[0].title).toBe('🎉 Amma’s birthday in 3 days')
+    expect(buildFamilyAlerts({ today: '2026-10-02', people, star: { star: 9, tamilMonth: 5 } }).map((a) => a.title)).toEqual(['🪔 Amma’s star birthday today'])
+  })
+
+  it('sums up the week', () => {
+    const r = buildWeeklyReview({ today: '2026-10-04', trades: [{ date: '2026-10-01', grossPnl: -500, fees: 20 }], tasks: { tasks: [], sessions: [{ date: '2026-10-02', minutes: 50 }] } })
+    expect(r.body).toContain('Trading: −₹520 across 1 trades')
+    expect(r.body).toContain('Focus 0h 50m')
   })
 })

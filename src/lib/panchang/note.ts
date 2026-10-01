@@ -33,3 +33,9 @@ export function dailyNote(date: string, s: CalendarSettings) {
   ].filter(Boolean)
   return { tag: `calendar-${date}`, title: `🪔 ${head}`, body: lines.join('\n'), url: `/tamil-calendar?date=${date}` }
 }
+
+/** The Tamil month and the Moon's star at sunrise, for star-based (natchathiram) birthdays. */
+export function starToday(date: string, placeName = 'Chennai') {
+  const f = dayFacts(date, placeOf(placeName))
+  return { tamilMonth: f.tamil.month, star: f.star }
+}
