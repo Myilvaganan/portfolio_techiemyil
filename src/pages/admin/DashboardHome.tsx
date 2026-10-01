@@ -153,6 +153,8 @@ export function DashboardHome() {
         {lead && <p className="mt-2 text-sm text-text-secondary">{lead.detail}</p>}
       </section>
 
+      <CinemaBanner slides={slides} onOpen={navigate} />
+
       <TodayCard />
 
       {notices.length > 0 && (
@@ -192,7 +194,6 @@ export function DashboardHome() {
         </div>
       </section>
 
-      <CinemaBanner slides={slides} onOpen={navigate} />
 
 
 
@@ -205,7 +206,7 @@ export function DashboardHome() {
             <div key={si}>
               {sec.label && <p className="mb-3 text-2xs font-semibold uppercase tracking-[0.18em] text-text-secondary">{sec.label}</p>}
               {/* One swipeable row per group, snapping to each icon. */}
-              <div className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 sm:scroll-px-8 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
+              <div className="-mx-5 flex snap-x snap-proximity scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 sm:scroll-px-8 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
                 {sec.items.filter((it) => it.to !== '/').map((it) => (
                   <button key={it.to} type="button" onClick={() => navigate(it.to)} className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 text-center">
                     <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">

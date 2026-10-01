@@ -1535,7 +1535,8 @@ html.admin.noir .aurum-page > *:nth-child(n + 6) { animation-delay: 340ms; }
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  /* Proximity, not mandatory: a flick glides and settles like a native carousel instead of jumping card to card. */
+  scroll-snap-type: x proximity;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }

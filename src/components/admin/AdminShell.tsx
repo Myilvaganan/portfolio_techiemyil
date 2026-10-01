@@ -860,7 +860,7 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           </div>
         </header>
 
-        <motion.main key={`${pathname}-${refreshKey}-${localeVersion}`} initial={motionFor.initial} animate={motionFor.animate} transition={isPhone && direction !== 'tab' ? { type: 'spring', stiffness: 380, damping: 38, mass: 0.9 } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }} onAnimationComplete={() => {
+        <motion.main key={`${pathname}-${refreshKey}-${localeVersion}`} initial={motionFor.initial} animate={motionFor.animate} transition={isPhone && direction !== 'tab' ? { duration: 0.4, ease: [0.05, 0.7, 0.1, 1] } : { duration: 0.25, ease: [0.2, 0, 0, 1] }} onAnimationComplete={() => {
             // A leftover transform would make <main> the frame for every fixed overlay inside a page (sheets would sit
             // behind the tab bar and shrink to the content column), so clear it once the entrance is done.
             const el = document.querySelector<HTMLElement>('main.aurum-page')

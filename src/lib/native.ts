@@ -33,9 +33,10 @@ export function useNavDirection(): NavDirection {
 }
 
 export const SLIDE = {
-  forward: { initial: { opacity: 0, x: '28%' }, animate: { opacity: 1, x: 0 } },
-  back: { initial: { opacity: 0, x: '-22%' }, animate: { opacity: 1, x: 0 } },
-  tab: { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } },
+  // Android's shared-axis X transition: a short slide (about 30dp) with a fade, not a full-width push.
+  forward: { initial: { opacity: 0, x: 32 }, animate: { opacity: 1, x: 0 } },
+  back: { initial: { opacity: 0, x: -32 }, animate: { opacity: 1, x: 0 } },
+  tab: { initial: { opacity: 0 }, animate: { opacity: 1 } },
 } as const
 
 // ---------- Haptics ----------
