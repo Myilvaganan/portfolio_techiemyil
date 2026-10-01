@@ -72,6 +72,10 @@ const SANITIZERS = {
   debt(v) {
     return { extraPerMonth: amount(v?.extraPerMonth), strategy: v?.strategy === 'snowball' ? 'snowball' : 'avalanche' }
   },
+  calendar(v) {
+    const pick = (x, max) => (Number.isInteger(x) && x >= -1 && x <= max ? x : -1)
+    return { place: text(v?.place, 40) || 'Chennai', rasi: pick(v?.rasi, 11), star: pick(v?.star, 26), notify: v?.notify !== false }
+  },
   household(v) {
     return {
       manual: list(v?.manual, 500)

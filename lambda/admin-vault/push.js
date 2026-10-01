@@ -13,11 +13,13 @@
 //   • a credit-card bill due within 3 days
 //   • a Life Admin deadline due within 3 days, or overdue
 //   • the daily trading loss limit hit today (afternoon run, after the Indian market close)
+//   • 7 AM: the Tamil calendar daily note (panchangam, good/bad times, rasi palan)
 //   • water: a separate hourly rule ({ job: 'water' }), every two hours from your start time plus a last call, nudges when you're behind the day's water target
 
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const webpush = require('web-push')
 const { createFcm } = require('./fcm')
+const { dailyNote } = require('./panchang.gen')
 
 const ROOT = '_data'
 const SUBS_KEY = `${ROOT}/push/subscriptions.json`
@@ -169,9 +171,19 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
     const t = now()
     const today = istDate(t)
     const istHour = new Date(t.getTime() + 5.5 * 3600_000).getUTCHours()
-    const water = await getJson(`${ROOT}/growth/water.json`, null)
-    const alert = buildWaterAlert({ today, istHour, water })
-    return { job: 'water', sent: alert ? await sendAll([alert]) : 0 }
+    const [water, calendar] = await Promise.all([getJson(`${ROOT}/growth/water.json`, null), getJson(`${ROOT}/growth/calendar.json`, null)])
+    const alerts = []
+    // 7 AM: the day's Tamil calendar note — the date, anything special, good and bad times, rasi palan, a fresh line.
+    if (istHour === 7 && calendar?.notify !== false) {
+      try {
+        alerts.push(dailyNote(today, { place: calendar?.place || 'Chennai', rasi: calendar?.rasi ?? -1, star: calendar?.star ?? -1, notify: true }))
+      } catch (err) {
+        console.error('calendar note failed', err)
+      }
+    }
+    const water1 = buildWaterAlert({ today, istHour, water })
+    if (water1) alerts.push(water1)
+    return { job: 'water', sent: alerts.length ? await sendAll(alerts) : 0 }
   }
 
   async function runScheduled(event) {

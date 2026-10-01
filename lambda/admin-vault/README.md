@@ -91,7 +91,7 @@ S3 keys, no PII.
    ```bash
    cd lambda/admin-vault
    npm install --omit=dev
-   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js bankParse.js bankClassify.js package.json node_modules
+   zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js panchang.gen.js bankParse.js bankClassify.js package.json node_modules
    aws lambda create-function \
      --function-name admin-vault \
      --runtime nodejs20.x \
@@ -137,7 +137,7 @@ S3 keys, no PII.
 ```bash
 cd lambda/admin-vault
 npm install --omit=dev
-zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js bankParse.js bankClassify.js package.json node_modules
+zip -X -r admin-vault-lambda.zip index.js statements.js journal.js health.js platform.js tax.js security.js finance.js wealth.js invest.js inbox.js lending.js chat.js growth.js push.js fcm.js panchang.gen.js bankParse.js bankClassify.js package.json node_modules
 aws lambda update-function-code \
   --function-name admin-vault \
   --zip-file fileb://admin-vault-lambda.zip \

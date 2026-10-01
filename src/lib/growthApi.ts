@@ -90,6 +90,7 @@ export interface GrowthDocs {
   water: WaterDoc
   profile: ProfileDoc
   household: HouseholdDoc
+  calendar: { place: string; rasi: number; star: number; notify: boolean }
 }
 export type GrowthDoc = keyof GrowthDocs
 
@@ -101,6 +102,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   debt: { extraPerMonth: 0, strategy: 'avalanche' },
   subscriptions: { cancelled: [], ignored: [] },
   household: { manual: [] },
+  calendar: { place: 'Chennai', rasi: -1, star: -1, notify: true },
   profile: { displayName: '', fullName: '', email: '', phone: '', dob: '', city: '', occupation: '', bio: '', photo: '' },
   water: { weightKg: 0, activity: 'moderate', hot: false, customMl: 0, targetMl: 0, glassMl: 250, reminders: true, startHour: 8, endHour: 21, logs: {} },
 }

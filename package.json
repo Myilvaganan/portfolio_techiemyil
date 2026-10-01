@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "android:sync": "cap sync android",
     "android:apk": "cd android && ./gradlew assembleDebug",
-    "android:release": "bash scripts/androidRelease.sh"
+    "android:release": "bash scripts/androidRelease.sh",
+    "build:panchang": "esbuild src/lib/panchang/note.ts --bundle --platform=node --format=cjs --target=node20 --outfile=lambda/admin-vault/panchang.gen.js --banner:js=\"// Generated from src/lib/panchang by npm run build:panchang. Do not edit.\""
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
@@ -29,6 +30,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@types/qrcode": "^1.5.6",
+    "astronomy-engine": "^2.1.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
