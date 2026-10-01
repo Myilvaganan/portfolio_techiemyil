@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { BedDouble, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { AlarmClock, BedDouble, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
@@ -36,7 +36,7 @@ interface NavItem {
   icon: typeof LayoutDashboard
 }
 
-interface NavSection {
+export interface NavSection {
   label?: string
   k?: TKey
   items: NavItem[]
@@ -59,6 +59,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/family': 'birthday anniversary family dates star natchathiram',
   '/receipts': 'receipt bill photo scan cash expense',
   '/goal-timeline': 'goal net worth debt free timeline projection',
+  '/reminders': 'reminder alarm repeat vaccine vaccination child baby immunisation schedule',
   '/water': 'water drink hydration litres glass reminder',
   '/guardrails': 'rules stop loss limit discipline checklist risk',
   '/trading-journal': 'mt5 forex options calendar',
@@ -80,7 +81,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
 
 // Ordered by how often each is used: the daily pair first, then trading (the busiest area), day-to-day money, periodic wealth
 // and debt, and the rarely-touched admin last.
-const NAV_SECTIONS: NavSection[] = [
+export const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', k: 'nav.dashboard', to: '/', icon: LayoutDashboard },
@@ -145,6 +146,7 @@ const NAV_SECTIONS: NavSection[] = [
     k: 'nav.growth',
     items: [
       { label: 'Monthly Review', k: 'nav.monthlyReview', to: '/monthly-review', icon: CalendarCheck },
+      { label: 'Reminders', k: 'nav.reminders', to: '/reminders', icon: AlarmClock },
       { label: 'Life Admin', k: 'nav.lifeAdmin', to: '/life-admin', icon: ClipboardList },
       { label: 'Habits', k: 'nav.habits', to: '/habits', icon: Flame },
       { label: 'Water', k: 'nav.water', to: '/water', icon: Droplets },

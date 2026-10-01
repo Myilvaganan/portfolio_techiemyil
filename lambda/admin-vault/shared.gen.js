@@ -1,4 +1,4 @@
-// Generated from src/lib/panchang by npm run build:panchang. Do not edit.
+// Generated from src/lib/serverShared.ts by npm run build:shared. Do not edit.
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -17,14 +17,15 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod2) => __copyProps(__defProp({}, "__esModule", { value: true }), mod2);
 
-// src/lib/panchang/note.ts
-var note_exports = {};
-__export(note_exports, {
+// src/lib/serverShared.ts
+var serverShared_exports = {};
+__export(serverShared_exports, {
   dailyNote: () => dailyNote,
-  placeOf: () => placeOf,
-  starToday: () => starToday
+  reminderAlerts: () => reminderAlerts,
+  starToday: () => starToday,
+  vaccineAlerts: () => vaccineAlerts
 });
-module.exports = __toCommonJS(note_exports);
+module.exports = __toCommonJS(serverShared_exports);
 
 // node_modules/astronomy-engine/esm/astronomy.js
 var C_AUDAY = 173.1446326846693;
@@ -2763,10 +2764,10 @@ function lastSankranti(d) {
 }
 function tamilDate(date, place) {
   const { sunset } = sunTimes(date, place);
-  const { sign, at } = lastSankranti(sunset);
-  const entryDay = istDateOf(at);
+  const { sign, at: at2 } = lastSankranti(sunset);
+  const entryDay = istDateOf(at2);
   const entrySunset = sunTimes(entryDay, place).sunset;
-  const day1 = at <= entrySunset ? entryDay : istDateOf(new Date(Date.parse(`${entryDay}T00:00:00Z`) + 864e5));
+  const day1 = at2 <= entrySunset ? entryDay : istDateOf(new Date(Date.parse(`${entryDay}T00:00:00Z`) + 864e5));
   const day = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${day1}T00:00:00Z`)) / 864e5) + 1;
   const y = Number(date.slice(0, 4));
   const startYear = sign >= 9 || sign === 8 && date.slice(5, 7) === "01" ? y - 1 : y;
@@ -2985,11 +2986,82 @@ function starToday(date, placeName = "Chennai") {
   const f = dayFacts(date, placeOf(placeName));
   return { tamilMonth: f.tamil.month, star: f.star };
 }
+
+// src/lib/vaccines.ts
+var W = 7;
+var M = 30.44;
+var Y = 365.25;
+var at = (days) => Math.round(days);
+var IAP_SCHEDULE = [
+  { code: "bcg", name: "BCG", days: 0, age: "Birth" },
+  { code: "opv0", name: "OPV 0", days: 0, age: "Birth" },
+  { code: "hepb1", name: "Hepatitis B 1", days: 0, age: "Birth" },
+  ...[["1", 6], ["2", 10], ["3", 14]].flatMap(([n, w]) => {
+    const days = at(Number(w) * W);
+    const age = `${w} weeks`;
+    return [
+      { code: `dtp${n}`, name: `DTwP / DTaP ${n}`, days, age },
+      { code: `ipv${n}`, name: `IPV ${n}`, days, age },
+      { code: `hib${n}`, name: `Hib ${n}`, days, age },
+      { code: `hepb${Number(n) + 1}`, name: `Hepatitis B ${Number(n) + 1}`, days, age },
+      { code: `rota${n}`, name: `Rotavirus ${n}`, days, age },
+      { code: `pcv${n}`, name: `PCV ${n}`, days, age }
+    ];
+  }),
+  { code: "flu1", name: "Influenza 1", days: at(6 * M), age: "6 months" },
+  { code: "flu2", name: "Influenza 2", days: at(7 * M), age: "7 months", note: "Four weeks after the first dose" },
+  { code: "tcv", name: "Typhoid conjugate", days: at(6 * M + 14), age: "6\u20139 months" },
+  { code: "mmr1", name: "MMR 1", days: at(9 * M), age: "9 months" },
+  { code: "hepa1", name: "Hepatitis A 1", days: at(12 * M), age: "12 months" },
+  { code: "mmr2", name: "MMR 2", days: at(15 * M), age: "15 months" },
+  { code: "var1", name: "Varicella 1", days: at(15 * M), age: "15 months" },
+  { code: "pcvb", name: "PCV booster", days: at(15 * M), age: "15 months" },
+  { code: "dtpb1", name: "DTwP / DTaP booster 1", days: at(16 * M), age: "16\u201318 months" },
+  { code: "ipvb", name: "IPV booster", days: at(16 * M), age: "16\u201318 months" },
+  { code: "hibb", name: "Hib booster", days: at(16 * M), age: "16\u201318 months" },
+  { code: "hepa2", name: "Hepatitis A 2", days: at(18 * M), age: "18\u201319 months", note: "For the inactivated vaccine" },
+  { code: "var2", name: "Varicella 2", days: at(18 * M), age: "18\u201319 months" },
+  ...[2, 3, 4, 5].map((y) => ({ code: `fluy${y}`, name: `Influenza (yearly)`, days: at(y * Y), age: `${y} years`, note: "Every year until 5, before the monsoon" })),
+  { code: "dtpb2", name: "DTwP / DTaP booster 2", days: at(4 * Y), age: "4\u20136 years" },
+  { code: "ipvb2", name: "IPV / OPV booster", days: at(4 * Y), age: "4\u20136 years" },
+  { code: "mmr3", name: "MMR 3", days: at(4 * Y), age: "4\u20136 years" },
+  { code: "tdap", name: "Tdap", days: at(10 * Y), age: "10\u201312 years" },
+  { code: "hpv1", name: "HPV 1", days: at(9 * Y), age: "9\u201314 years" },
+  { code: "hpv2", name: "HPV 2", days: at(9 * Y + 6 * M), age: "6 months after HPV 1" }
+];
+var addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+function childSchedule(dob, given, today) {
+  return IAP_SCHEDULE.map((d) => {
+    const due = addDays(dob, d.days);
+    const givenOn = given[d.code];
+    const status = givenOn ? "given" : due < today ? "overdue" : due <= addDays(today, 14) ? "due" : "upcoming";
+    return { ...d, due, status, givenOn };
+  });
+}
+function vaccineAlerts(children, vaccines, today) {
+  const out = [];
+  const monday = (/* @__PURE__ */ new Date(`${today}T00:00:00Z`)).getUTCDay() === 1;
+  for (const c of children) {
+    const plan = childSchedule(c.dob, vaccines[c.id] ?? {}, today).filter((d) => d.status !== "given");
+    const soon = plan.filter((d) => [addDays(today, 7), addDays(today, 1), today].includes(d.due));
+    const overdue = plan.filter((d) => d.status === "overdue" && d.due >= addDays(c.dob, 0));
+    if (soon.length) {
+      const when = soon[0].due === today ? "today" : soon[0].due === addDays(today, 1) ? "tomorrow" : "in 7 days";
+      out.push({ tag: `vax-${c.id}-${soon[0].due}`, title: `\u{1F489} ${c.name}\u2019s vaccines ${when}`, body: soon.filter((d) => d.due === soon[0].due).map((d) => d.name).join(", "), url: "/reminders" });
+    }
+    if (monday && overdue.length) out.push({ tag: `vax-overdue-${c.id}-${today}`, title: `\u{1F489} ${overdue.length} vaccine${overdue.length === 1 ? "" : "s"} pending for ${c.name}`, body: `${overdue.slice(0, 4).map((d) => d.name).join(", ")}${overdue.length > 4 ? "\u2026" : ""} \u2014 tick them once given.`, url: "/reminders" });
+  }
+  return out;
+}
+function reminderAlerts(items, today, hour) {
+  return items.filter((r) => !r.done && r.hour === hour && r.date <= today).map((r) => ({ tag: `rem-${r.id}-${r.date}`, title: `\u23F0 ${r.title}`, body: r.note || (r.date < today ? `Was due ${r.date}` : "Due now"), url: "/reminders" }));
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   dailyNote,
-  placeOf,
-  starToday
+  reminderAlerts,
+  starToday,
+  vaccineAlerts
 });
 /*! Bundled license information:
 

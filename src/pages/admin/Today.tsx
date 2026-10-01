@@ -104,7 +104,7 @@ export function Today() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="w-full space-y-5">
+    <div className="w-full min-w-0 space-y-5 overflow-x-clip">
       <PageHero eyebrow={new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })} title={`${greeting}, ${firstName}`} lede={`${sky.f.tamil.monthTa} ${sky.f.tamil.day} · ${doneCount} of ${total} done today`} />
 
       {/* Progress */}
@@ -113,7 +113,7 @@ export function Today() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Alerts */}
           {(missing.length > 0 || advice.size === 'skip' || palan?.chandrashtamam) && (
             <div className="space-y-2">
@@ -168,8 +168,8 @@ export function Today() {
                   <div key={`${a.loan}-${a.date}`} className="flex items-center gap-2">
                     {a.status === 'paid' ? <CheckCircle2 className="h-4 w-4 text-positive" /> : a.status === 'missing' ? <XCircle className="h-4 w-4 text-error" /> : <Clock className="h-4 w-4 text-text-secondary" />}
                     <span className="min-w-0 flex-1 truncate text-text">{a.loan} · {a.date}</span>
-                    <span className="font-mono text-text-secondary">{m.inr(a.amount)}</span>
-                    <span className={cn('w-16 text-right text-xs', a.status === 'paid' ? 'text-positive' : a.status === 'missing' ? 'text-error' : 'text-text-secondary')}>{a.status === 'paid' ? `paid ${a.paidOn?.slice(5)}` : a.status === 'missing' ? 'not found' : 'waiting'}</span>
+                    <span className="hidden font-mono text-text-secondary sm:inline">{m.inr(a.amount)}</span>
+                    <span className={cn('shrink-0 text-right text-xs', a.status === 'paid' ? 'text-positive' : a.status === 'missing' ? 'text-error' : 'text-text-secondary')}>{a.status === 'paid' ? `paid ${a.paidOn?.slice(5)}` : a.status === 'missing' ? 'not found' : 'waiting'}</span>
                   </div>
                 ))}
               </div>
@@ -177,7 +177,7 @@ export function Today() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Trading check-in */}
           <Panel title="Trading check-in" hint="Before the market opens." action={<ShieldCheck className={cn('h-5 w-5', advice.ready ? 'text-positive' : 'text-text-secondary')} />}>
             <div className="space-y-3">
@@ -186,7 +186,7 @@ export function Today() {
                   <p className="mb-1 text-xs font-medium text-text-secondary">{k === 'sleep' ? 'How did you sleep?' : 'How do you feel?'}</p>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((n) => (
-                      <button key={n} type="button" aria-pressed={g[k] === n} onClick={() => { haptic(6); setGate({ [k]: n }) }} className={cn('flex h-10 flex-1 items-center justify-center rounded-xl border text-lg transition-transform', g[k] === n ? 'scale-105 border-accent bg-accent/15' : 'border-border bg-surface-2 opacity-70')}>{SCALE[n]}</button>
+                      <button key={n} type="button" aria-pressed={g[k] === n} onClick={() => { haptic(6); setGate({ [k]: n }) }} className={cn('flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border text-base transition-transform sm:text-lg', g[k] === n ? 'scale-105 border-accent bg-accent/15' : 'border-border bg-surface-2 opacity-70')}>{SCALE[n]}</button>
                     ))}
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export function Today() {
                 I’ve read my <Link to="/guardrails" className="text-accent">trading rules</Link>
               </label>
               {checklist.map((c, i) => (
-                <label key={i} className="flex items-center gap-2 text-sm text-text">
+                <label key={i} className="flex items-start gap-2 text-sm text-text [overflow-wrap:anywhere]">
                   <input type="checkbox" checked={g.checks.includes(i)} onChange={(e) => setGate({ checks: e.target.checked ? [...g.checks, i] : g.checks.filter((x) => x !== i) })} className="h-4 w-4 accent-amber-500" />
                   {c}
                 </label>
@@ -215,16 +215,16 @@ export function Today() {
             {sky.specials.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {sky.specials.map((x) => (
-                  <span key={x.key} className="inline-flex items-center gap-1.5 rounded-full bg-surface-3 px-2.5 py-1 text-xs text-text">
+                  <span key={x.key} className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-surface-3 px-2.5 py-1 text-xs text-text">
                     <FestiveIcon kind={x.icon} className={cn('h-4 w-4', ICON_TONE[x.icon])} /> {x.name}
                   </span>
                 ))}
               </div>
             )}
             <div className="space-y-1.5 text-sm">
-              <p className="flex justify-between"><span className="flex items-center gap-1.5 text-text-secondary"><Sun className="h-4 w-4 text-positive" /> Good time</span><span className="text-right font-mono text-positive">{sky.good.map((x) => `${istTime(x.start)}–${istTime(x.end)}`).join(', ') || '—'}</span></p>
-              <p className="flex justify-between"><span className="flex items-center gap-1.5 text-text-secondary"><Moon className="h-4 w-4 text-error" /> Rahu kalam</span><span className="font-mono text-error">{istTime(sky.div.rahu.start)}–{istTime(sky.div.rahu.end)}</span></p>
-              <p className="flex justify-between"><span className="flex items-center gap-1.5 text-text-secondary"><Moon className="h-4 w-4 text-error" /> Yamagandam</span><span className="font-mono text-error">{istTime(sky.div.yama.start)}–{istTime(sky.div.yama.end)}</span></p>
+              <p className="flex flex-wrap justify-between gap-x-3"><span className="flex items-center gap-1.5 text-text-secondary"><Sun className="h-4 w-4 text-positive" /> Good time</span><span className="min-w-0 break-words text-right font-mono text-xs leading-5 text-positive">{sky.good.map((x) => `${istTime(x.start)}–${istTime(x.end)}`).join(', ') || '—'}</span></p>
+              <p className="flex flex-wrap justify-between gap-x-3"><span className="flex items-center gap-1.5 text-text-secondary"><Moon className="h-4 w-4 text-error" /> Rahu kalam</span><span className="font-mono text-error">{istTime(sky.div.rahu.start)}–{istTime(sky.div.rahu.end)}</span></p>
+              <p className="flex flex-wrap justify-between gap-x-3"><span className="flex items-center gap-1.5 text-text-secondary"><Moon className="h-4 w-4 text-error" /> Yamagandam</span><span className="font-mono text-error">{istTime(sky.div.yama.start)}–{istTime(sky.div.yama.end)}</span></p>
             </div>
             {palan && <p className={cn('mt-3 rounded-xl p-2.5 text-xs', palan.chandrashtamam ? 'bg-error/10 text-error' : 'bg-surface-2 text-text-secondary')}>{'★'.repeat(palan.score)} {palan.line}</p>}
           </Panel>

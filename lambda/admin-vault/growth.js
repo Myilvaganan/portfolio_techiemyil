@@ -85,6 +85,23 @@ const SANITIZERS = {
         .filter((e) => e.date && e.box),
     }
   },
+  reminders(v) {
+    const children = list(v?.children, 10).map((c) => ({ id: id(c?.id), name: text(c?.name, 40), dob: isDate(c?.dob) ? c.dob : '' })).filter((c) => c.name && c.dob)
+    const ids = new Set(children.map((c) => c.id))
+    const vaccines = {}
+    for (const [cid, doses] of Object.entries(v?.vaccines && typeof v.vaccines === 'object' ? v.vaccines : {})) {
+      if (!ids.has(cid) || !doses || typeof doses !== 'object') continue
+      vaccines[cid] = {}
+      for (const [code, date] of Object.entries(doses).slice(0, 80)) if (/^[a-z0-9]{2,8}$/.test(code) && isDate(date)) vaccines[cid][code] = date
+    }
+    return {
+      items: list(v?.items, 300)
+        .map((r) => ({ id: id(r?.id), title: text(r?.title, 100), note: text(r?.note, 300), date: isDate(r?.date) ? r.date : '', hour: Number.isInteger(r?.hour) && r.hour >= 0 && r.hour <= 23 ? r.hour : 9, repeat: ['none', 'daily', 'weekly', 'monthly', 'yearly'].includes(r?.repeat) ? r.repeat : 'none', done: r?.done === true }))
+        .filter((r) => r.title && r.date),
+      children,
+      vaccines,
+    }
+  },
   tasks(v) {
     return {
       tasks: list(v?.tasks, 500)

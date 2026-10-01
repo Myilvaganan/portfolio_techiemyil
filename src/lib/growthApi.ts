@@ -146,6 +146,13 @@ export interface Receipt {
   note: string
 }
 
+export interface RemindersDoc {
+  items: import('./vaccines').Reminder[]
+  children: { id: string; name: string; dob: string }[]
+  /** childId → vaccine code → date given */
+  vaccines: Record<string, Record<string, string>>
+}
+
 export interface GrowthDocs {
   guardrails: GuardrailRules
   habits: HabitsDoc
@@ -158,6 +165,7 @@ export interface GrowthDocs {
   household: HouseholdDoc
   diary: DiaryDoc
   tasks: TasksDoc
+  reminders: RemindersDoc
   gate: { days: Record<string, GateDay> }
   mood: { days: Record<string, MoodDay> }
   meds: { items: Med[]; taken: Record<string, string[]>; reminders: boolean }
@@ -176,6 +184,7 @@ export const EMPTY_DOCS: GrowthDocs = {
   subscriptions: { cancelled: [], ignored: [] },
   household: { manual: [] },
   tasks: { tasks: [], sessions: [] },
+  reminders: { items: [], children: [], vaccines: {} },
   gate: { days: {} },
   mood: { days: {} },
   meds: { items: [], taken: {}, reminders: true },

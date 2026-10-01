@@ -13,13 +13,14 @@
 //   • a credit-card bill due within 3 days
 //   • a Life Admin deadline due within 3 days, or overdue
 //   • the daily trading loss limit hit today (afternoon run, after the Indian market close)
+//   • reminders at their hour; children's vaccines at 8 AM (a week before, the day before, on the day)
 //   • 7 AM: the Tamil calendar daily note (panchangam, good/bad times, rasi palan)
 //   • water: a separate hourly rule ({ job: 'water' }), every two hours from your start time plus a last call, nudges when you're behind the day's water target
 
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const webpush = require('web-push')
 const { createFcm } = require('./fcm')
-const { dailyNote, starToday } = require('./panchang.gen')
+const { dailyNote, starToday, vaccineAlerts, reminderAlerts } = require('./shared.gen')
 
 const ROOT = '_data'
 const SUBS_KEY = `${ROOT}/push/subscriptions.json`
@@ -237,8 +238,12 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
         console.error('calendar note failed', err)
       }
     }
-    const [meds, family] = await Promise.all([getJson(`${ROOT}/growth/meds.json`, null), istHour === 7 ? getJson(`${ROOT}/growth/family.json`, null) : null])
+    const [meds, family, reminders] = await Promise.all([getJson(`${ROOT}/growth/meds.json`, null), istHour === 7 ? getJson(`${ROOT}/growth/family.json`, null) : null, getJson(`${ROOT}/growth/reminders.json`, null)])
     alerts.push(...buildMedAlerts({ today, istHour, meds }))
+    if (reminders) {
+      alerts.push(...reminderAlerts(reminders.items ?? [], today, istHour))
+      if (istHour === 8) alerts.push(...vaccineAlerts(reminders.children ?? [], reminders.vaccines ?? {}, today))
+    }
     if (istHour === 7 && family?.people?.length) {
       let star = null
       try {

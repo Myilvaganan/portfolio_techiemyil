@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { NAV_SECTIONS } from '@/components/admin/AdminShell'
+import { SITE_URL, openExternal } from '@/lib/host'
 import { useProfile } from '@/lib/profile'
 import { CinemaBanner, NoirTitle, type CinemaSlide } from '@/components/admin/Cinema'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, ChevronRight, X, Home, Sparkles, BarChart3, BookOpen, Calculator, CalendarClock, CreditCard, DatabaseBackup, ExternalLink, Eye, Globe, HandCoins, Landmark, FolderOpen, HardDrive, HeartPulse, Loader2, PieChart, ReceiptText, Scale, TrendingUp, Wallet } from 'lucide-react'
+import { AlertTriangle, ChevronRight, X, BarChart3, CalendarClock, DatabaseBackup, ExternalLink, Eye, HardDrive, HeartPulse, Loader2, TrendingUp, Wallet } from 'lucide-react'
 import { listDocuments, type VaultDocument } from '@/lib/adminVault'
 import { formatInr } from '@/lib/kite'
 import { cn } from '@/lib/utils'
@@ -23,22 +25,6 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${units[unitIndex]}`
 }
 
-const QUICK_ACTIONS = [
-  { label: 'Document Manager', to: '/documents', icon: FolderOpen },
-  { label: 'Margin Calculator', to: '/margin-calculator', icon: Calculator },
-  { label: 'Portfolio Rebalance', to: '/portfolio-rebalance', icon: PieChart },
-  { label: 'Zerodha Dashboard', to: '/zerodha', icon: TrendingUp },
-  { label: 'Options Analytics', to: '/options-analytics', icon: BarChart3 },
-  { label: 'Bank Statements', to: '/bank-statements', icon: Landmark },
-  { label: 'Credit Cards', to: '/credit-cards', icon: CreditCard },
-  { label: 'Loans', to: '/loans', icon: HandCoins },
-  { label: 'Health Report', to: '/health-report', icon: HeartPulse },
-  { label: 'Trading Journal', to: '/trading-journal', icon: BookOpen },
-  { label: 'Household', to: '/household', icon: Home },
-  { label: 'Tax Information', to: '/tax', icon: ReceiptText },
-  { label: 'Net Worth', to: '/net-worth', icon: Scale },
-  { label: 'Website', to: '/site', icon: Globe },
-]
 
 const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '-' : ''}${formatInr(Math.abs(n))}`
 const toneOf = (n: number | null) => (n === null || n === 0 ? 'text-text' : n > 0 ? 'text-positive' : 'text-error')
@@ -205,22 +191,25 @@ export function DashboardHome() {
         </section>
       )}
 
+      {/* Every module, grouped like the menu, so nothing is more than one tap from Home. */}
       <section>
         <SectionLabel>For you</SectionLabel>
-        <div className="grid grid-cols-4 gap-x-2 gap-y-6 sm:grid-cols-6 lg:grid-cols-7">
-          <button type="button" onClick={() => navigate('/chat')} className="group flex flex-col items-center gap-2.5 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
-              <Sparkles className="h-6 w-6 text-text" strokeWidth={1.5} />
-            </span>
-            <span className="text-xs leading-tight text-text">Ask AI</span>
-          </button>
-          {QUICK_ACTIONS.map((action) => (
-            <button key={action.to} type="button" onClick={() => navigate(action.to)} className="group flex flex-col items-center gap-2.5 text-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
-                <action.icon className="h-6 w-6 text-text" strokeWidth={1.5} />
-              </span>
-              <span className="text-xs leading-tight text-text">{action.label}</span>
-            </button>
+        <div className="space-y-6">
+          {NAV_SECTIONS.map((sec, si) => (
+            <div key={si}>
+              {sec.label && <p className="mb-3 text-2xs font-semibold uppercase tracking-[0.18em] text-text-secondary">{sec.label}</p>}
+              {/* One swipeable row per group, snapping to each icon. */}
+              <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
+                {sec.items.filter((it) => it.to !== '/').map((it) => (
+                  <button key={it.to} type="button" onClick={() => navigate(it.to)} className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 text-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
+                      <it.icon className="h-5 w-5 text-text" strokeWidth={1.5} />
+                    </span>
+                    <span className="line-clamp-2 text-[11px] leading-tight text-text">{it.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -236,7 +225,7 @@ export function DashboardHome() {
             <span className="flex-1 text-[15px] text-text">download backup</span>
             {backingUp ? <Loader2 className="h-4 w-4 animate-spin text-text-secondary" /> : <DatabaseBackup className="h-4 w-4 text-text-secondary" />}
           </button>
-          <button type="button" onClick={() => window.open('/', '_blank')} className="flex w-full items-center gap-3 py-4 text-left">
+          <button type="button" onClick={() => openExternal(SITE_URL)} className="flex w-full items-center gap-3 py-4 text-left">
             <span className="flex-1 text-[15px] text-text">visit website</span>
             <ExternalLink className="h-4 w-4 text-text-secondary" />
           </button>

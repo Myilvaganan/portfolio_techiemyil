@@ -13,7 +13,7 @@
     "android:sync": "cap sync android",
     "android:apk": "cd android && ./gradlew assembleDebug",
     "android:release": "bash scripts/androidRelease.sh",
-    "build:panchang": "esbuild src/lib/panchang/note.ts --bundle --platform=node --format=cjs --target=node20 --outfile=lambda/admin-vault/panchang.gen.js --banner:js=\"// Generated from src/lib/panchang by npm run build:panchang. Do not edit.\""
+    "build:shared": "esbuild src/lib/serverShared.ts --bundle --platform=node --format=cjs --target=node20 --outfile=lambda/admin-vault/shared.gen.js --banner:js=\"// Generated from src/lib/serverShared.ts by npm run build:shared. Do not edit.\""
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
