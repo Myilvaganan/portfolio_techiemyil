@@ -108,14 +108,14 @@ export function PortfolioRebalance() {
   }
 
   return (
-    <div className="w-full space-y-4 xl:space-y-3">
-      <div className="flex flex-wrap items-start justify-between gap-4 xl:items-end">
+    <div className="w-full space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3.5">
           <PageBadge />
           <div className="min-w-0">
           <p className="page-eyebrow">Portfolio intelligence</p>
           <h1 className="mt-1 page-title">Portfolio Rebalance Blueprint</h1>
-          <p className="page-lede xl:hidden">
+          <p className="page-lede">
             A diversified framework built from the {SNAPSHOT.holdingCount} holdings in the {SNAPSHOT.label} snapshot. The
             goal is long-term wealth building, not a guaranteed daily return.
           </p>
@@ -141,10 +141,10 @@ export function PortfolioRebalance() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)_minmax(0,1.25fr)] xl:gap-3">
-      <GlassCard hover={false} className="p-5 xl:col-start-1 xl:row-start-1 xl:p-4">
+      <div className="grid gap-4 lg:grid-cols-2">
+      <GlassCard hover={false} className="p-5">
         <SectionTitle>01 — Portfolio diagnosis</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary xl:hidden">
+        <p className="mb-4 text-xs text-text-secondary">
           The main structural issue is concentration, not the number of green positions today.
         </p>
         <div className="space-y-3">
@@ -158,53 +158,48 @@ export function PortfolioRebalance() {
           {pct(pctOf(gold + silver, total))} of the portfolio. Textile-related names add sector concentration on top.
         </p>
       </GlassCard>
-
-      <GlassCard hover={false} className="p-5 xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:p-4">
-        <SectionTitle>02 — Current holdings review</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary xl:hidden">
-          A “review” tag means fundamentals and valuation need checking before adding or exiting.
+      <GlassCard hover={false} className="p-5">
+        <SectionTitle>04 — Rebalancing roadmap</SectionTitle>
+        <p className="mb-4 text-xs text-text-secondary">
+          A staged transition avoids making the whole portfolio depend on one trading day.
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-border label-caps">
-                <th className="py-2 pr-3 font-medium">Holding</th>
-                <th className="py-2 pr-3 text-right font-medium">Value</th>
-                <th className="py-2 pr-3 text-right font-medium">Weight</th>
-                <th className="py-2 pr-3 font-medium">Role</th>
-                <th className="py-2 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {holdingsSorted.map((h) => (
-                <tr key={h.symbol} className="border-b border-border/60">
-                  <td className="py-2.5 xl:py-1.5 pr-3 font-mono font-semibold text-text">
-                    {h.symbol}
-                    {h.count ? <span className="ml-1 font-sans font-normal text-text-secondary">({h.count})</span> : null}
-                  </td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text">{inr(h.value)}</td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text-secondary">{pct(pctOf(h.value, total))}</td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-text-secondary">{h.role}</td>
-                  <td className="py-2.5 xl:py-1.5">
-                    <span className={cn('rounded-full px-2 py-0.5 text-2xs font-bold', ACTION_STYLE[h.action].className)}>
-                      {ACTION_STYLE[h.action].label}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3">
+          {[
+            {
+              title: 'Reduce concentration',
+              body: `Bring Gold from ~${inr(gold)} toward ~${inr(rows.find((r) => r.id === 'gold')!.target)} and Silver from ~${inr(silver)} toward ~${inr(rows.find((r) => r.id === 'silver')!.target)}, subject to taxes and your holding period.`,
+            },
+            {
+              title: 'Build the core',
+              body: 'Deploy released capital gradually into broad-market ETFs rather than replacing one concentrated position with another.',
+            },
+            {
+              title: 'Control stock bets',
+              body: 'Keep individual stocks as a smaller satellite allocation. Review earnings, debt, valuation and sector concentration before adding.',
+            },
+          ].map((s, i) => (
+            <div key={s.title} className="rounded-xl border border-border bg-surface-2 p-4">
+              <div className="flex items-center gap-2">
+              <div className="mb-2 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+                {i + 1}
+              </div>
+              <h3 className="text-sm font-semibold text-text">{s.title}</h3>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">{s.body}</p>
+            </div>
+          ))}
         </div>
       </GlassCard>
-
-      <GlassCard hover={false} className="p-5 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:p-4">
+      </div>
+      <GlassCard hover={false} className="p-5">
         <SectionTitle>03 — Destination portfolio</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary xl:hidden">
+        <p className="mb-4 text-xs text-text-secondary">
           Edit the target % per bucket; buy/sell amounts update for {inr(total)}. ETF choice should weigh expense
           ratio, tracking difference, liquidity and taxation.
         </p>
 
-        <div className="mb-5 grid grid-cols-2 gap-4 xl:mb-2">
+        <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-1">
           <Donut
             title="Current"
             center={inr(total)}
@@ -216,7 +211,7 @@ export function PortfolioRebalance() {
             segments={rows.map((r) => ({ pct: (r.targetPct / (targetSum || 1)) * 100, color: BUCKETS[r.id].color }))}
           />
         </div>
-
+        <div className="min-w-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-left text-xs">
             <thead>
@@ -231,14 +226,14 @@ export function PortfolioRebalance() {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-border/60">
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-text">
+                  <td className="py-2.5 pr-3 text-text">
                     <span className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: BUCKETS[r.id].color }} />
                     {BUCKETS[r.id].label}
                   </td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text-secondary">
+                  <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">
                     {inr(r.current)} · {pct(r.currentPct)}
                   </td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-right">
+                  <td className="py-2.5 pr-3 text-right">
                     <input
                       type="number"
                       min="0"
@@ -249,10 +244,10 @@ export function PortfolioRebalance() {
                       className="w-16 rounded-md border border-border bg-surface-2 px-2 py-1 text-right font-mono text-xs text-text outline-none focus:border-accent/50"
                     />
                   </td>
-                  <td className="py-2.5 xl:py-1.5 pr-3 text-right font-mono text-text">{inr(r.target)}</td>
+                  <td className="py-2.5 pr-3 text-right font-mono text-text">{inr(r.target)}</td>
                   <td
                     className={cn(
-                      'py-2.5 xl:py-1.5 text-right font-mono font-semibold',
+                      'py-2.5 text-right font-mono font-semibold',
                       r.delta >= 0 ? 'text-positive' : 'text-error',
                     )}
                   >
@@ -283,44 +278,48 @@ export function PortfolioRebalance() {
             <b className="font-mono text-accent">{inr(toBuy)}</b>
           </p>
         )}
+        </div>
+        </div>
       </GlassCard>
-
-      <GlassCard hover={false} className="p-5 xl:col-start-1 xl:row-start-2 xl:p-4">
-        <SectionTitle>04 — Rebalancing roadmap</SectionTitle>
-        <p className="mb-4 text-xs text-text-secondary xl:hidden">
-          A staged transition avoids making the whole portfolio depend on one trading day.
+      <GlassCard hover={false} className="p-5">
+        <SectionTitle>02 — Current holdings review</SectionTitle>
+        <p className="mb-4 text-xs text-text-secondary">
+          A “review” tag means fundamentals and valuation need checking before adding or exiting.
         </p>
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1 xl:gap-2">
-          {[
-            {
-              title: 'Reduce concentration',
-              body: `Bring Gold from ~${inr(gold)} toward ~${inr(rows.find((r) => r.id === 'gold')!.target)} and Silver from ~${inr(silver)} toward ~${inr(rows.find((r) => r.id === 'silver')!.target)}, subject to taxes and your holding period.`,
-            },
-            {
-              title: 'Build the core',
-              body: 'Deploy released capital gradually into broad-market ETFs rather than replacing one concentrated position with another.',
-            },
-            {
-              title: 'Control stock bets',
-              body: 'Keep individual stocks as a smaller satellite allocation. Review earnings, debt, valuation and sector concentration before adding.',
-            },
-          ].map((s, i) => (
-            <div key={s.title} className="rounded-xl border border-border bg-surface-2 p-4 xl:p-2.5">
-              <div className="flex items-center gap-2 xl:mb-1">
-              <div className="mb-2 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-bold text-accent xl:mb-0 xl:h-5 xl:w-5 xl:text-2xs">
-                {i + 1}
-              </div>
-              <h3 className="text-sm font-semibold text-text xl:text-xs">{s.title}</h3>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-text-secondary xl:mt-0 xl:text-2xs xl:leading-snug">{s.body}</p>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-left text-xs">
+            <thead>
+              <tr className="border-b border-border label-caps">
+                <th className="py-2 pr-3 font-medium">Holding</th>
+                <th className="py-2 pr-3 text-right font-medium">Value</th>
+                <th className="py-2 pr-3 text-right font-medium">Weight</th>
+                <th className="py-2 pr-3 font-medium">Role</th>
+                <th className="py-2 font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdingsSorted.map((h) => (
+                <tr key={h.symbol} className="border-b border-border/60">
+                  <td className="py-2.5 pr-3 font-mono font-semibold text-text">
+                    {h.symbol}
+                    {h.count ? <span className="ml-1 font-sans font-normal text-text-secondary">({h.count})</span> : null}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right font-mono text-text">{inr(h.value)}</td>
+                  <td className="py-2.5 pr-3 text-right font-mono text-text-secondary">{pct(pctOf(h.value, total))}</td>
+                  <td className="py-2.5 pr-3 text-text-secondary">{h.role}</td>
+                  <td className="py-2.5">
+                    <span className={cn('rounded-full px-2 py-0.5 text-2xs font-bold', ACTION_STYLE[h.action].className)}>
+                      {ACTION_STYLE[h.action].label}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </GlassCard>
 
-      </div>
-
-      <GlassCard hover={false} className="p-5 xl:px-4 xl:py-2.5 xl:py-1.5">
+      <GlassCard hover={false} className="p-5">
         <SectionTitle>Risk note</SectionTitle>
         <p className="text-xs leading-relaxed text-text-secondary">
           This is an educational portfolio framework based on the supplied snapshot, not a guarantee of returns or
@@ -331,7 +330,7 @@ export function PortfolioRebalance() {
         </p>
       </GlassCard>
 
-      <p className="text-center text-2xs text-text-secondary/70 xl:hidden">
+      <p className="text-center text-2xs text-text-secondary/70">
         Values are approximate snapshot figures and change with market prices.
       </p>
     </div>
