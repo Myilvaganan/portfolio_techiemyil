@@ -365,3 +365,16 @@ export function accountFromReport(report: Mt5Report) {
 }
 
 export type Mt5AccountMeta = ReturnType<typeof accountFromReport> & { updatedAt?: string }
+
+/** A short broker name for labels: "Octa Markets Incorporated" → "Octa", "Exness-MT5Real8" → "Exness". */
+export function brokerName(a: { company?: string; server?: string }): string {
+  const fromCompany = (a.company ?? '')
+    .replace(/[.,]/g, ' ')
+    .replace(/\b(ltd|limited|llc|inc|incorporated|corp|corporation|pty|plc|sa|markets?|global|group|international|financial|trading|investments?|holdings?|\(.*?\))\b/gi, ' ')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .join(' ')
+  if (fromCompany) return fromCompany
+  return (a.server ?? '').split(/[-_\s]/)[0].replace(/(fx|mt5|mt4)$/i, '') || ''
+}

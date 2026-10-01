@@ -1,3 +1,4 @@
+import { brokerName } from '@/lib/mt5'
 import { useState, type ReactNode } from 'react'
 import { ChevronDown, Globe, Upload } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'
@@ -73,6 +74,7 @@ export function Mt5AccountCard({ account, usdInr, onUpload, compact = false }: P
           <span className="flex min-w-0 items-center gap-2">
             <Globe className="h-4 w-4 shrink-0 text-accent" />
             <span className="truncate font-display text-sm font-semibold text-text">{account.name || 'MetaTrader 5 account'}</span>
+            {brokerName(account) && <span className="shrink-0 rounded-full bg-surface-5 px-1.5 py-0.5 text-2xs font-medium text-text-secondary">{brokerName(account)}</span>}
             <span className="text-text-secondary">
               #<span className="font-mono text-text">{account.account}</span>
               {account.server && <> · {account.server}</>}
@@ -116,6 +118,7 @@ export function Mt5AccountCard({ account, usdInr, onUpload, compact = false }: P
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h2 className="truncate font-display text-base font-semibold text-text">{account.name || 'MetaTrader 5 account'}</h2>
+              {brokerName(account) && <span className="shrink-0 rounded-full bg-surface-5 px-1.5 py-0.5 text-2xs font-medium text-text-secondary">{brokerName(account)}</span>}
               {account.accountType && <Badge>{account.accountType}</Badge>}
               {account.currency && <Badge>{account.currency}</Badge>}
               {account.marginMode && <Badge>{account.marginMode}</Badge>}

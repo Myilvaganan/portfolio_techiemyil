@@ -1,3 +1,4 @@
+import { brokerName } from '@/lib/mt5'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Mt5FolderSync } from '@/components/journal/Mt5FolderSync'
@@ -66,6 +67,7 @@ function AccountChips({ accounts, activeId, onSelect, onUpload }: { accounts: Mt
         <Chip key={a.account} active={a.account === activeId} onClick={() => onSelect(a.account)}>
           {a.name ? `${a.name} · ` : ''}
           {a.account}
+          {brokerName(a) && <span className="ml-1 text-2xs opacity-70">{brokerName(a)}</span>}
         </Chip>
       ))}
       <Chip active={false} onClick={onUpload}>

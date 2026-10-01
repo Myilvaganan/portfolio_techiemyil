@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { grossFromPrices } from './journal'
 import {
+  brokerName,
   Mt5ParseError,
   accountFromReport,
   contractSizeFor,
@@ -306,5 +307,15 @@ describe('accountFromReport', () => {
 
   it('has an empty period for a report with no trades', () => {
     expect(accountFromReport(parse({ trades: [] })).report).toMatchObject({ from: '', to: '', trades: 0 })
+  })
+})
+
+describe('brokerName', () => {
+  it('shortens the company, else the server', () => {
+    expect(brokerName({ company: 'Octa Markets Incorporated' })).toBe('Octa')
+    expect(brokerName({ company: 'Demo Markets Ltd' })).toBe('Demo')
+    expect(brokerName({ company: '', server: 'Exness-MT5Real8' })).toBe('Exness')
+    expect(brokerName({ company: '', server: 'OctaFX-Real' })).toBe('Octa')
+    expect(brokerName({})).toBe('')
   })
 })
