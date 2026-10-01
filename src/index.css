@@ -3,6 +3,7 @@
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
+@import '@fontsource/plus-jakarta-sans/400.css';
 @import '@fontsource/plus-jakarta-sans/500.css';
 @import '@fontsource/plus-jakarta-sans/600.css';
 @import '@fontsource/plus-jakarta-sans/700.css';
@@ -154,7 +155,7 @@
     body {
       overscroll-behavior-y: none;
     }
-    body {
+    html:not(.admin) body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
       padding-left: env(safe-area-inset-left);
@@ -1179,6 +1180,20 @@ html.admin:not([data-theme^='royal']) .btn-primary:hover {
 html.admin header.aurum-header {
   position: sticky !important;
 }
+/* The phone's status bar sits over the top of the app (installed PWA and the Android app draw edge to edge), so the
+   pinned top bar grows by the status-bar height and its buttons stay below it. Capacitor reports the inset as
+   --safe-area-inset-top where the WebView's env() does not. */
+html.admin {
+  --inset-top: max(env(safe-area-inset-top), var(--safe-area-inset-top, 0px));
+  --inset-bottom: max(env(safe-area-inset-bottom), var(--safe-area-inset-bottom, 0px));
+}
+html.admin header.aurum-header {
+  height: calc(4rem + var(--inset-top));
+  padding-top: var(--inset-top);
+}
+html.admin nav[aria-label='Main'] {
+  padding-bottom: var(--inset-bottom);
+}
 /* Sheets opened by the app itself (not a Radix dialog) need to be fixed to the bottom too. */
 @media (max-width: 639px) and (pointer: coarse) {
   html.admin [role='dialog'][data-state].native-sheet {
@@ -1232,4 +1247,403 @@ html.admin body:has([role='alertdialog'][data-state='open']) nav[aria-label='Mai
   html.admin body {
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* =====================================================================================================================
+   NOIR — the admin app's default look (html.admin.noir, set by useSkin). Monochrome and editorial: white paper or pure
+   black, hairline-bordered cards with no shadows, a serif for headlines, spaced capitals for section labels, solid
+   black (or white) buttons, a black tab bar with a round centre key, and cinematic page entrances.
+   ===================================================================================================================== */
+
+html.admin.noir {
+  --font-sans: 'Plus Jakarta Sans', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Plus Jakarta Sans', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 18px;
+  --noir-gold: #c8a464;
+  --noir-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-card: none;
+  --shadow-lift: none;
+  --depth-raise: none;
+  --depth-lift: none;
+  --depth-inset: none;
+  --depth-bar-down: none;
+  --depth-bar-up: none;
+}
+html.admin.noir[data-theme='light'] {
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f5f5f4;
+  --color-card: #ffffff;
+  --color-border: rgba(10, 10, 10, 0.11);
+  --color-text: #0a0a0a;
+  --color-text-secondary: #6b6b6b;
+  --color-accent: #0a0a0a;
+  --color-accent-hover: #2a2a2a;
+  --color-success: #138a4a;
+  --color-positive: #138a4a;
+  --color-error: #d0312d;
+  --color-surface-2: rgba(10, 10, 10, 0.025);
+  --color-surface-3: rgba(10, 10, 10, 0.04);
+  --color-surface-5: rgba(10, 10, 10, 0.055);
+  --color-surface-7: rgba(10, 10, 10, 0.07);
+  --color-surface-10: rgba(10, 10, 10, 0.09);
+  --color-surface-15: rgba(10, 10, 10, 0.13);
+  --accent-rgb: 10 10 10;
+  --aurum-glow: 10 10 10;
+}
+html.admin.noir[data-theme='dark'],
+html.admin.noir:not([data-theme]) {
+  --color-bg: #000000;
+  --color-bg-secondary: #0b0b0b;
+  --color-card: #0e0e0e;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text: #f3f3f3;
+  --color-text-secondary: #8c8c8c;
+  --color-accent: #ffffff;
+  --color-accent-hover: #e6e6e6;
+  --color-success: #3ccf86;
+  --color-positive: #3ccf86;
+  --color-error: #ff5a52;
+  --color-surface-2: rgba(255, 255, 255, 0.03);
+  --color-surface-3: rgba(255, 255, 255, 0.045);
+  --color-surface-5: rgba(255, 255, 255, 0.06);
+  --color-surface-7: rgba(255, 255, 255, 0.075);
+  --color-surface-10: rgba(255, 255, 255, 0.1);
+  --color-surface-15: rgba(255, 255, 255, 0.15);
+  --accent-rgb: 255 255 255;
+  --aurum-glow: 255 255 255;
+}
+
+html.admin.noir body {
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 0;
+  -webkit-font-smoothing: antialiased;
+}
+html.admin.noir .aurum-backdrop {
+  display: none;
+}
+
+/* Type: a serif for headlines; spaced capitals for labels. */
+html.admin.noir h1,
+html.admin.noir h2,
+html.admin.noir .page-title,
+html.admin.noir .section-title,
+html.admin.noir .font-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  font-variation-settings: 'SOFT' 0, 'WONK' 0;
+}
+html.admin.noir .label-caps,
+html.admin.noir .noir-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* Surfaces: flat paper with a hairline; pressing a card sinks it slightly instead of lifting it. */
+html.admin.noir .royal-card {
+  background: var(--color-card) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-card);
+  border-color: var(--color-border);
+}
+html.admin.noir .royal-card.aurum-hover:hover,
+html.admin.noir .royal-card:hover {
+  transform: none;
+  box-shadow: none !important;
+  border-color: rgb(var(--accent-rgb) / 0.28);
+}
+html.admin.noir .btn-3d,
+html.admin.noir .btn-3d:hover:not(:disabled),
+html.admin.noir .btn-3d:active:not(:disabled) {
+  box-shadow: none;
+}
+html.admin.noir .glitter::before,
+html.admin.noir .glitter::after,
+html.admin.noir .royal-shine::after {
+  display: none !important;
+}
+html.admin.noir input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+html.admin.noir select,
+html.admin.noir textarea {
+  box-shadow: none;
+}
+html.admin.noir input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']):focus,
+html.admin.noir select:focus,
+html.admin.noir textarea:focus {
+  border-color: var(--color-text);
+  outline: none;
+}
+
+/* Buttons: solid ink with paper text (white on black, or black on white in the dark theme). Square-ish, like CRED. */
+html.admin.noir .btn-primary,
+html.admin.noir:not([data-theme^='royal']) .btn-primary,
+html.admin.noir .aurum-cta {
+  background: var(--color-text) !important;
+  background-image: none !important;
+  color: var(--color-bg) !important;
+  box-shadow: none !important;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+html.admin.noir .btn-primary:hover,
+html.admin.noir .aurum-cta:hover {
+  opacity: 0.88;
+}
+html.admin.noir .btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+html.admin.noir button.rounded-full.border,
+html.admin.noir a.rounded-full.border {
+  border-radius: 12px;
+}
+html.admin.noir .btn-3d.border {
+  border-color: rgb(var(--accent-rgb) / 0.85);
+  background: transparent;
+  font-weight: 600;
+}
+/* Text on a solid accent fill must be paper-coloured (the accent is ink in Noir). */
+html.admin.noir .bg-accent {
+  color: var(--color-bg);
+}
+
+/* Top bar: plain paper, no hairline glow. */
+html.admin.noir header.aurum-header {
+  background: var(--color-bg) !important;
+  backdrop-filter: none !important;
+  background-image: none !important;
+  border-bottom: 1px solid transparent;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease;
+}
+html.admin.noir aside {
+  background: var(--color-bg) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Tab bar: always black, spaced capitals, a glossy round key in the middle. */
+html.admin.noir nav[aria-label='Main'] {
+  background: #000 !important;
+  backdrop-filter: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none !important;
+}
+html.admin.noir nav[aria-label='Main'] > a,
+html.admin.noir nav[aria-label='Main'] > button {
+  color: #7d7d7d;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  gap: 6px;
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+html.admin.noir nav[aria-label='Main'] > a.text-accent,
+html.admin.noir nav[aria-label='Main'] > button.text-accent,
+html.admin.noir nav[aria-label='Main'] .text-accent {
+  color: #ffffff !important;
+}
+html.admin.noir nav[aria-label='Main'] .tab-orb {
+  background: radial-gradient(circle at 50% 30%, #2b2b2b, #050505 70%) !important;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22) inset,
+    0 0 0 6px #000,
+    0 -6px 26px -6px rgba(255, 255, 255, 0.28) !important;
+  --tw-ring-color: transparent;
+  margin-top: -2.1rem;
+  height: 4rem;
+  width: 4rem;
+}
+
+/* Sheets opened from the tab bar are dark, like CRED's profile screen. */
+html.admin.noir .nav-sheet {
+  --color-card: #0b0b0b;
+  --color-bg: #000;
+  --color-text: #f3f3f3;
+  --color-text-secondary: #8c8c8c;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-accent: #ffffff;
+  --accent-rgb: 255 255 255;
+  --color-surface-2: rgba(255, 255, 255, 0.03);
+  --color-surface-3: rgba(255, 255, 255, 0.05);
+  --color-surface-15: rgba(255, 255, 255, 0.18);
+  --color-error: #ff5a52;
+  background: #0b0b0b;
+  color: #f3f3f3;
+  color-scheme: dark;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Dialogs and dropdowns: flat paper with a hairline. */
+html.admin.noir [role='dialog'],
+html.admin.noir [role='alertdialog'] {
+  box-shadow: 0 -10px 40px -10px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* ---------- Motion: cinematic page entrances ---------- */
+
+/* Each block of a page fades up out of a soft blur, one after another, like a title sequence. */
+@keyframes noir-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+html.admin.noir .aurum-page > * {
+  animation: noir-rise 0.8s var(--noir-ease) backwards;
+}
+html.admin.noir .aurum-page > *:nth-child(2) { animation-delay: 70ms; }
+html.admin.noir .aurum-page > *:nth-child(3) { animation-delay: 140ms; }
+html.admin.noir .aurum-page > *:nth-child(4) { animation-delay: 210ms; }
+html.admin.noir .aurum-page > *:nth-child(5) { animation-delay: 280ms; }
+html.admin.noir .aurum-page > *:nth-child(n + 6) { animation-delay: 340ms; }
+
+/* A page's own headline reveals word by word (see NoirTitle). */
+@keyframes noir-word {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.noir-word {
+  display: inline-block;
+  animation: noir-word 0.9s var(--noir-ease, ease-out) backwards;
+}
+
+/* Horizontal card rails (Money Matters) snap card by card and hide the scrollbar. */
+.noir-rail {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.noir-rail::-webkit-scrollbar {
+  display: none;
+}
+.noir-rail > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* The gold coin pill in the top bar: a slow marquee of what matters today. */
+@keyframes noir-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.noir-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: noir-marquee 22s linear infinite;
+}
+.noir-coin-pill {
+  background: linear-gradient(100deg, #f6e7c1, #fbf3df 40%, #f1dcaa 70%, #f8ecd0);
+  color: #1b1408;
+  box-shadow: inset 0 0 0 1px rgba(160, 120, 40, 0.35);
+}
+
+/* Splash shown once per session when the app opens: the name draws in, then the curtain lifts. */
+@keyframes noir-splash-out {
+  0%,
+  70% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 100% 0);
+  }
+}
+@keyframes noir-letter {
+  from {
+    opacity: 0;
+    letter-spacing: 0.6em;
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.32em;
+    filter: none;
+  }
+}
+@keyframes noir-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.noir-splash {
+  animation: noir-splash-out 2.1s var(--noir-ease, ease-in-out) forwards;
+}
+.noir-splash-name {
+  animation: noir-letter 1.2s var(--noir-ease, ease-out) both;
+}
+.noir-splash-line {
+  transform-origin: center;
+  animation: noir-line 1s 0.35s var(--noir-ease, ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.admin.noir .aurum-page > *,
+  .noir-word,
+  .noir-marquee,
+  .noir-splash,
+  .noir-splash-name,
+  .noir-splash-line {
+    animation: none !important;
+  }
+}
+
+/* Noir: icon tiles lose their colour and become hairline circles; top-bar controls are bare icons, as in CRED. */
+html.admin.noir .icon-badge {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px !important;
+}
+html.admin.noir .icon-badge svg {
+  stroke-width: 1.5;
+}
+html.admin.noir header.aurum-header button.btn-3d {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text);
+}
+html.admin.noir header.aurum-header button.btn-3d svg {
+  width: 1.375rem;
+  height: 1.375rem;
+  stroke-width: 1.6;
+}
+html.admin.noir header.aurum-header button[aria-label='Profile menu'] {
+  border-radius: 9999px;
+  border: 2px solid var(--color-border);
 }
