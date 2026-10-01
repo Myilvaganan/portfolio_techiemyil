@@ -81,7 +81,7 @@ export function TodayCard() {
   const c = 2 * Math.PI * r
 
   return (
-    <section aria-label="Today" className="overflow-hidden rounded-[20px] border border-border bg-card">
+    <section aria-label="Today" className="depth overflow-hidden rounded-[20px] border border-border bg-card">
       <button type="button" onClick={() => { haptic(8); setOpen(!open) }} aria-expanded={open} className="flex w-full items-center gap-4 p-4 text-left">
         <span className="relative grid h-14 w-14 shrink-0 place-items-center">
           <svg viewBox="0 0 52 52" className="absolute inset-0 -rotate-90">
@@ -116,7 +116,7 @@ export function TodayCard() {
                 </button>
               )}
               {items.map((i) => (
-                <motion.button key={i.key} type="button" layout whileTap={i.onTap ? { scale: 0.97 } : undefined} onClick={() => { if (i.onTap) { haptic(12); i.onTap() } }} className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 p-2.5 text-left">
+                <motion.button key={i.key} type="button" layout whileTap={i.onTap ? { scale: 0.97 } : undefined} onClick={() => { if (i.onTap) { haptic(12); i.onTap() } }} className="depth flex w-full items-center gap-3 rounded-2xl bg-surface-2 p-2.5 text-left">
                   <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors', i.done ? 'bg-positive text-white' : i.late ? 'bg-error/10 text-error' : 'bg-accent/10 text-accent')}>
                     {i.done ? <Check className="h-4 w-4" /> : <i.icon className="h-4 w-4" />}
                   </span>

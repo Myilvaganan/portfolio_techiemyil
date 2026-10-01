@@ -58,7 +58,7 @@ function MoneyCard({ label, value, sub, icon: Icon, valueClass, onClick }: { lab
     <button
       type="button"
       onClick={onClick}
-      className="flex w-[46%] min-w-[150px] max-w-[220px] flex-col justify-between rounded-[18px] border border-border bg-card p-4 text-left transition-[transform,border-color] duration-200 hover:border-text/30 active:scale-[0.97]"
+      className="depth flex w-[46%] min-w-[150px] max-w-[220px] flex-col justify-between rounded-[18px] border border-border bg-card p-4 text-left transition-[transform,border-color] duration-200 hover:border-text/30 active:scale-[0.97]"
     >
       <Icon className="h-6 w-6 text-text" strokeWidth={1.5} />
       <span className="mt-8 block">
@@ -209,7 +209,7 @@ export function DashboardHome() {
               <div className="-mx-5 flex snap-x snap-proximity scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 pb-1 sm:scroll-px-8 [scrollbar-width:none] sm:-mx-8 sm:px-8 [&::-webkit-scrollbar]:hidden">
                 {sec.items.filter((it) => it.to !== '/').map((it) => (
                   <button key={it.to} type="button" onClick={() => navigate(it.to)} className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 text-center">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
+                    <span className="depth orb flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card transition-transform group-active:scale-90">
                       <it.icon className="h-5 w-5 text-text" strokeWidth={1.5} />
                     </span>
                     <span className="line-clamp-2 text-[11px] leading-tight text-text">{it.label}</span>

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
 
 // App-like behaviour for the installed admin on a phone (built for Android / Chrome, harmless on desktop):
 //   • screens slide forward/back like native navigation, tab switches just fade
@@ -41,9 +43,39 @@ export const SLIDE = {
 
 // ---------- Haptics ----------
 
-export function haptic(ms = 8) {
+// In the Android app the native Haptics plugin drives the vibration motor (the web vibrate API is unreliable inside
+// the app's browser view); in Chrome it falls back to navigator.vibrate. Settings → Haptics turns it off or changes
+// the strength.
+
+export type HapticLevel = 'off' | 'light' | 'medium' | 'strong'
+const HAPTIC_KEY = 'admin-haptics'
+export function getHapticLevel(): HapticLevel {
   try {
-    navigator.vibrate?.(ms)
+    const v = localStorage.getItem(HAPTIC_KEY)
+    return v === 'off' || v === 'light' || v === 'strong' ? v : 'medium'
+  } catch {
+    return 'medium'
+  }
+}
+export function setHapticLevel(level: HapticLevel) {
+  try {
+    localStorage.setItem(HAPTIC_KEY, level)
+  } catch {
+    // Not saved; this session still uses it.
+  }
+}
+
+/** A short tap of feedback. `ms` hints how firm it should be (bigger = firmer). */
+export function haptic(ms = 8) {
+  const level = getHapticLevel()
+  if (level === 'off') return
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const firm = ms >= 30 || level === 'strong' ? ImpactStyle.Heavy : ms >= 12 || level === 'medium' ? ImpactStyle.Medium : ImpactStyle.Light
+      void Haptics.impact({ style: level === 'light' ? ImpactStyle.Light : firm }).catch(() => {})
+      return
+    }
+    navigator.vibrate?.(Math.round(ms * (level === 'strong' ? 2.5 : level === 'light' ? 0.8 : 1.5)))
   } catch {
     // Not supported (iPhone, desktop): silent.
   }

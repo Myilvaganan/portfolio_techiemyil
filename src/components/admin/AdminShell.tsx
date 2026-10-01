@@ -25,7 +25,7 @@ import { useAppLock } from '@/hooks/useAppLock'
 import { useOnline, useTouchGestures } from '@/hooks/useTouchGestures'
 import { GlobalSearch } from './GlobalSearch'
 import { LocalePicker } from './LocalePicker'
-import { SLIDE, haptic, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
+import { SLIDE, getHapticLevel, haptic, setHapticLevel, type HapticLevel, markTabNavigation, useNavDirection, useNativeFeel, useTitleScrolledAway } from '@/lib/native'
 import { useT, type TKey } from '@/lib/i18n'
 import { usePrivacy } from '@/lib/privacy'
 import { useKeepPushRegistered, useNativePushTaps, usePush } from '@/lib/push'
@@ -206,6 +206,7 @@ export function ProfileSettings() {
     <div className="space-y-4">
       <SizePicker scale={ctx.scale} onScale={ctx.onScale} />
       <LocalePicker />
+      <HapticsRow />
       <HideNumbersRow />
       <NotificationsRow />
       <SkinRow skin={ctx.skin} onSkin={ctx.onSkin} />
@@ -231,6 +232,40 @@ interface ScaleProps {
 }
 
 /** Push notifications on this device: card bills, deadlines and loss-limit alerts. */
+/** Settings: vibration on taps — off, light, medium or strong (tapping a level gives a sample). */
+function HapticsRow() {
+  const [level, setLevel] = useState<HapticLevel>(getHapticLevel)
+  const levels: { id: HapticLevel; label: string }[] = [
+    { id: 'off', label: 'Off' },
+    { id: 'light', label: 'Light' },
+    { id: 'medium', label: 'Medium' },
+    { id: 'strong', label: 'Strong' },
+  ]
+  return (
+    <div>
+      <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-text-secondary/70">Haptics</p>
+      <div role="radiogroup" aria-label="Haptics" className="grid grid-cols-4 gap-1.5">
+        {levels.map((l) => (
+          <button
+            key={l.id}
+            type="button"
+            role="radio"
+            aria-checked={level === l.id}
+            onClick={() => {
+              setHapticLevel(l.id)
+              setLevel(l.id)
+              haptic(l.id === 'strong' ? 40 : 14)
+            }}
+            className={cn('btn-3d flex h-10 items-center justify-center rounded-xl border text-xs font-semibold transition-colors', level === l.id ? 'border-text bg-text text-bg ring-2 ring-accent/50 ring-offset-2 ring-offset-card' : 'border-border bg-surface-2 text-text-secondary')}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function NotificationsRow() {
   const push = usePush()
   if (!push.supported) return null
@@ -393,7 +428,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
       </button>
       <AnimatePresence>
         {open && (
-        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[calc(100dvh-var(--inset-top,0px)-6rem)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
           <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 border-b border-border px-4 py-3 hover:bg-surface-3">
             <MeAvatar size="md" />
             <span className="min-w-0 flex-1">
@@ -405,6 +440,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
           <div className="space-y-3 border-b border-border p-3">
             <SizePicker scale={scale} onScale={onScale} />
             <LocalePicker />
+            <HapticsRow />
             <HideNumbersRow />
             <NotificationsRow />
             <SkinRow skin={skin} onSkin={onSkin} />
@@ -504,7 +540,7 @@ function NotificationBell() {
       </button>
       <AnimatePresence>
         {open && (
-        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 w-80 overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <motion.div initial={{ opacity: 0, y: -8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }} style={{ transformOrigin: 'top right' }} className="absolute right-0 top-full z-20 mt-2 max-h-[calc(100dvh-var(--inset-top,0px)-6rem)] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card shadow-2xl">
           {notices.length === 0 ? (
             <p className="p-4 text-center text-sm text-text-secondary">You&apos;re all caught up.</p>
           ) : (

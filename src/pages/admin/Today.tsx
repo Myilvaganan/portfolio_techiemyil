@@ -37,7 +37,7 @@ function Row({ icon, title, sub, done, onClick, to, tone }: { icon: React.ReactN
       </span>
     </>
   )
-  const cls = 'flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-2 p-2.5 text-left transition-colors hover:border-accent/40'
+  const cls = 'depth flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-2 p-2.5 text-left transition-colors hover:border-accent/40'
   if (to) return <Link to={to} className={cls}>{body}</Link>
   return (
     <motion.button type="button" whileTap={onClick ? { scale: 0.97 } : undefined} onClick={onClick} disabled={!onClick} className={cls}>

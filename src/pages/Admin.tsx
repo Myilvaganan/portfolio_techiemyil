@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, type ComponentType } from 'react'
+import { Suspense, lazy, useEffect, useState, type ComponentType } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { PageSkeleton } from '@/components/ui/Skeleton'
@@ -9,7 +9,25 @@ import { AdminShell } from '@/components/admin/AdminShell'
 import { DashboardHome } from '@/pages/admin/DashboardHome'
 
 // Each page is its own chunk, so opening the admin only downloads the page you're on.
-const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => lazy(async () => ({ default: (await retryImport(load))[name] }))
+// After sign-in every other page is fetched quietly in the background, so switching pages never waits on a download.
+const loaders: (() => Promise<unknown>)[] = []
+const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => {
+  loaders.push(load)
+  return lazy(async () => ({ default: (await retryImport(load))[name] }))
+}
+let warmed = false
+function warmPages() {
+  if (warmed) return
+  warmed = true
+  const idle = (fn: () => void) => (typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 300))
+  const next = (i: number) => {
+    if (i >= loaders.length) return
+    loaders[i]()
+      .catch(() => {})
+      .finally(() => idle(() => next(i + 1)))
+  }
+  window.setTimeout(() => idle(() => next(0)), 1500)
+}
 
 const DocumentManager = page(() => import('@/components/admin/DocumentManager'), 'DocumentManager')
 const MarginCalculator = page(() => import('@/pages/admin/MarginCalculator'), 'MarginCalculator')
@@ -62,6 +80,9 @@ function PageLoading() {
 export function Admin() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredToken()))
   const navigate = useNavigate()
+  useEffect(() => {
+    if (authed) warmPages()
+  }, [authed])
 
   return (
     <>
