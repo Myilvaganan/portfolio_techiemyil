@@ -1546,6 +1546,25 @@ html.admin.noir .aurum-page > *:nth-child(n + 6) { animation-delay: 340ms; }
   scroll-snap-align: start;
   flex: 0 0 auto;
 }
+/* Snap cards to the page margin (the rail bleeds to the screen edge but its content starts at the margin), and keep
+   the same gap after the last card. */
+.noir-rail {
+  scroll-padding-inline: 1.25rem;
+}
+.noir-rail::after {
+  content: '';
+  flex: 0 0 1px;
+}
+@media (min-width: 640px) {
+  .noir-rail {
+    scroll-padding-inline: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .noir-rail {
+    scroll-padding-inline: 0;
+  }
+}
 
 /* The gold coin pill in the top bar: a slow marquee of what matters today. */
 @keyframes noir-marquee {
