@@ -60,7 +60,7 @@ const SEARCH_KEYWORDS: Record<string, string> = {
   '/diary': 'diary journal notes daily notes private personal locked',
   '/today': 'today plan agenda daily list check-in',
   '/focus': 'tasks todo focus pomodoro timer deep work',
-  '/sleep-mood': 'sleep mood energy log',
+  '/sleep-mood': 'sleep mood energy steps walk log',
   '/medicines': 'medicine tablet vitamin supplement reminder',
   '/family': 'birthday anniversary family dates star natchathiram',
   '/receipts': 'receipt bill photo scan cash expense',
@@ -157,7 +157,7 @@ export const NAV_SECTIONS: NavSection[] = [
     k: 'nav.health',
     items: [
       { label: 'Health Report', k: 'nav.healthReport', to: '/health-report', icon: HeartPulse },
-      { label: 'Sleep & Mood', k: 'nav.sleepMood', to: '/sleep-mood', icon: BedDouble },
+      { label: 'Sleep, Mood & Steps', k: 'nav.sleepMood', to: '/sleep-mood', icon: BedDouble },
       { label: 'Mind & Money', k: 'nav.mindMoney', to: '/mind-money', icon: Brain },
     ],
   },

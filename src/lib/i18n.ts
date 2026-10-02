@@ -48,7 +48,7 @@ const en = {
   'nav.receipts': 'Receipts',
   'nav.family': 'Family dates',
   'nav.medicines': 'Medicines',
-  'nav.sleepMood': 'Sleep & Mood',
+  'nav.sleepMood': 'Sleep, Mood & Steps',
   'nav.focus': 'Tasks & Focus',
   'nav.today': 'Today',
   'nav.diary': 'Diary',
