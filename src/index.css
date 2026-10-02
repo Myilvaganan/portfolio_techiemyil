@@ -1876,3 +1876,33 @@ html.admin main .grid > * {
 html.admin main {
   overflow-wrap: break-word;
 }
+
+/* ---------- One font everywhere ----------
+   Titles, text and numbers all use Plus Jakarta Sans (with Noto Sans Tamil for Tamil), in every theme. Numbers keep
+   equal-width digits so columns still line up. */
+html.admin.admin {
+  --font-sans: 'Plus Jakarta Sans', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Plus Jakarta Sans', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+}
+html.admin.admin body,
+html.admin.admin h1,
+html.admin.admin h2,
+html.admin.admin h3,
+html.admin.admin .font-display,
+html.admin.admin .page-title,
+html.admin.admin .section-title,
+html.admin.admin .font-mono,
+html.admin.admin input,
+html.admin.admin select,
+html.admin.admin textarea,
+html.admin.admin button {
+  font-family: var(--font-sans) !important;
+}
+html.admin.admin .font-mono {
+  font-variant-numeric: tabular-nums;
+}
+html.admin.admin h1,
+html.admin.admin .page-title {
+  letter-spacing: -0.02em;
+}

@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 
 // A device-level app lock using the phone's own Face ID / fingerprint / screen lock. In the browser it uses a passkey
 // (WebAuthn platform authenticator); inside the Android app — whose built-in browser has no passkeys — it uses Android's
@@ -7,7 +7,12 @@ import { Capacitor } from '@capacitor/core'
 const KEY = 'admin_app_lock_cred'
 const NATIVE = 'native'
 const isNative = () => Capacitor.isNativePlatform()
-const bio = () => import('@aparajita/capacitor-biometric-auth').then((m) => m.BiometricAuth)
+interface AppLockNative {
+  status(): Promise<{ available: boolean; code: number; reason: string }>
+  authenticate(o: { title?: string; subtitle?: string }): Promise<void>
+}
+/** The app's own native module (MainActivity registers AppLockPlugin): Android's biometric prompt. */
+const lockPlugin = () => registerPlugin<AppLockNative>('AppLock')
 
 /** Why the last native prompt failed, to show under the switch. */
 export let lastLockError = ''
@@ -15,21 +20,23 @@ export let lastLockError = ''
 async function nativePrompt(reason: string): Promise<boolean> {
   lastLockError = ''
   try {
-    const b = await bio()
-    const c = await b.checkBiometry().catch(() => null)
-    if (c && !c.isAvailable && !c.deviceIsSecure) {
-      lastLockError = 'Set a screen lock with a fingerprint or face in Android Settings → Security first.'
+    const p = lockPlugin()
+    const st = await p.status()
+    if (!st.available) {
+      lastLockError = st.reason
       return false
     }
-    // Never leave the switch stuck: if Android doesn't answer within 60 s, treat it as cancelled.
     await Promise.race([
-      b.authenticate({ reason, androidTitle: 'Unlock Myil Admin', androidSubtitle: reason, allowDeviceCredential: true, cancelTitle: 'Cancel' }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('No response from the fingerprint prompt. Update the app from App Tester and try again.')), 60_000)),
+      p.authenticate({ title: 'Unlock Myil Admin', subtitle: reason }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('No response from the fingerprint prompt. Try again.')), 60_000)),
     ])
     return true
   } catch (e) {
-    const msg = (e as Error)?.message || ''
-    lastLockError = /cancel/i.test(msg) ? '' : msg || 'Fingerprint check didn’t work. Try again.'
+    const err = e as { message?: string; code?: string }
+    const msg = err?.message || ''
+    // Cancelled by the person (back, Cancel, tapped outside): not an error worth showing.
+    lastLockError = /cancel/i.test(msg) || err?.code === 'E10' || err?.code === 'E13' ? '' : msg || 'Fingerprint check didn’t work. Try again.'
+    if (/not implemented|not available/i.test(msg)) lastLockError = 'Update the app from App Tester to use fingerprint lock.'
     return false
   }
 }

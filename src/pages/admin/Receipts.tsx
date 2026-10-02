@@ -6,6 +6,7 @@ import { haptic } from '@/lib/native'
 import { useMoney } from '@/lib/privacy'
 import { scanReceipt, useGrowthDoc, type Receipt } from '@/lib/growthApi'
 import { todayStr } from '@/lib/journal'
+import { MonthStepper } from '@/components/viz/MonthStepper'
 
 // Photograph a bill: the AI reads the shop, date, total and category, you check it, and it's filed. Good for cash
 // spends that never show up in a bank statement.
@@ -98,9 +99,13 @@ export function Receipts() {
           </div>
         </Panel>
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <input type="month" className={`${inputCls} w-auto`} value={month} max={today.slice(0, 7)} onChange={(e) => setMonth(e.target.value)} />
-            <Stat label="This month" value={m.inr(total)} className="flex-1" />
+          <div className="flex justify-end">
+            <MonthStepper value={month} max={today.slice(0, 7)} onChange={setMonth} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Stat label="Spent" value={m.inr(total)} sub="this month" />
+            <Stat label="Receipts" value={String(inMonth.length)} sub="saved" />
+            <Stat label="Top category" value={byCat[0]?.[0] ?? '—'} sub={byCat[0] ? m.inr(byCat[0][1]) : 'nothing yet'} />
           </div>
           {byCat.length > 0 && (
             <Panel title="By category">

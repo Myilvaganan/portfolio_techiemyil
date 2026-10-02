@@ -522,7 +522,7 @@ function NotificationBell() {
   const ref = useOutsideClick(() => setOpen(false))
   const navigate = useNavigate()
   const { pulse, refresh } = useAdminPulse()
-  const { visible, dismiss, restoreAll, count: hiddenCount } = useDismissedNotices()
+  const { visible, dismiss, dismissAll, restoreAll, count: hiddenCount } = useDismissedNotices()
   const notices = useMemo(() => visible(pulse ? noticesFrom(pulse, signed) : []), [pulse, visible])
   const urgent = notices.some((n) => n.tone !== 'info')
   const [permission, setPermission] = useState(() => (canNotify() ? Notification.permission : 'denied'))
@@ -554,6 +554,11 @@ function NotificationBell() {
           {notices.length === 0 ? (
             <p className="p-4 text-center text-sm text-text-secondary">You&apos;re all caught up.</p>
           ) : (
+            <>
+            <div className="flex items-center justify-between border-b border-border px-4 py-2">
+              <span className="text-xs font-semibold text-text">{notices.length} alert{notices.length === 1 ? '' : 's'}</span>
+              <button type="button" onClick={() => { haptic(10); dismissAll(notices) }} className="text-xs font-semibold text-accent">Clear all</button>
+            </div>
             <ul className="divide-y divide-border">
               {notices.map((n) => (
                 <li key={n.id} className="flex items-start">
@@ -577,6 +582,7 @@ function NotificationBell() {
                 </li>
               ))}
             </ul>
+            </>
           )}
           {hiddenCount > 0 && (
             <button type="button" onClick={restoreAll} className="w-full border-t border-border px-4 py-2.5 text-left text-xs text-text-secondary hover:bg-surface-3 hover:text-text">

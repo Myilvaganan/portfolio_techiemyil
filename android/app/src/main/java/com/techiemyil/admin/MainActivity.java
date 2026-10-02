@@ -8,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(AppLockPlugin.class);
         super.onCreate(savedInstanceState);
         // No native scroll indicator down the right edge, and no overscroll glow: the app scrolls like a native app.
         getBridge().getWebView().setVerticalScrollBarEnabled(false);

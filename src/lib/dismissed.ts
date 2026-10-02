@@ -7,7 +7,10 @@ const KEY = 'admin_dismissed_notices'
 const MAX = 200
 const listeners = new Set<() => void>()
 
-const signature = (n: Notice) => `${n.id}|${n.title}|${n.detail}`
+// The same alert with only its countdown changed ("in 4 days" → "in 3 days") is still the same alert: numbers are
+// ignored, and a dismissal lasts for the rest of the month, so next month's EMI or bill shows up again.
+const month = () => new Date().toISOString().slice(0, 7)
+const signature = (n: Notice) => `${n.id}|${n.title.replace(/[\d,.₹$]+/g, '#')}|${month()}`
 
 function read(): string[] {
   try {
@@ -40,5 +43,6 @@ export function useDismissedNotices() {
   const visible = useCallback((notices: Notice[]) => notices.filter((n) => !list.includes(signature(n))), [list])
   const dismiss = useCallback((n: Notice) => write([...cache.filter((s) => s !== signature(n)), signature(n)]), [])
   const restoreAll = useCallback(() => write([]), [])
-  return { visible, dismiss, restoreAll, count: list.length }
+  const dismissAll = useCallback((ns: Notice[]) => write([...cache, ...ns.map(signature).filter((s) => !cache.includes(s))]), [])
+  return { visible, dismiss, dismissAll, restoreAll, count: list.length }
 }
