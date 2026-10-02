@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
 import { useProfile } from '@/lib/profile'
+import { VersionLine } from './VersionLine'
 import { lastLockError } from '@/lib/appLock'
 import { MorningBrief } from './MorningBrief'
 import { useGrowthDoc } from '@/lib/growthApi'
@@ -476,6 +477,7 @@ function ProfileMenu({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogou
             <LogOut className="h-3.5 w-3.5" />
             Log out
           </button>
+          <VersionLine className="border-t border-border px-4 py-2 text-center font-mono text-[10px] text-text-secondary/70" />
         </motion.div>
       )}
       </AnimatePresence>
@@ -734,6 +736,7 @@ function MobileTabBar({ onLogout, scale, onScale, lock, skin, onSkin }: { onLogo
                   >
                     <LogOut className="h-4 w-4" /> Sign out
                   </button>
+                  <VersionLine className="col-span-2 pt-2 text-center font-mono text-[10px] text-text-secondary/70" />
                 </div>
               )}
             </motion.div>

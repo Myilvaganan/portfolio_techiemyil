@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Field, Notice, PageHero, Panel, inputCls } from '@/components/growth/kit'
 import { ProfileSettings } from '@/components/admin/AdminShell'
+import { VersionLine } from '@/components/admin/VersionLine'
 import { haptic } from '@/lib/native'
 import { saveProfile, squarePhoto, useProfile } from '@/lib/profile'
 import type { ProfileDoc } from '@/lib/growthApi'
@@ -120,6 +121,7 @@ export function Profile() {
 
         <Panel title="Settings" hint="Display, language, privacy, notifications and app lock.">
           <ProfileSettings />
+          <VersionLine className="mt-4 border-t border-border pt-3 text-center font-mono text-xs text-text-secondary" />
         </Panel>
       </div>
     </div>
