@@ -305,3 +305,19 @@ export const scanReceipt = async (image: string): Promise<{ merchant: string; da
 export type FoodItem = Omit<FoodEntry, 'id' | 'date' | 'meal'>
 /** Estimate calories and macros from a description and/or a photo of a meal. */
 export const estimateFood = async (o: { text?: string; image?: string }): Promise<{ items: FoodItem[] }> => call('/admin/food/estimate', 'POST', o)
+
+export interface FoodSuggestion extends FoodItem {
+  meal: Meal
+  why: string
+  cookMinutes: number
+  ingredients: string[]
+  costInr: number
+  veg: boolean
+}
+export interface FoodPlan {
+  analysis: { summary: string; calories: string; protein: string; carbs: string; fat: string; fibre: string; timing: string; health: string }
+  suggestions: FoodSuggestion[]
+  tips: string[]
+}
+/** AI: what to eat next to reach today's goal (South Indian, market-available, easy to cook), with an analysis. */
+export const suggestFood = async (ctx: unknown): Promise<FoodPlan> => call('/admin/food/suggest', 'POST', ctx)

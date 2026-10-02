@@ -269,6 +269,54 @@ const FOOD_ITEM = {
 }
 const FOOD_SCHEMA = { type: 'object', additionalProperties: false, required: ['isFood', 'items'], properties: { isFood: { type: 'boolean' }, items: { type: 'array', items: FOOD_ITEM } } }
 const FOOD_RULES = 'You are a nutritionist who knows Indian home and restaurant food well (idli, dosa, chapati, rice, sambar, rasam, curries, biryani, parotta, snacks, sweets, chai, filter coffee) as well as global foods and packaged brands. Split the meal into separate items. For each, give a short name, the quantity you assumed (e.g. "2 pieces", "1 cup / 150 g"), and estimates for that quantity: kcal, protein g, carbs g, fat g, fiber g. Use typical South Indian home portions unless stated; count oil/ghee used in cooking. Round sensibly. If it is not food or drink, set isFood false and return no items.'
+const SUGGEST_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['analysis', 'suggestions', 'tips'],
+  properties: {
+    analysis: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['summary', 'calories', 'protein', 'carbs', 'fat', 'fibre', 'timing', 'health'],
+      properties: { summary: { type: 'string' }, calories: { type: 'string' }, protein: { type: 'string' }, carbs: { type: 'string' }, fat: { type: 'string' }, fibre: { type: 'string' }, timing: { type: 'string' }, health: { type: 'string' } },
+    },
+    suggestions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['meal', 'name', 'qty', 'why', 'kcal', 'protein', 'carbs', 'fat', 'fiber', 'cookMinutes', 'ingredients', 'costInr', 'veg'],
+        properties: {
+          meal: { type: 'string', enum: ['breakfast', 'lunch', 'dinner', 'snack'] },
+          name: { type: 'string' },
+          qty: { type: 'string' },
+          why: { type: 'string' },
+          kcal: { type: 'number' },
+          protein: { type: 'number' },
+          carbs: { type: 'number' },
+          fat: { type: 'number' },
+          fiber: { type: 'number' },
+          cookMinutes: { type: 'number' },
+          ingredients: { type: 'array', items: { type: 'string' } },
+          costInr: { type: 'number' },
+          veg: { type: 'boolean' },
+        },
+      },
+    },
+    tips: { type: 'array', items: { type: 'string' } },
+  },
+}
+const SUGGEST_RULES = `You are a practical South Indian nutritionist and home cook. From the person's targets, what they have eaten today and their recent pattern, suggest what to eat next to reach today's goal.
+Rules:
+- Only foods easily available in an ordinary Tamil Nadu / Karnataka market or kirana store (no imported or specialty items). Prefer home-style South Indian dishes: idli, dosa, pesarattu, ragi, kambu, upma, pongal, sundal, kootu, poriyal, rasam, sambar, curd rice, millet rice, egg dishes, chicken/fish curry (if non-veg is allowed), paneer, buttermilk, fruits like banana, guava, papaya.
+- Easy to cook: under 30 minutes, everyday ingredients; say the minutes honestly.
+- Fit the remaining calories and macros; push protein and fibre if they are short; keep oil modest.
+- Respect the time of day: suggest the next meal(s) left today (and a snack if useful). 4 to 6 suggestions.
+- qty is a real household portion (e.g. "2 medium dosas + 1 cup sambar"). Numbers are for that qty.
+- costInr is a rough cost to make that portion at home in India.
+- analysis: one short line each — overall summary, calories, protein, carbs, fat, fibre, meal timing, and one health note. Plain, kind and specific (use the numbers given).
+- tips: 3 short practical tips (shopping, cooking or habit).`
+
 const RECEIPT_RULES = 'You read Indian shop receipts and bills. Return the merchant name, the bill date as YYYY-MM-DD (null if not printed), the final total paid in rupees (after tax and discounts; null if unreadable) and the best category. If the photo is not a receipt or bill, set isReceipt false.'
 
 function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined }) {
@@ -316,8 +364,32 @@ function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined 
     }
   }
 
+  async function suggestFood(payload) {
+    if (!ai) return { statusCode: 503, body: { error: 'Food suggestions are not set up.' } }
+    const ctx = payload && typeof payload === 'object' ? payload : {}
+    const facts = JSON.stringify({
+      now: text(ctx.now, 40),
+      goal: text(ctx.goal, 20),
+      diet: ctx.veg === true ? 'vegetarian' : 'eats eggs, chicken and fish',
+      target: ctx.target ?? null,
+      eatenToday: ctx.eaten ?? null,
+      remaining: ctx.remaining ?? null,
+      itemsToday: list(ctx.items, 30).map((x) => text(x, 80)),
+      last14days: ctx.recent ?? null,
+      notes: text(ctx.notes, 200),
+    }).slice(0, 6000)
+    try {
+      const r = await ai({ model: visionModel(), system: SUGGEST_RULES, user: facts, name: 'meal_plan', schema: SUGGEST_SCHEMA, effort: 'low', timeoutMs: 28000, maxTokens: 3500 })
+      return { statusCode: 200, body: r }
+    } catch (err) {
+      if (err.code && err.statusCode) return { statusCode: err.statusCode, body: { error: err.message } }
+      throw err
+    }
+  }
+
   return async function handle({ method, path, query, payload }) {
     if (method === 'POST' && path === '/admin/receipt/scan') return scanReceipt(payload)
+    if (method === 'POST' && path === '/admin/food/suggest') return suggestFood(payload)
     if (method === 'POST' && path === '/admin/food/estimate') return estimateFood(payload)
     if (path !== '/admin/growth') return null
     const doc = method === 'GET' ? query?.doc : payload?.doc

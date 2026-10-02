@@ -10,6 +10,7 @@ import { latestWeight } from '@/lib/growth/water'
 import { lastDays } from '@/lib/growth/habits'
 import { todayStr } from '@/lib/journal'
 import { ReportMenu } from '@/components/viz/ReportMenu'
+import { FoodSuggest } from '@/components/growth/FoodSuggest'
 import { calorieMonthReport } from '@/lib/healthReports'
 import { ACTIVITY, MEALS, dayTotals, insights, logStreak, targets, topFoods } from '@/lib/calories'
 
@@ -321,6 +322,8 @@ export function Calories() {
               )}
             </div>
           </Panel>
+
+          <FoodSuggest entries={entries} profile={profile} t={t} date={date} onAdd={(x) => doc.save({ ...doc.value, entries: [...doc.value.entries, { id: newId(), date, meal: x.meal, name: x.name, qty: x.qty, kcal: x.kcal, protein: x.protein, carbs: x.carbs, fat: x.fat, fiber: x.fiber }] })} />
 
           {tips.length > 0 && (
             <Panel title="Insights" hint="From the last 14 days">

@@ -668,7 +668,7 @@ exports.handler = async (event) => {
       if (result) return respond(result.statusCode, result.body)
     }
 
-    if (path === '/admin/growth' || path === '/admin/receipt/scan' || path === '/admin/food/estimate') {
+    if (path === '/admin/growth' || path === '/admin/receipt/scan' || path === '/admin/food/estimate' || path === '/admin/food/suggest') {
       const result = await growthApi({ method, path, payload, query: queryParams })
       if (result) return respond(result.statusCode, result.body)
     }

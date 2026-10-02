@@ -9,9 +9,17 @@ export const ADMIN_URL = 'https://admin.techiemyil.com'
 
 export const SITE_URL = 'https://techiemyil.com'
 
-/** Open another site: a new tab on the web; in the Android app the system browser (Capacitor hands off other hosts). */
+/**
+ * Open another site: a new tab on the web; in the Android app a Chrome tab over the app (Custom Tab), so pressing back
+ * closes it and returns to the app.
+ */
 export function openExternal(url: string) {
   const native = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
-  if (native) window.location.href = url
-  else window.open(url, '_blank', 'noopener')
+  if (native) {
+    void import('@capacitor/browser').then(({ Browser }) => Browser.open({ url, toolbarColor: '#000000' })).catch(() => {
+      window.location.href = url
+    })
+    return
+  }
+  window.open(url, '_blank', 'noopener')
 }
