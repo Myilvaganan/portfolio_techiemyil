@@ -21,7 +21,11 @@ async function nativePrompt(reason: string): Promise<boolean> {
       lastLockError = 'Set a screen lock with a fingerprint or face in Android Settings → Security first.'
       return false
     }
-    await b.authenticate({ reason, androidTitle: 'Unlock Myil Admin', androidSubtitle: reason, allowDeviceCredential: true, cancelTitle: 'Cancel' })
+    // Never leave the switch stuck: if Android doesn't answer within 60 s, treat it as cancelled.
+    await Promise.race([
+      b.authenticate({ reason, androidTitle: 'Unlock Myil Admin', androidSubtitle: reason, allowDeviceCredential: true, cancelTitle: 'Cancel' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('No response from the fingerprint prompt. Update the app from App Tester and try again.')), 60_000)),
+    ])
     return true
   } catch (e) {
     const msg = (e as Error)?.message || ''

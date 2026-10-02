@@ -83,6 +83,16 @@ export function Admin() {
   useEffect(() => {
     if (authed) warmPages()
   }, [authed])
+  // The server said the sign-in is no longer valid (expired or revoked): go back to the sign-in screen.
+  const [expired, setExpired] = useState(false)
+  useEffect(() => {
+    const onOut = () => {
+      setExpired(true)
+      setAuthed(false)
+    }
+    window.addEventListener('admin:signed-out', onOut)
+    return () => window.removeEventListener('admin:signed-out', onOut)
+  }, [])
 
   return (
     <>
@@ -144,12 +154,20 @@ export function Admin() {
             </Suspense>
           </AdminShell>
         ) : (
-          <AdminLogin
-            onSuccess={() => {
-              setAuthed(true)
-              navigate('', { replace: true })
-            }}
-          />
+          <>
+            {expired && (
+              <div role="status" className="fixed inset-x-0 top-0 z-[95] bg-amber-500 px-4 py-2 pt-[calc(0.5rem+var(--inset-top,0px))] text-center text-sm font-medium text-black">
+                Your session ended. Please sign in again — everything is still saved.
+              </div>
+            )}
+            <AdminLogin
+              onSuccess={() => {
+                setExpired(false)
+                setAuthed(true)
+                navigate('', { replace: true })
+              }}
+            />
+          </>
         )}
       </div>
     </>

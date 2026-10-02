@@ -21,6 +21,9 @@ export function storeToken(token: string, expiresAt: number) {
 export function clearStoredToken() {
   // Offline copies of vault data must not outlive the session.
   if (typeof caches !== 'undefined') void caches.delete('vault-api').catch(() => {})
+  const had = Boolean(localStorage.getItem(TOKEN_KEY))
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(EXPIRES_KEY)
+  // Tell the app, so it shows the sign-in screen instead of carrying on with every request failing.
+  if (had && typeof window !== 'undefined') window.dispatchEvent(new Event('admin:signed-out'))
 }
