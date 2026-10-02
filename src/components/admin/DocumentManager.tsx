@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { tile } from '@/lib/tiles'
 import { useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
+  Folder,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -203,6 +205,22 @@ export function DocumentManager() {
     const unique = Array.from(new Set([...fromDocs, ...fromCustom]))
     return unique.sort((a, b) => tagLabel(a).localeCompare(tagLabel(b)))
   }, [documents, customCategories])
+
+  // One folder per category, newest activity first.
+  const FOLDER_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316']
+  const folders = useMemo(
+    () =>
+      categories
+        .map((tag, i) => {
+          const docs = documents.filter((d) => d.tag === tag)
+          return { tag, count: docs.length, size: docs.reduce((t, d) => t + d.size, 0), latest: docs.reduce((m, d) => ((d.lastModified || '') > m ? d.lastModified || '' : m), ''), color: FOLDER_COLORS[i % FOLDER_COLORS.length] }
+        })
+        .filter((f) => f.count > 0)
+        .sort((a, b) => b.latest.localeCompare(a.latest)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [categories, documents],
+  )
+  const showFolders = category === 'all' && !search.trim() && fileType === 'all'
 
   const fileTypes = useMemo(() => {
     const unique = Array.from(new Set(documents.map((d) => getExtension(d.filename)).filter(Boolean)))
@@ -431,6 +449,44 @@ export function DocumentManager() {
         </Button>
       </div>
 
+      {/* Folders: every category as a folder. Open one to see its files; searching looks across all folders. */}
+      {category !== 'all' && (
+        <div className="flex items-center gap-1.5 text-sm">
+          <button type="button" onClick={() => setCategory('all')} className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+            <FolderOpen className="h-4 w-4" /> All folders
+          </button>
+          <span className="text-text-secondary">›</span>
+          <span className="font-semibold text-text">{tagLabel(category)}</span>
+        </div>
+      )}
+      {showFolders ? (
+        loading ? (
+          <div className="p-4"><ListSkeleton rows={4} /></div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {folders.map((f, i) => (
+              <motion.button
+                key={f.tag}
+                type="button"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                onClick={() => setCategory(f.tag)}
+                className="depth group flex flex-col items-start gap-2 rounded-2xl border border-border bg-card p-4 text-left"
+              >
+                <span className="relative">
+                  <Folder className="h-11 w-11" style={{ color: f.color }} fill={f.color} fillOpacity={0.18} strokeWidth={1.5} />
+                  <span className="absolute -right-2 -top-1 rounded-full bg-text px-1.5 text-[10px] font-bold text-bg">{f.count}</span>
+                </span>
+                <span className="w-full truncate text-sm font-semibold text-text">{tagLabel(f.tag)}</span>
+                <span className="text-xs text-text-secondary">{f.count} file{f.count === 1 ? '' : 's'} · {formatBytes(f.size)}</span>
+                {f.latest && <span className="text-2xs text-text-secondary/80">Updated {new Date(f.latest).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+              </motion.button>
+            ))}
+            {folders.length === 0 && <EmptyState icon={FolderOpen} title="No documents yet" hint="Upload a PDF, image or spreadsheet to get started." />}
+          </div>
+        )
+      ) : (
       <GlassCard hover={false} className="overflow-hidden p-0">
         {loading ? (
           <div className="p-4"><ListSkeleton rows={6} /></div>
@@ -544,6 +600,7 @@ export function DocumentManager() {
           </div>
         )}
       </GlassCard>
+      )}
 
       {!loading && filtered.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-text-secondary">
