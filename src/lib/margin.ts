@@ -21,7 +21,7 @@ export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
   US30: { name: 'Dow Jones / USD', contractSize: 1, fallbackPrice: 50000, tick: 1, unit: 'idx', priceDecimals: 0, defaultLeverage: 500 },
 }
 
-export const LEVERAGE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000] as const
+export const LEVERAGE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000, 1500, 2000] as const
 export const DEFAULT_LEVERAGE = 1000
 
 /** Shown (marked as estimated) until the live USD→INR rate arrives or if it can't be fetched. */
