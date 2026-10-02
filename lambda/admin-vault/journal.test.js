@@ -141,7 +141,8 @@ describe('journal API', () => {
   let api
   beforeEach(() => {
     s3 = fakeS3()
-    api = createJournalApi({ s3, bucket: 'b' })
+    // These tests use fixed past dates, so the current-week lock is off here (it has its own test below).
+    api = createJournalApi({ s3, bucket: 'b', lockHistory: false })
   })
 
   const call = (method, path, extra = {}) => api({ method, path, ...extra })
@@ -456,3 +457,23 @@ describe('journal API', () => {
   })
 })
 
+describe('journal history lock', () => {
+  it('refuses to change or delete trades from before this week', async () => {
+    const files = {}
+    const s3 = {
+      send: async (cmd) => {
+        const k = cmd.input.Key
+        if (cmd.constructor.name === 'GetObjectCommand') {
+          if (!files[k]) throw Object.assign(new Error('x'), { name: 'NoSuchKey' })
+          return { Body: { transformToString: async () => files[k] } }
+        }
+        files[k] = cmd.input.Body
+        return {}
+      },
+    }
+    const api = createJournalApi({ s3, bucket: 'b' })
+    const old = trade({ id: 'old1', date: '2020-01-06' })
+    expect((await api({ method: 'POST', path: '/admin/journal/trade', payload: { trade: old } })).statusCode).toBe(403)
+    expect((await api({ method: 'DELETE', path: '/admin/journal/trade', query: { date: '2020-01-06', id: 'old1' } })).statusCode).toBe(403)
+  })
+})

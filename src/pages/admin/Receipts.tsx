@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { canEditDay, editableFrom } from '@/lib/locks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, Loader2, Plus, ReceiptText, Trash2 } from 'lucide-react'
 import { Empty, Field, Loading, Notice, PageHero, Panel, Stat, inputCls } from '@/components/growth/kit'
@@ -85,7 +86,7 @@ export function Receipts() {
             <Field label="Shop"><input className={inputCls} value={draft.merchant} maxLength={80} onChange={(e) => setDraft({ ...draft, merchant: e.target.value })} /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Amount (₹)"><input className={inputCls} inputMode="decimal" value={draft.amount || ''} onChange={(e) => setDraft({ ...draft, amount: Number(e.target.value.replace(/[^\d.]/g, '')) || 0 })} /></Field>
-              <Field label="Date"><input type="date" className={inputCls} max={today} value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+              <Field label="Date"><input type="date" className={inputCls} min={editableFrom(today)} max={today} value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
             </div>
             <Field label="Category">
               <select className={inputCls} value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
@@ -129,7 +130,7 @@ export function Receipts() {
                       <span className="w-12 font-mono text-text-secondary">{r.date.slice(8)}/{r.date.slice(5, 7)}</span>
                       <span className="min-w-0 flex-1"><span className="block truncate text-text">{r.merchant || r.category}</span><span className="block truncate text-xs text-text-secondary">{r.category}{r.note ? ` · ${r.note}` : ''}</span></span>
                       <span className="font-mono text-text">{m.inr(r.amount)}</span>
-                      <button type="button" aria-label="Delete" onClick={() => doc.save({ items: items.filter((x) => x.id !== r.id) })} className="p-1 text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>
+                      {canEditDay(r.date, today) && <button type="button" aria-label="Delete" onClick={() => doc.save({ items: items.filter((x) => x.id !== r.id) })} className="p-1 text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>}
                     </motion.li>
                   ))}
                 </AnimatePresence>

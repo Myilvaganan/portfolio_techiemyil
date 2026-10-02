@@ -477,7 +477,7 @@ const normMerchant = (s) => String(s || '').trim().toLowerCase()
 
 // ---------- Handlers ----------
 
-function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
+function createStatementsApi({ s3, bucket, sign = getSignedUrl, lockHistory = true }) {
   const store = makeStore(s3, bucket)
 
   async function uploadUrl(payload) {
@@ -706,6 +706,11 @@ function createStatementsApi({ s3, bucket, sign = getSignedUrl }) {
     const id = validId(query.id)
     if (!kind || !id) return bad('A valid statement id is required.')
     const data = await store.getJson(store.key(kind, 'data.json'), emptyData())
+    // Only statements for the current month (India time) can be deleted; earlier months are kept as history.
+    const st = data.statements.find((s) => s.id === id)
+    const stMonth = String(st?.periodTo || st?.uploadedAt || '').slice(0, 7)
+    const thisMonth = new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 7)
+    if (lockHistory && stMonth && stMonth < thisMonth) return bad('Only this month’s statements can be deleted. Earlier months are kept as history.', 403)
     data.statements = data.statements.filter((s) => s.id !== id)
     data.transactions = data.transactions.filter((t) => t.statementId !== id)
     // keep the last analysis: it is refreshed at most weekly (or on request), not on every upload

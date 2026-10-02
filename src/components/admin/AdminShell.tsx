@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useInRouterContext, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { AlarmClock, BedDouble, Salad, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
+import { Calendar as CalendarIcon, AlarmClock, BedDouble, Salad, Cake, Milestone, Pill, Receipt, Sun, Timer, BellRing, BookLock, CalendarDays, Droplets, UserRound, ChevronRight, X, Gem, Flame, ClipboardList, LifeBuoy, Mountain, Eye, EyeOff, CalendarCheck, Repeat, Brain, ShieldAlert, Scale3d, AlertTriangle, Bell, Handshake, Sparkles, Home, LineChart, PiggyBank, ShieldCheck, Target, Waves, Calculator, FolderOpen, Globe, LayoutDashboard, LogOut, LayoutGrid, Wallet, Fingerprint, WifiOff, Loader2, ArrowDown, PieChart, Scale, TrendingUp, BarChart3, Landmark, CreditCard, HandCoins, NotebookPen, HeartPulse, ReceiptText } from 'lucide-react'
 import tmLogo from '@/assets/images/logo.webp'
 import { SITE_URL, openExternal } from '@/lib/host'
 import { Logo } from '@/components/ui/Logo'
@@ -921,6 +921,17 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
           <GlobalSearch pages={SEARCH_PAGES} />
 
           <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Calendar"
+              title="Tamil calendar"
+              onClick={() => navigate('/tamil-calendar')}
+              className="btn-3d relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-text-secondary transition-colors hover:text-text"
+            >
+              {/* A blank calendar with today's date written in it. */}
+              <CalendarIcon className="h-[18px] w-[18px]" />
+              <span className="absolute top-[17px] text-[8px] font-bold leading-none text-text">{new Date().getDate()}</span>
+            </button>
             <ThemeToggle simple={skin === 'noir'} className={skin === 'noir' && pathname === '/' ? 'hidden sm:flex' : undefined} />
             <NotificationBell />
             <ProfileMenu onLogout={onLogout} scale={scale} onScale={setScale} lock={lock} skin={skin} onSkin={setSkin} />

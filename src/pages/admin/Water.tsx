@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { canEditDay } from '@/lib/locks'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BellRing, ChevronLeft, ChevronRight, Droplets, Flame, GlassWater, Minus, Plus } from 'lucide-react'
@@ -272,14 +273,14 @@ export function Water() {
             <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-2 px-3 py-2 text-sm">
               <span className="text-text-secondary">{new Date(`${picked}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
               <span className="flex items-center gap-2 font-mono text-text">
-                {picked !== today && (
+                {picked !== today && canEditDay(picked, today) && (
                   <button type="button" aria-label="Less" onClick={() => doc.save(addWater(w, picked, -w.glassMl))} className="rounded-lg border border-border p-1">
                     <Minus className="h-3 w-3" />
                   </button>
                 )}
                 {L(w.logs[picked] || 0)}
                 {target ? <span className="text-text-secondary"> / {L(target)}</span> : null}
-                {picked !== today && (
+                {picked !== today && canEditDay(picked, today) && (
                   <button type="button" aria-label="More" onClick={() => doc.save(addWater(w, picked, w.glassMl))} className="rounded-lg border border-border p-1">
                     <Plus className="h-3 w-3" />
                   </button>

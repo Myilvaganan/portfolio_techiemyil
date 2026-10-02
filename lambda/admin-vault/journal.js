@@ -238,7 +238,7 @@ function sanitizeSettings(s) {
 
 const monthKey = (month) => `${ROOT}/${month}.json`
 
-function createJournalApi({ s3, bucket }) {
+function createJournalApi({ s3, bucket, lockHistory = true }) {
   async function readJson(key) {
     try {
       const out = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
@@ -298,11 +298,21 @@ function createJournalApi({ s3, bucket }) {
     return { statusCode: 200, body: { trades, days, months: all } }
   }
 
+  // Trades and day notes can only change within the current week (Monday, India time); older weeks are history.
+  // Broker imports may still add trades for any date.
+  const weekStart = () => {
+    const t = new Date(Date.now() + 5.5 * 3600_000)
+    const back = (t.getUTCDay() + 6) % 7
+    return new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() - back)).toISOString().slice(0, 10)
+  }
+  const LOCKED = { statusCode: 403, body: { error: 'Only this week’s trades can be changed or deleted. Earlier weeks are kept as logged.' } }
+
   async function saveTrade(payload) {
     const trade = sanitizeTrade(payload.trade)
     if (!trade) {
       return { statusCode: 400, body: { error: 'A trade needs a valid date, instrument, direction and P&L.' } }
     }
+    if (lockHistory && trade.date < weekStart()) return LOCKED
     const month = trade.date.slice(0, 7)
     const doc = await readMonth(month)
     const at = doc.trades.findIndex((t) => t.id === trade.id)
@@ -379,6 +389,7 @@ function createJournalApi({ s3, bucket }) {
     if (!isRealDate(query.date) || typeof query.id !== 'string' || !query.id) {
       return { statusCode: 400, body: { error: 'A trade date and id are required.' } }
     }
+    if (lockHistory && query.date < weekStart()) return LOCKED
     const month = query.date.slice(0, 7)
     const doc = await readMonth(month)
     const kept = doc.trades.filter((t) => t.id !== query.id)
@@ -389,6 +400,7 @@ function createJournalApi({ s3, bucket }) {
   async function saveDay(payload) {
     const day = sanitizeDay(payload.day)
     if (!day) return { statusCode: 400, body: { error: 'A valid date is required.' } }
+    if (lockHistory && day.date < weekStart()) return LOCKED
     const month = day.date.slice(0, 7)
     const doc = await readMonth(month)
     if (isEmptyDay(day)) delete doc.days[dayKey(day)]

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { canEditDay } from '@/lib/locks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ChevronLeft, ChevronRight, Flame, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -246,7 +247,7 @@ export function Habits() {
                       {habits.map((h, hi) => {
                         const state = dayState(h, picked, doc.value, auto)
                         const c = colorOf(h, hi)
-                        const can = !h.auto
+                        const can = !h.auto && canEditDay(picked, today)
                         return (
                           <motion.button
                             key={h.id}

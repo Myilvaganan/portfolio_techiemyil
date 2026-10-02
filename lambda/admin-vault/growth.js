@@ -249,6 +249,34 @@ const SANITIZERS = {
 
 const DOCS = Object.keys(SANITIZERS)
 
+// ---------- History is read-only ----------
+// Only today and yesterday (India time) can be added to, changed or deleted. Anything older is kept exactly as it was
+// stored, whatever the browser sends, so logs and reports can't be rewritten after the fact.
+const DAY_MS = 86_400_000
+const istToday = (now = Date.now()) => new Date(now + 5.5 * 3600_000).toISOString().slice(0, 10)
+const editableFrom = (now = Date.now()) => new Date(Date.parse(`${istToday(now)}T00:00:00Z`) - DAY_MS).toISOString().slice(0, 10)
+
+function freezeMap(prev = {}, next = {}, from) {
+  const out = {}
+  for (const [d, v] of Object.entries(next)) if (d >= from) out[d] = v
+  for (const [d, v] of Object.entries(prev)) if (d < from) out[d] = v
+  return out
+}
+function freezeList(prev = [], next = [], from, dateOf = (x) => x.date) {
+  return [...prev.filter((x) => dateOf(x) < from), ...next.filter((x) => dateOf(x) >= from)]
+}
+/** Per document: which parts are dated logs, and how to keep their history fixed. (The personal diary is exempt: it stays editable any time.) */
+const FREEZERS = {
+  habits: (p, n, f) => ({ ...n, checks: freezeMap(p.checks, n.checks, f) }),
+  water: (p, n, f) => ({ ...n, logs: freezeMap(p.logs, n.logs, f) }),
+  mood: (p, n, f) => ({ ...n, days: freezeMap(p.days, n.days, f) }),
+  gate: (p, n, f) => ({ ...n, days: freezeMap(p.days, n.days, f) }),
+  meds: (p, n, f) => ({ ...n, taken: freezeMap(p.taken, n.taken, f) }),
+  food: (p, n, f) => ({ ...n, entries: freezeList(p.entries, n.entries, f) }),
+  receipts: (p, n, f) => ({ ...n, items: freezeList(p.items, n.items, f) }),
+  tasks: (p, n, f) => ({ ...n, sessions: freezeList(p.sessions, n.sessions, f) }),
+}
+
 const RECEIPT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -319,7 +347,7 @@ Rules:
 
 const RECEIPT_RULES = 'You read Indian shop receipts and bills. Return the merchant name, the bill date as YYYY-MM-DD (null if not printed), the final total paid in rupees (after tax and discounts; null if unreadable) and the best category. If the photo is not a receipt or bill, set isReceipt false.'
 
-function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined }) {
+function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined, now = () => Date.now() }) {
   const key = (doc) => `${ROOT}/${doc}.json`
 
   async function read(doc) {
@@ -396,7 +424,8 @@ function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined 
     if (!DOCS.includes(doc)) return { statusCode: 400, body: { error: 'Unknown document.' } }
     if (method === 'GET') return { statusCode: 200, body: { doc, value: SANITIZERS[doc](await read(doc)) } }
     if (method === 'POST') {
-      const value = SANITIZERS[doc](payload?.value ?? {})
+      let value = SANITIZERS[doc](payload?.value ?? {})
+      if (FREEZERS[doc]) value = FREEZERS[doc](SANITIZERS[doc](await read(doc)), value, editableFrom(now()))
       const body = JSON.stringify(value)
       if (body.length > (doc === 'diary' ? 6_000_000 : 300_000)) return { statusCode: 413, body: { error: 'That is too much to save at once.' } }
       await s3.send(new PutObjectCommand({ Bucket: bucket, Key: key(doc), Body: body, ContentType: 'application/json' }))
@@ -406,4 +435,4 @@ function createGrowthApi({ s3, bucket, ai = null, visionModel = () => undefined 
   }
 }
 
-module.exports = { createGrowthApi, SANITIZERS, DOCS }
+module.exports = { createGrowthApi, SANITIZERS, DOCS, editableFrom }

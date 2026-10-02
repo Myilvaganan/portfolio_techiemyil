@@ -10,6 +10,7 @@ import { useSources } from '@/lib/growth/sources'
 import { monthGrid, shiftMonth } from '@/lib/growth/water'
 import { netInr, todayStr } from '@/lib/journal'
 import { fetchLogs, saveLog } from '@/lib/healthApi'
+import { canEditDay } from '@/lib/locks'
 import type { DailyLog } from '@/lib/health'
 
 // Sleep, mood and steps, made simple:
@@ -150,6 +151,8 @@ export function SleepMood() {
               <button type="button" aria-label="Next day" disabled={date >= today} onClick={() => setDate(shift(date, 1))} className="rounded-full p-2 text-text-secondary disabled:opacity-30"><ChevronRight className="h-5 w-5" /></button>
             </div>
 
+            {!canEditDay(date, today) && <p className="rounded-xl bg-surface-3 px-3 py-2 text-xs text-text-secondary">🔒 Only today and yesterday can be changed — older days are kept as logged.</p>}
+            <fieldset disabled={!canEditDay(date, today)} className="min-w-0 space-y-4 disabled:opacity-60">
             <Panel title={isToday ? '😴 Last night’s sleep' : `😴 Sleep (woke up ${nice(date)})`} hint={`The night of ${nice(shift(date, -1))} → ${nice(date)} morning`}>
               <div className="flex flex-wrap gap-1.5">
                 {HOURS.map((h) => (
@@ -178,6 +181,7 @@ export function SleepMood() {
               </div>
               <p className="mt-2 text-2xs text-text-secondary">Copy the number from your phone’s step counter or watch. Saves when you leave the box.</p>
             </Panel>
+            </fieldset>
           </motion.div>
         </AnimatePresence>
 

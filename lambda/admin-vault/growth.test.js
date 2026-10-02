@@ -56,3 +56,23 @@ it('food estimates go through the AI and come back sanitised', async () => {
   expect(r.statusCode).toBe(200)
   expect(r.body.items[0]).toMatchObject({ name: 'Idli', kcal: 130 })
 })
+
+it('keeps days before yesterday exactly as stored, whatever is sent', async () => {
+  const store = { '_data/growth/water.json': JSON.stringify({ logs: { '2026-09-25': 2000, '2026-10-01': 500 } }) }
+  const s3 = {
+    send: async (cmd) => {
+      const k = cmd.input.Key
+      if (cmd.constructor.name === 'GetObjectCommand') {
+        if (!store[k]) throw Object.assign(new Error('x'), { name: 'NoSuchKey' })
+        return { Body: { transformToString: async () => store[k] } }
+      }
+      store[k] = cmd.input.Body
+      return {}
+    },
+  }
+  const api = createGrowthApi({ s3, bucket: 'b', now: () => Date.parse('2026-10-02T06:00:00Z') })
+  const r = await api({ method: 'POST', path: '/admin/growth', payload: { doc: 'water', value: { logs: { '2026-09-25': 9999, '2026-10-01': 750, '2026-10-02': 250 } } } })
+  expect(r.body.value.logs).toEqual({ '2026-09-25': 2000, '2026-10-01': 750, '2026-10-02': 250 })
+  const r2 = await api({ method: 'POST', path: '/admin/growth', payload: { doc: 'water', value: { logs: {} } } })
+  expect(r2.body.value.logs).toEqual({ '2026-09-25': 2000 })
+})

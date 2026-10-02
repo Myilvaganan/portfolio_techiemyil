@@ -177,18 +177,28 @@ describe('health api: goal', () => {
 
 describe('health api: logs', () => {
   it('upserts by date, lists sorted and deletes', async () => {
+    // Logs can only change for today and yesterday, so use those two days.
+    const ist = (n) => new Date(Date.now() + 5.5 * 3600_000 - n * 86_400_000).toISOString().slice(0, 10)
+    const T = ist(0)
+    const Y = ist(1)
     const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
-    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-20', weight: 91 } } })
-    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-18', steps: 9000 } } })
-    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2026-09-20', weight: 90.5, note: 'updated' } } })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: T, weight: 91 } } })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: Y, steps: 9000 } } })
+    await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: T, weight: 90.5, note: 'updated' } } })
 
     const listed = await api({ method: 'GET', path: '/admin/health/logs', query: {} })
-    expect(listed.body.logs.map((l) => l.date)).toEqual(['2026-09-18', '2026-09-20'])
+    expect(listed.body.logs.map((l) => l.date)).toEqual([Y, T])
     expect(listed.body.logs[1]).toMatchObject({ weight: 90.5, note: 'updated' })
 
-    const removed = await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: '2026-09-18' } })
+    const removed = await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: Y } })
     expect(removed.body.logs).toHaveLength(1)
-    expect((await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: '2026-09-18' } })).statusCode).toBe(404)
+    expect((await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: Y } })).statusCode).toBe(404)
+  })
+
+  it('refuses to change or delete logs older than yesterday', async () => {
+    const api = createHealthApi({ s3: fakeS3(), bucket: 'b' })
+    expect((await api({ method: 'POST', path: '/admin/health/logs', payload: { log: { date: '2020-01-01', weight: 80 } } })).statusCode).toBe(403)
+    expect((await api({ method: 'DELETE', path: '/admin/health/logs', query: { date: '2020-01-01' } })).statusCode).toBe(403)
   })
 
   it('rejects an invalid log', async () => {

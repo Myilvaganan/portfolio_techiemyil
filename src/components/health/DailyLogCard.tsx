@@ -1,8 +1,9 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { todayStr } from '@/lib/journal'
+import { canEditDay } from '@/lib/locks'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { inputClass } from '@/components/journal/parts'
 import { AreaChart } from '@/components/viz/charts'
-import { todayStr } from '@/lib/journal'
 import { dayLabel } from '@/lib/statements'
 import { cn } from '@/lib/utils'
 import { blankLog, logAverages, sortLogs, type DailyLog } from '@/lib/health'
@@ -93,9 +94,9 @@ export function DailyLogCard({ logs, onSave, onDelete }: { logs: DailyLog[]; onS
                 {l.sleepH !== null && ` · ${l.sleepH.toFixed(1)} h sleep`}
                 {l.note && ` · ${l.note}`}
               </span>
-              <button type="button" data-cursor="hover" aria-label={`Delete log for ${l.date}`} onClick={() => void onDelete(l.date)} className={cn('rounded-full border border-border p-1 text-text-secondary transition-colors hover:border-error/40 hover:text-error')}>
+              {canEditDay(l.date, todayStr()) && <button type="button" data-cursor="hover" aria-label={`Delete log for ${l.date}`} onClick={() => void onDelete(l.date)} className={cn('rounded-full border border-border p-1 text-text-secondary transition-colors hover:border-error/40 hover:text-error')}>
                 <Trash2 className="h-3 w-3" />
-              </button>
+              </button>}
             </li>
           ))}
         </ul>

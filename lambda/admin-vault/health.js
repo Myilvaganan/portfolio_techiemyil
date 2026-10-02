@@ -302,7 +302,16 @@ function createHealthApi({ s3, bucket, ai = callOpenAI }) {
     return { statusCode: 200, body: { logs: await loadLogs() } }
   }
 
+  /** Only today and yesterday (India time) can be changed; older logs are history. */
+  const tooOld = (date) => {
+    const today = new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10)
+    const from = new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10)
+    return typeof date === 'string' && date < from
+  }
+  const LOCKED = { statusCode: 403, body: { error: 'Only today and yesterday can be changed. Older days are kept as logged.' } }
+
   async function saveLog(payload) {
+    if (tooOld(payload?.log?.date)) return LOCKED
     const clean = sanitizeLog(payload.log)
     if (!clean) return { statusCode: 400, body: { error: 'A date and at least one value are required.' } }
     const logs = await loadLogs()
@@ -315,6 +324,7 @@ function createHealthApi({ s3, bucket, ai = callOpenAI }) {
 
   async function removeLog(query) {
     const date = typeof query.date === 'string' ? query.date : ''
+    if (tooOld(date)) return LOCKED
     const logs = await loadLogs()
     const next = logs.filter((l) => l.date !== date)
     if (next.length === logs.length) return { statusCode: 404, body: { error: 'That log was not found.' } }

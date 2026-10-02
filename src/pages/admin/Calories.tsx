@@ -100,6 +100,8 @@ export function Calories() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const { profile, entries } = doc.value
+  // Only today and yesterday can be changed; older days are history (kept as logged, so reports stay honest).
+  const editable = date >= shift(today, -1)
   const logWeight = latestWeight(data.health ?? [])?.kg ?? 0
   const t = targets(profile, logWeight)
   const day = dayTotals(entries, date)
@@ -239,7 +241,7 @@ export function Calories() {
                             </span>
                           </span>
                           <span className="shrink-0 rounded-full bg-orange-500/15 px-2 py-0.5 font-mono text-sm font-semibold text-orange-500">{Math.round(e.kcal)}</span>
-                          <button type="button" aria-label={`Remove ${e.name}`} onClick={() => doc.save({ ...doc.value, entries: entries.filter((x) => x.id !== e.id) })} className="p-1 text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>
+                          {editable && <button type="button" aria-label={`Remove ${e.name}`} onClick={() => doc.save({ ...doc.value, entries: entries.filter((x) => x.id !== e.id) })} className="p-1 text-text-secondary hover:text-error"><Trash2 className="h-3.5 w-3.5" /></button>}
                         </motion.li>
                       ))}
                     </AnimatePresence>
@@ -269,6 +271,8 @@ export function Calories() {
 
         <div className="min-w-0 space-y-4">
           {/* Add food */}
+          {editable ? (
+            <>
           <Panel title="Add food" action={<Sparkles className="h-4 w-4 text-accent" />}>
             <div className="space-y-3">
               <div className="flex flex-wrap gap-1.5">
@@ -325,6 +329,13 @@ export function Calories() {
           </Panel>
 
           <FoodSuggest entries={entries} profile={profile} t={t} date={date} onAdd={(x) => doc.save({ ...doc.value, entries: [...doc.value.entries, { id: newId(), date, meal: x.meal, name: x.name, qty: x.qty, kcal: x.kcal, protein: x.protein, carbs: x.carbs, fat: x.fat, fiber: x.fiber }] })} />
+            </>
+          ) : (
+            <Panel title="🔒 Locked day" hint="Food can be added, changed or deleted only for today and yesterday.">
+              <p className="text-sm text-text-secondary">{new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })} is kept as it was logged, so your history and reports stay accurate.</p>
+              <button type="button" onClick={() => setDate(today)} className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-[#0b0a09]">Go to today</button>
+            </Panel>
+          )}
 
           {tips.length > 0 && (
             <Panel title="Insights" hint="From the last 14 days">
