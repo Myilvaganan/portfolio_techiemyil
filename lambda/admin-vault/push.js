@@ -244,6 +244,7 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
     for (const token of tokens) {
       for (const a of alerts) {
         const r = await sender.send(token, a)
+        console.log('push: fcm send', a.tag, r)
         if (r === 'ok') sent++
         else if (r === 'gone') dead.add(token)
       }
@@ -360,6 +361,7 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
     if (method === 'GET' && path === '/admin/push/key') return { statusCode: 200, body: { publicKey: ready ? publicKey : null } }
     const validToken = (t) => typeof t === 'string' && /^[\w:-]{20,4096}$/.test(t)
     if (method === 'POST' && path === '/admin/push/fcm/register') {
+      console.log('push: fcm register', typeof payload?.token === 'string' ? `token ${payload.token.length} chars` : 'no token')
       const token = payload?.token
       if (!validToken(token)) return { statusCode: 400, body: { error: 'Invalid device token.' } }
       if (!(await fcm())) return { statusCode: 503, body: { error: 'Notifications are not set up on the server yet.' } }
@@ -369,11 +371,13 @@ function createPushApi({ s3, bucket, publicKey, privateKey, subject = 'mailto:ad
       return { statusCode: 200, body: { ok: true } }
     }
     if (method === 'POST' && path === '/admin/push/fcm/unregister') {
+      console.log('push: fcm unregister')
       const token = typeof payload?.token === 'string' ? payload.token : ''
       await putJson(FCM_TOKENS_KEY, (await getJson(FCM_TOKENS_KEY, [])).filter((t) => t !== token))
       return { statusCode: 200, body: { ok: true } }
     }
     if (method === 'POST' && path === '/admin/push/test') {
+      console.log('push: test requested')
       const sent = await sendAll([{ tag: 'test', title: 'Notifications are on', body: 'You’ll get card bills, deadlines and loss-limit alerts here.', url: '/' }])
       return { statusCode: 200, body: { sent } }
     }
