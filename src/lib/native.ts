@@ -78,11 +78,17 @@ export function haptic(ms = 8) {
     if (Capacitor.isNativePlatform()) {
       // A short one-shot pulse at full amplitude: Android always plays it, unlike the faint "impact" waveforms that
       // many phones (OnePlus included) mute or barely render.
-      const base = level === 'light' ? 12 : level === 'strong' ? 35 : 20
-      void Haptics.vibrate({ duration: Math.round(base + Math.min(ms, 40) * 0.4) }).catch(() => {})
+      // Clearly different levels: a quick tick, a firm tap, and a long buzz with a second pulse.
+      const firmer = ms >= 30 ? 1.4 : 1
+      if (level === 'light') void Haptics.vibrate({ duration: Math.round(15 * firmer) }).catch(() => {})
+      else if (level === 'medium') void Haptics.vibrate({ duration: Math.round(35 * firmer) }).catch(() => {})
+      else {
+        void Haptics.vibrate({ duration: Math.round(70 * firmer) }).catch(() => {})
+        window.setTimeout(() => void Haptics.vibrate({ duration: 40 }).catch(() => {}), 110)
+      }
       return
     }
-    navigator.vibrate?.(Math.round(ms * (level === 'strong' ? 2.5 : level === 'light' ? 0.8 : 1.5)))
+    navigator.vibrate?.(level === 'strong' ? [70, 60, 40] : level === 'light' ? 15 : 35)
   } catch {
     // Not supported (iPhone, desktop): silent.
   }

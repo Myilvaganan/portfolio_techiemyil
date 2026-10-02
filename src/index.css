@@ -1772,26 +1772,46 @@ html.admin .aurum-backdrop::after {
   inset: 0;
   pointer-events: none;
 }
-/* Film grain (an SVG turbulence tile) + a hairline dot field near the top. */
+/* A soft dot grid with faint lines every fourth dot, fading gently down the page. */
 html.admin .aurum-backdrop::before {
+  --dot: color-mix(in srgb, var(--color-text) 24%, transparent);
+  --line: color-mix(in srgb, var(--color-text) 7%, transparent);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-text) 10%, transparent) 0.8px, transparent 1.2px);
-  background-size: 160px 160px, 26px 26px;
-  /* No blend modes or masks here: on a full-screen fixed layer they make the phone recomposite the whole screen
-     (footer included) on every change, which shows up as lag and flicker. Plain opacity is free. */
-  opacity: 0.12;
+    radial-gradient(circle at 1px 1px, var(--dot) 1.1px, transparent 1.6px),
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px, 96px 96px, 96px 96px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 55%, rgba(0, 0, 0, 0.25) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 55%, rgba(0, 0, 0, 0.25) 100%);
 }
 /* A soft vignette and one faint light from the top. */
 html.admin .aurum-backdrop::after {
   background:
-    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--color-text) 5%, transparent), transparent 60%),
-    radial-gradient(150% 120% at 50% 40%, transparent 55%, color-mix(in srgb, #000 22%, transparent) 100%);
+    radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 60%),
+    radial-gradient(150% 120% at 50% 40%, transparent 55%, color-mix(in srgb, #000 18%, transparent) 100%);
 }
 html.admin[data-theme$='light'] .aurum-backdrop::after {
   background:
     radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.9), transparent 60%),
     radial-gradient(150% 120% at 50% 40%, transparent 60%, rgba(15, 23, 42, 0.05) 100%);
+}
+/* A handful of slow sparkles sitting on the grid (opacity-only animation, so it stays smooth). */
+.bg-sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: #f6e2a8;
+  box-shadow: 0 0 8px 3px rgba(214, 179, 106, 0.75), 0 0 18px 6px rgba(214, 179, 106, 0.25);
+  opacity: 0;
+  animation: bg-sparkle 6s ease-in-out infinite;
+}
+@keyframes bg-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 0.95; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-sparkle { animation: none; opacity: 0.35; }
 }
 html.admin .aurum-backdrop {
   transform: translateZ(0);

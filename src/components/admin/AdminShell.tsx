@@ -832,7 +832,12 @@ export function AdminShell({ children, onLogout }: { children: ReactNode; onLogo
   return (
     <SettingsContext.Provider value={{ scale, onScale: setScale, lock, skin, onSkin: setSkin }}>
     <div className="touch-app relative min-h-screen bg-bg">
-      <div className="aurum-backdrop" aria-hidden />
+      <div className="aurum-backdrop" aria-hidden>
+        {/* Sparkles sit on grid crossings (multiples of 24px) and twinkle out of step. */}
+        {[[96, 120, 0], [312, 72, 1.6], [216, 336, 3.1], [504, 192, 4.4], [72, 528, 2.3], [408, 456, 5.2], [600, 600, 0.8], [168, 744, 3.8]].map(([x, y, d]) => (
+          <span key={`${x}-${y}`} className="bg-sparkle" style={{ left: x - 1, top: y - 1, animationDelay: `${d}s` }} />
+        ))}
+      </div>
       {skin === 'noir' && <NoirSplash />}
       {lock.enabled && lock.locked && <LockScreen onUnlock={lock.unlock} />}
       {!online && (
