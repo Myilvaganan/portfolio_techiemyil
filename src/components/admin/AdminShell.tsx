@@ -8,6 +8,7 @@ import { Logo } from '@/components/ui/Logo'
 import { personal } from '@/data/personal'
 import { Avatar, IconBadge, assignColors } from '@/components/ui/Avatar'
 import { useProfile } from '@/lib/profile'
+import { lastLockError } from '@/lib/appLock'
 import { MorningBrief } from './MorningBrief'
 import { useGrowthDoc } from '@/lib/growthApi'
 import { todayStr } from '@/lib/journal'
@@ -343,8 +344,10 @@ function SkinRow({ skin, onSkin }: { skin: Skin; onSkin: (s: Skin) => void }) {
 /** Turns the Face ID / fingerprint app lock on or off. Hidden on devices that can't do it. */
 function AppLockRow({ lock }: { lock: AppLock }) {
   const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
   if (!lock.supported && !lock.enabled) return null
   return (
+    <div className="space-y-1">
     <button
       type="button"
       role="switch"
@@ -353,8 +356,10 @@ function AppLockRow({ lock }: { lock: AppLock }) {
       onClick={async () => {
         if (lock.enabled) return lock.disable()
         setBusy(true)
-        await lock.enable()
+        setErr('')
+        const ok = await lock.enable()
         setBusy(false)
+        if (!ok) setErr(lastLockError)
       }}
       className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left"
     >
@@ -367,6 +372,8 @@ function AppLockRow({ lock }: { lock: AppLock }) {
         <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', lock.enabled ? 'left-[1.125rem]' : 'left-0.5')} />
       </span>
     </button>
+    {err && <p className="px-1 text-xs text-error">{err}</p>}
+    </div>
   )
 }
 

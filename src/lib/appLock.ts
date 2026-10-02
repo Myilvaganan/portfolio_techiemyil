@@ -9,11 +9,23 @@ const NATIVE = 'native'
 const isNative = () => Capacitor.isNativePlatform()
 const bio = () => import('@aparajita/capacitor-biometric-auth').then((m) => m.BiometricAuth)
 
+/** Why the last native prompt failed, to show under the switch. */
+export let lastLockError = ''
+
 async function nativePrompt(reason: string): Promise<boolean> {
+  lastLockError = ''
   try {
-    await (await bio()).authenticate({ reason, androidTitle: 'Unlock Myil Admin', androidSubtitle: reason, allowDeviceCredential: true, cancelTitle: 'Cancel' })
+    const b = await bio()
+    const c = await b.checkBiometry().catch(() => null)
+    if (c && !c.isAvailable && !c.deviceIsSecure) {
+      lastLockError = 'Set a screen lock with a fingerprint or face in Android Settings → Security first.'
+      return false
+    }
+    await b.authenticate({ reason, androidTitle: 'Unlock Myil Admin', androidSubtitle: reason, allowDeviceCredential: true, cancelTitle: 'Cancel' })
     return true
-  } catch {
+  } catch (e) {
+    const msg = (e as Error)?.message || ''
+    lastLockError = /cancel/i.test(msg) ? '' : msg || 'Fingerprint check didn’t work. Try again.'
     return false
   }
 }
@@ -23,14 +35,8 @@ const unb64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0))
 const random = (n: number) => crypto.getRandomValues(new Uint8Array(n))
 
 export async function appLockSupported(): Promise<boolean> {
-  if (isNative()) {
-    try {
-      const r = await (await bio()).checkBiometry()
-      return r.isAvailable || r.deviceIsSecure
-    } catch {
-      return false
-    }
-  }
+  // In the Android app the switch is always offered; whether the phone can do it is answered when you turn it on.
+  if (isNative()) return true
   try {
     return Boolean(window.PublicKeyCredential) && (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
   } catch {
