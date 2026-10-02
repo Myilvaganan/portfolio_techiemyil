@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://admin.techiemyil.com',
     androidScheme: 'https',
+    // Zerodha's login pages, and Kite's return hop via techiemyil.com, stay inside the app (not Chrome), so after you
+    // log in you land straight back on the journal.
+    allowNavigation: ['kite.zerodha.com', '*.zerodha.com', 'kite.trade', 'techiemyil.com'],
   },
   android: {
     backgroundColor: '#ffffff',

@@ -58,16 +58,43 @@ export function useTouchGestures({ onRefresh, onBack }: { onRefresh: () => void;
   return pull
 }
 
+/**
+ * True unless we're really offline. The browser's own flag is unreliable (a VPN, an adapter switch or waking from
+ * sleep can report "offline" while the internet works), so when it says offline we confirm with a tiny request and
+ * keep re-checking every 15 seconds; the banner only shows if those requests fail too.
+ */
 export function useOnline() {
-  const [online, setOnline] = useState(() => navigator.onLine)
+  const [online, setOnline] = useState(true)
   useEffect(() => {
-    const up = () => setOnline(true)
-    const down = () => setOnline(false)
-    window.addEventListener('online', up)
-    window.addEventListener('offline', down)
+    let cancelled = false
+    let timer: number | undefined
+    const probe = async () => {
+      window.clearTimeout(timer)
+      if (navigator.onLine) {
+        if (!cancelled) setOnline(true)
+        return
+      }
+      const ctrl = new AbortController()
+      const t = window.setTimeout(() => ctrl.abort(), 5000)
+      try {
+        await fetch(`/favicon/favicon-96x96.png?ping=${Date.now()}`, { method: 'HEAD', cache: 'no-store', signal: ctrl.signal })
+        if (!cancelled) setOnline(true)
+      } catch {
+        if (!cancelled) setOnline(false)
+      } finally {
+        window.clearTimeout(t)
+      }
+      if (!cancelled && !navigator.onLine) timer = window.setTimeout(() => void probe(), 15000)
+    }
+    const check = () => void probe()
+    check()
+    window.addEventListener('online', check)
+    window.addEventListener('offline', check)
     return () => {
-      window.removeEventListener('online', up)
-      window.removeEventListener('offline', down)
+      cancelled = true
+      window.clearTimeout(timer)
+      window.removeEventListener('online', check)
+      window.removeEventListener('offline', check)
     }
   }, [])
   return online
