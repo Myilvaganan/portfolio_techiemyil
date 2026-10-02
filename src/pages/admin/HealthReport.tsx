@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { healthMonthReport } from '@/lib/healthReports'
+import { MonthStepper } from '@/components/viz/MonthStepper'
 import { useGrowthDoc } from '@/lib/growthApi'
 import { PageBadge } from '@/components/admin/AdminShell'
 import { MotionConfig, motion } from 'framer-motion'
@@ -278,7 +279,7 @@ export function HealthReport() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <input type="month" aria-label="Report month" className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs text-text" value={reportMonth} max={new Date().toISOString().slice(0, 7)} onChange={(e) => setReportMonth(e.target.value)} />
+            <MonthStepper value={reportMonth} max={new Date().toISOString().slice(0, 7)} onChange={setReportMonth} />
             <ReportMenu
               label="Monthly health report"
               filename={`health-report-${reportMonth}`}

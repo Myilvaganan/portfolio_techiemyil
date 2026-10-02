@@ -26,8 +26,18 @@ public class MainActivity extends BridgeActivity {
     private void openLink(Intent intent) {
         if (intent == null) return;
         Uri uri = intent.getData();
-        if (uri == null || !"admin.techiemyil.com".equals(uri.getHost())) return;
-        final String url = uri.toString();
-        getBridge().getWebView().post(() -> getBridge().getWebView().loadUrl(url));
+        if (uri == null) return;
+        String url;
+        if ("admin.techiemyil.com".equals(uri.getHost())) {
+            url = uri.toString();
+        } else if ("techiemyil.com".equals(uri.getHost()) && "/admin/zerodha".equals(uri.getPath())) {
+            // Kite's login callback: carry the token over to the journal's Zerodha page in the app.
+            String q = uri.getEncodedQuery();
+            url = "https://admin.techiemyil.com/zerodha" + (q != null ? "?" + q : "");
+        } else {
+            return;
+        }
+        final String target = url;
+        getBridge().getWebView().post(() -> getBridge().getWebView().loadUrl(target));
     }
 }

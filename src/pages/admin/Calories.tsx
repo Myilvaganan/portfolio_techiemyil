@@ -11,6 +11,7 @@ import { lastDays } from '@/lib/growth/habits'
 import { todayStr } from '@/lib/journal'
 import { ReportMenu } from '@/components/viz/ReportMenu'
 import { FoodSuggest } from '@/components/growth/FoodSuggest'
+import { MonthStepper } from '@/components/viz/MonthStepper'
 import { calorieMonthReport } from '@/lib/healthReports'
 import { ACTIVITY, MEALS, dayTotals, insights, logStreak, targets, topFoods } from '@/lib/calories'
 
@@ -163,7 +164,7 @@ export function Calories() {
         lede="Type what you ate or snap a photo — the AI works out calories and macros. Your day against your target, and what to improve."
         actions={
           <div className="flex items-center gap-2">
-            <input type="month" aria-label="Report month" className={cn(inputCls, 'w-auto py-1.5 text-xs')} value={reportMonth} max={today.slice(0, 7)} onChange={(e) => setReportMonth(e.target.value)} />
+            <MonthStepper value={reportMonth} max={today.slice(0, 7)} onChange={setReportMonth} />
             <ReportMenu label="Monthly report" filename={`calorie-report-${reportMonth}`} report={() => calorieMonthReport({ month: reportMonth, label: new Date(`${reportMonth}-01T00:00:00`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), entries, profile, logs: data.health ?? [], today })} />
           </div>
         }

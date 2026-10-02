@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.techiemyil.admin",
+      "sha256_cert_fingerprints": ["8C:E5:50:CC:EB:47:6F:17:DB:D0:F8:15:BF:2B:76:58:AC:C1:0F:36:13:1A:BD:9A:76:26:95:25:1E:66:92:1B"]
+    }
+  }
+]
